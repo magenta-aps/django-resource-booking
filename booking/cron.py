@@ -215,15 +215,11 @@ class NotifyEventTimeJob(KuCronJob):
     def run(self):
         prev = self.get_last_run()
         if prev:
-            start = prev.start_time
             end = timezone.now()
-            print "Notifying eventtimes between %s and %s" % (
-                unicode(start), unicode(end)
-            )
+            print "Notifying eventtimes before %s" % (unicode(end))
 
             for eventtime in EventTime.objects.filter(
                     has_notified_start=False,
-                    start__gte=start,
                     start__lt=end
             ):
                 print "Notifying EventTime %d (starting)" % eventtime.id
@@ -231,7 +227,6 @@ class NotifyEventTimeJob(KuCronJob):
 
             for eventtime in EventTime.objects.filter(
                     has_notified_end=False,
-                    end__gte=start,
                     end__lt=end
             ):
                 print "Notifying EventTime %d (ending)" % eventtime.id
