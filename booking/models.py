@@ -2013,13 +2013,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
-    )
-
     booking_close_days_before = models.IntegerField(
         default=6,
         verbose_name=_(u'Antal dage før afholdelse, '
