@@ -40,6 +40,11 @@
                             <li><a href="{% url 'product-view' product.id %}">{{ product.title }}</a></li>
                         {% endfor %}
                         </ul>
+                        {% if object.visit.is_being_planned %}
+                            <div class="pull-right">
+                                <a class="btn btn-primary" href="{% url 'visit-mpv-edit' object.visit.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Tilføj besøg' %}</a>
+                            </div>
+                        {% endif %}
                     {% else %}
                         {% url 'product-view' object.visit.product.id as producturl %}
                         {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.date_display_context %}

@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -37,7 +37,7 @@ from django.views.generic.edit import FormView, ProcessFormView
 import booking.models as booking_models
 import urls
 from booking.constants import LOGACTION_CREATE
-from booking.forms import AcceptBookingForm
+from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
 from booking.forms import AssignmentHelpForm
 from booking.forms import BookerForm
@@ -2619,7 +2619,7 @@ class BookingSuccessView(DetailView):
             return ["booking/success.html"]
 
 
-class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
+class VisitBookingCreateView(AutologgerMixin, CreateView):
     model = Booking
     visit = None
     object = None
@@ -4088,13 +4088,14 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
+        available_products = self.available_products
         form.fields[self.products_key].choices = [
             (product.id, product.title)
-            for product in self.available_products
+            for product in available_products
         ]
         form.initial[self.products_key] = [
             product for product in self.object.products_ordered
-            if product in self.available_products
+            if product in available_products
         ]
         return form
 
@@ -4170,6 +4171,60 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
             {
                 'url': reverse('mpv-confirm', args=[mpv.id]),
                 'text': _(u'Bekræft')
+            }
+        ]
+
+
+class MultiProductVisitAddProductView(BackMixin,
+                                      MultiProductVisitTempProductsView):
+    model = MultiProductVisit
+    form_class = MultiProductVisitProductsForm
+    template_name = "visit/multi_products_edit.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.workflow_status not in [
+            Visit.WORKFLOW_STATUS_BEING_PLANNED
+        ]:
+            raise HttpResponseBadRequest(
+                u'Can only edit visits that are being planned'
+            )
+        return super(MultiProductVisitAddProductView, self)\
+            .dispatch(request, *args, **kwargs)
+
+    @property
+    def available_products(self):
+        visit = self.object
+        filter = {
+            'state': Product.ACTIVE,
+            'time_mode': Product.TIME_MODE_GUEST_SUGGESTED,
+        }
+        exclude = {
+            'type': Product.STUDENT_FOR_A_DAY
+        }
+        booking = visit.bookings.first()
+        booker = booking.booker
+        date = visit.date_ref
+        institution_level = booker.school.type
+        if institution_level != Subject.SUBJECT_TYPE_BOTH:
+            filter['institution_level'] = institution_level
+        products = Product.objects.filter(**filter).exclude(**exclude)
+        available_products = [
+            product
+            for product in products
+            if product.is_bookable(date)
+        ]
+        return available_products
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(visit):
+        return VisitDetailView.build_breadcrumbs(visit) + [
+            {
+                'url': reverse('visit-mpv-edit', args=[visit.id]),
+                'text': _(u'Redigér tilbud')
             }
         ]
 
