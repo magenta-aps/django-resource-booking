@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 import sys
+from datetime import datetime
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput, \
-    ModelMultipleChoiceField
+from django.forms import CheckboxInput
+from django.forms import CheckboxSelectMultiple
+from django.forms import DateInput
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
+from django.forms import ModelMultipleChoiceField
+from django.forms import NumberInput
+from django.forms import Select
+from django.forms import TextInput
+from django.forms import Textarea
+from django.forms import TimeInput
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
@@ -784,6 +791,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    classbooking = False
     products = []
 
     eventtime = VisitEventTimeField(
@@ -797,6 +805,17 @@ class BookingForm(forms.ModelForm):
 
     desired_time = forms.CharField(
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
+        required=False
+    )
+
+    desired_datetime_date = forms.DateField(
+        widget=DateInput(attrs={'class': 'form-control input-sm datepicker'}),
+        input_formats=['%d-%m-%Y'],
+        required=False
+    )
+
+    desired_datetime_time = forms.TimeField(
+        widget=TimeInput(attrs={'class': 'form-control input-sm clockpicker'}),
         required=False
     )
 
@@ -824,6 +843,9 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
             product.time_mode for product in products
+        ]
+        self.classbooking = Product.GROUP_VISIT in [
+            product.type for product in products
         ]
         if self.scheduled and len(products) > 0:
             product = products[0]
@@ -891,6 +913,8 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
+        elif self.classbooking:
+            self.fields['desired_datetime_date'].required = True
         else:
             self.fields['desired_time'].required = True
 
@@ -913,6 +937,15 @@ class BookingForm(forms.ModelForm):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
         if booking.visit and 'desired_time' in self.cleaned_data:
             booking.visit.desired_time = self.cleaned_data['desired_time']
+        if booking.visit \
+                and 'desired_datetime_date' in self.cleaned_data \
+                and 'desired_datetime_time' in self.cleaned_data:
+            desired_time = datetime.combine(
+                self.cleaned_data['desired_datetime_date'],
+                self.cleaned_data['desired_datetime_time']
+            )
+            booking.visit.desired_time = \
+                desired_time.strftime("%d.%m.%Y %H:%m")
         return booking
 
 

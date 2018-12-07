@@ -55,6 +55,9 @@ var KU = KU || {};
         };
 
         var iso_datetime = function(jsdate) {
+            if (!jsdate) {
+                return "";
+            }
             return [
                 jsdate.getFullYear(),
                 zero_pad(jsdate.getMonth() + 1),
@@ -68,9 +71,9 @@ var KU = KU || {};
 
         var update_widgets = function() {
             var from = text_to_jsdate($start.val()),
-                from_txt = format_datetime(from),
+                from_txt = from && format_datetime(from),
                 to = text_to_jsdate($end.val()),
-                to_txt = format_datetime(to);
+                to_txt = to && format_datetime(to);
 
             // If we're using full days we want the widgets to use one day
             // earlier.
@@ -149,12 +152,13 @@ var KU = KU || {};
                     $output.text(from_txt + " - " + to_txt);
                 }
             }
-
-            $start.val(iso_datetime(from));
+var foo = iso_datetime(from);
+            console.log(foo);
+            $start.val(foo);
             $end.val(iso_datetime(to));
             update_widgets();
 
-            if(update_callback) {
+            if (update_callback) {
                 update_callback();
             }
         };
