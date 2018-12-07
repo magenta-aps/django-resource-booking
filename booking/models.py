@@ -4370,6 +4370,38 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             evaluation__for_students=False
         )
 
+    def evaluations(self, filter=None, ordered=False):
+        evaluation_ids = set()
+        for guest in SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+        ):
+            evaluation_ids.add(guest.evaluation.id)
+        evaluations = SurveyXactEvaluation.objects.filter(
+            id__in=evaluation_ids
+        )
+        if filter is not None:
+            evaluations = evaluations.filter(**filter)
+        evaluations = list(evaluations)
+        if ordered:
+            evaluations.sort(key=lambda e: self.products.index(e.product))
+        return evaluations
+
+    @property
+    def student_evaluation(self):
+        evaluations = self.evaluations({'for_students': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
+
+    @property
+    def teacher_evaluation(self):
+        evaluations = self.evaluations({'for_teachers': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
+
+    @property
+    def common_evaluation(self):
+        return self.evaluations.filter(
+            for_students=True, for_teachers=True
+        ).first()
+
     # Used by evaluation statistics page
     def evaluation_guestset(self):
         statuslist = [
@@ -6240,8 +6272,10 @@ class BookerResponseNonce(models.Model):
 
 class SurveyXactEvaluation(models.Model):
 
-    DEFAULT_STUDENT_SURVEY_ID = 946435
-    DEFAULT_TEACHER_SURVEY_ID = 946493
+    DEFAULT_STUDENT_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['student']
+    DEFAULT_TEACHER_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['teacher']
 
     surveyId = models.IntegerField()
 
@@ -6319,6 +6353,26 @@ class SurveyXactEvaluation(models.Model):
                 EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
                 in autosends
         }
+
+    def save(self, *args, **kwargs):
+        super(SurveyXactEvaluation, self).save(*args, **kwargs)
+        for visit in self.product.get_visits():
+            if visit.is_multi_sub:
+                visit = visit.multi_master
+            for booking in visit.booking_list:
+                guest = booking.booker
+                if SurveyXactEvaluationGuest.objects.filter(
+                    evaluation=self,
+                    guest=guest
+                ).count() == 0:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=self,
+                        guest=guest
+                    )
+                    evaluationguest.save()
+
+    def __unicode__(self):
+        return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
 
 class SurveyXactEvaluationGuest(models.Model):
@@ -6424,13 +6478,9 @@ class SurveyXactEvaluationGuest(models.Model):
         product = self.product
         visit = self.visit
         guest = self.guest
-        teachers = list(visit.assigned_teachers)
-        return {
+        data = {
             u'email': guest.email,
             u'ID': product.id,
-            u'enhed': getattr_long(product, 'organizationalunit.id'),
-            u'type': product.type,
-            u'titel': product.title,
             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
             u'niveau': Guest.grundskole_level_conversion[self.guest.level]
@@ -6451,14 +6501,37 @@ class SurveyXactEvaluationGuest(models.Model):
             u'postnr': getattr_long(guest, 'school.postcode.number'),
             u'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
-            ),
-            u'underv': ', '.join([
-                teacher.get_full_name() for teacher in teachers
-            ]),
-            u'underv_m': ', '.join([
-                teacher.email for teacher in teachers
-            ])
+            )
         }
+
+        visits = visit.real.subvisits \
+            if visit.is_multiproductvisit \
+            else [visit]
+
+        index = 1
+        for visit in visits:
+            teachers = list(visit.assigned_teachers)
+            product = visit.product
+            data.update({
+                u"akt%d" % index: product.title,
+                u"type%d" % index: product.type,
+                u"enhed%d" % index: getattr_long(
+                    product, 'organizationalunit.id'
+                ),
+                u"oenhed%d" % index: getattr_long(
+                    product, 'organizationalunit.parent.id'
+                ),
+                u"undvn%d" % index: ', '.join([
+                    teacher.get_full_name() for teacher in teachers
+                ]),
+                u"undvm%d" % index: ', '.join([
+                    teacher.email for teacher in teachers
+                ])
+            })
+            index += 1
+            if index > 4:
+                break
+        return data
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
