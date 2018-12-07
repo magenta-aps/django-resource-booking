@@ -71,8 +71,7 @@ class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequriedMixin,
             )
 
 
-class ChangeVisitStartTimeView(AutologgerMixin,
-                               UpdateWithCancelView):
+class ChangeVisitStartTimeView(AutologgerMixin, UpdateWithCancelView):
     model = EventTime
     template_name = "booking/workflow/change_starttime.html"
     view_title = _(u'Redigér tidspunkt')
@@ -98,10 +97,16 @@ class ChangeVisitStartTimeView(AutologgerMixin,
         else:
             time_mode = "time_and_date"
 
+        try:
+            desired_time = self.object.visit.desired_time
+        except:
+            desired_time = None
+
         return super(ChangeVisitStartTimeView, self).get_context_data(
             product=self.object.product,
             use_product_duration=self.object.duration_matches_product,
             time_mode_value=time_mode,
+            desired_time=desired_time,
             **kwargs
         )
 
