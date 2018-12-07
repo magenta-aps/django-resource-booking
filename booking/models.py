@@ -6629,27 +6629,28 @@ class SurveyXactEvaluationGuest(models.Model):
 
         index = 1
         for visit in visits:
-            teachers = list(visit.assigned_teachers)
-            product = visit.product
-            data.update({
-                u"akt%d" % index: product.title,
-                u"type%d" % index: product.type,
-                u"enhed%d" % index: getattr_long(
-                    product, 'organizationalunit.id'
-                ),
-                u"oenhed%d" % index: getattr_long(
-                    product, 'organizationalunit.parent.id'
-                ),
-                u"undvn%d" % index: ', '.join([
-                    teacher.get_full_name() for teacher in teachers
-                ]),
-                u"undvm%d" % index: ', '.join([
-                    teacher.email for teacher in teachers
-                ])
-            })
-            index += 1
-            if index > 4:
-                break
+            if visit.workflow_status != Visit.WORKFLOW_STATUS_CANCELLED:
+                teachers = list(visit.assigned_teachers)
+                product = visit.product
+                data.update({
+                    u"akt%d" % index: product.title,
+                    u"type%d" % index: product.type,
+                    u"enhed%d" % index: getattr_long(
+                        product, 'organizationalunit.id'
+                    ),
+                    u"oenhed%d" % index: getattr_long(
+                        product, 'organizationalunit.parent.id'
+                    ),
+                    u"undvn%d" % index: ', '.join([
+                        teacher.get_full_name() for teacher in teachers
+                    ]),
+                    u"undvm%d" % index: ', '.join([
+                        teacher.email for teacher in teachers
+                    ])
+                })
+                index += 1
+                if index > 4:
+                    break
         return data
 
     def link_clicked(self):
