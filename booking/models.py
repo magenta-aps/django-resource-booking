@@ -3266,6 +3266,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def is_cancelled(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_CANCELLED
 
+    @property
+    def is_rejected(self):
+        return self.workflow_status == Visit.WORKFLOW_STATUS_REJECTED
+
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
 
