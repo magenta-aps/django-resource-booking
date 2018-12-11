@@ -4239,6 +4239,25 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return [self.product]
 
     @property
+    def product_qs(self):
+        return Product.objects.filter(id__in=[x.id for x in self.products])
+
+    @staticmethod
+    def with_product_types(visit_qs, product_types=None):
+        if product_types is None:
+            return visit_qs
+        return visit_qs.filter(
+            multiproductvisit__isnull=True,
+            eventtime__product__type__in=product_types
+        ) | visit_qs.filter(
+            multiproductvisit__isnull=False,
+            multiproductvisit__subvisit__in=Visit.objects.filter(
+                eventtime__product__type__in=product_types,
+                is_multi_sub=True
+            )
+        )
+
+    @property
     def products_unique_address(self):
         addresses = {
             product.locality.id: product for product in self.products
