@@ -2,7 +2,7 @@
     <strong>Forberedelsestid</strong>:
     <ul>
         {% for subvisit in visit.real.subvisits_by_time %}
-            {% if not subvisit.is_cancelled %}
+            {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
                 <li>{{ subvisit.product.title }}: {{ subvisit.product.preparation_time|default:"Ingen" }}</li>
             {% endif %}
         {% endfor %}
