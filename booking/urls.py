@@ -21,11 +21,13 @@ from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
-from booking.views import BecomeHostView
+from booking.views import BecomeHostView, MultiProductVisitAddProductView
 from booking.views import BecomeTeacherView
 from booking.views import BookingAcceptView
+from booking.views import BookingCancelView
 from booking.views import BookingEditView
-from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingNotifyView
+from booking.views import BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView
 from booking.views import CalendarCreateView
@@ -200,6 +202,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/book/success$',
         BookingSuccessView.as_view(modal=False),
         name='visit-booking-success'),
+    url(r'^visit/(?P<pk>[0-9]+)/mpvedit/?$',
+        MultiProductVisitAddProductView.as_view(),
+        name='visit-mpv-edit'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
@@ -210,6 +215,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/edit/?$',
         BookingEditView.as_view(),
         name='booking-edit-view'),
+    url(r'booking/(?P<pk>[0-9]+)/cancel/?$',
+        BookingCancelView.as_view(),
+        name='booking-cancel'),
 
     url(r'^visit/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitStatusView.as_view(),

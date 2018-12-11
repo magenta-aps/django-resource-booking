@@ -151,6 +151,8 @@ def get(obj, key):
     if obj is not None and key is not None:
         if isinstance(obj, dict):
             return obj[key]
+        if isinstance(obj, list):
+            return obj[key]
         if hasattr(obj, key):
             return getattr(obj, key)
 

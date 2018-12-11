@@ -1,14 +1,32 @@
-{% if recipient.guest %}
+{% if recipient.is_guest %}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
 
-    <p>
-        Vi glæder os til at se dig til {{ product.title }}
-        {% include 'booking/email/snippets/visit_time.html' %}
-        på Københavns Universitet:
-        {% include 'booking/email/snippets/product_maplink.html' %}.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
-    </p>
+    {% if visit.is_multiproductvisit %}
+        <p>
+            Vi glæder os til at se dig til:
+            <ul>
+            {% for subvisit in visit.real.subvisits_by_time %}
+                {% if not subvisit.is_cancelled %}
+                <li>
+                    {{ subvisit.product.title }},
+                    {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
+                    {% include 'booking/email/snippets/product_maplink.html' with product=subvisit.product %}.
+                </li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+            {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.products|get:0 vedr=1 %}
+        </p>
+    {% else %}
+        <p>
+            Vi glæder os til at se dig til {{ product.title }}
+            {% include 'booking/email/snippets/visit_time.html' %}
+            på Københavns Universitet:
+            {% include 'booking/email/snippets/product_maplink.html' %}.
+            {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
+        </p>
+    {% endif %}
     <p>
         Detaljer for din tilmelding:
     </p>
@@ -24,7 +42,7 @@
 
     {% include 'booking/email/snippets/see_all.html' %}
 
-{% elif recipient.user.userprofile.is_host %}
+{% elif recipient.is_host %}
 
     {# Denne besked sendes til værter #}
 
@@ -53,7 +71,7 @@
         {% include 'booking/email/snippets/coordinators.html' %}
     </p>
 
-{% elif recipient.user.userprofile.is_teacher %}
+{% elif recipient.is_teacher %}
 
     {# Denne besked sendes til undervisere #}
 

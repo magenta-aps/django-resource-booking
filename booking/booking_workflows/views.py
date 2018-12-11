@@ -25,7 +25,7 @@ from booking.logging import log_action
 from booking.mixins import AutologgerMixin
 from booking.mixins import EditorRequriedMixin
 from booking.mixins import RoleRequiredMixin
-from booking.models import EmailTemplateType
+from booking.models import EmailTemplateType, KUEmailRecipient
 from booking.models import EventTime
 from booking.models import HostResource
 from booking.models import Locality
@@ -191,11 +191,11 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 teacher
                 for teacher in new_teachers
                 if teacher not in old_teachers
-            ]
+            ]), KUEmailRecipient.TYPE_TEACHER)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -250,11 +250,11 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 host
                 for host in new_hosts
                 if host not in old_hosts
-            ]
+            ]), KUEmailRecipient.TYPE_HOST)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -569,7 +569,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.notify_mail_template_type:
                     self.object.autosend(
                         self.notify_mail_template_type,
-                        [request.user],
+                        [KUEmailRecipient(request.user)],
                         True
                     )
                 self.object.resource_accepts()
