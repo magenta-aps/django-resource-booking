@@ -46,6 +46,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     HEADING_BLUE = 'alert-info'
     HEADING_YELLOW = 'alert-warning'
 
+    visit_ordering = ['-eventtime__start', '-eventtime__end']
+
     """Display the user's profile."""
     def get_template_names(self):
         profile = self.request.user.userprofile
@@ -66,14 +68,12 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         today_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_todays_visits()
             if visit.real.unit_qs & unit_qs
-        ])
+        ]).order_by(*self.visit_ordering)
 
         recent_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_recently_held()
             if visit.real.unit_qs & unit_qs
-        ]).order_by(
-            '-eventtime__start'
-        )
+        ]).order_by(*self.visit_ordering)
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
@@ -230,7 +230,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     )
                 )).filter(num_participants__gte=1)
                 # See also VisitSearchView.filter_by_participants
-            ),
+            ).order_by(*self.visit_ordering),
             'limit': limit
         }
         if unplanned['queryset'].count() > limit:
@@ -255,7 +255,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     ),
                     unit_qs
                 )
-            ),
+            ).order_by(*self.visit_ordering),
             'limit': limit
         }
         if planned['queryset'].count() > limit:
@@ -294,9 +294,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 ),
                 'queryset': Visit.unit_filter(
                     profile.can_be_assigned_to_qs, unit_qs
-                ).order_by(
-                    'eventtime__start', 'eventtime__end'
-                ),
+                ).order_by(*self.visit_ordering),
                 'limit': limit
             },
             {
@@ -312,7 +310,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                         profile.all_assigned_visits(),
                         unit_qs
                     )
-                ),
+                ).order_by(*self.visit_ordering),
                 'limit': limit
             }
         ]
