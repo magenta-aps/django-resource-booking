@@ -65,12 +65,6 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             if int(product_type) in Product.applicable_types
         ]
 
-    def product_filter(self, path_to_product=None):
-        product_type = self.request.GET.get('product_type', None)
-        if product_type in Product.applicable_types:
-            prefix = (path_to_product + "__") if path_to_product is not None else ''
-            return {prefix + 'type': product_type}
-
     def get_context_data(self, **kwargs):
         context = {'lists': []}
         limit = 10
@@ -254,8 +248,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 u"%(count)d besøg under planlægning",
                 'count'
             ),
-            'queryset': self.sort_vo_queryset(unplanned_qs)
-                .order_by(*self.visit_ordering),
+            'queryset': self.sort_vo_queryset(
+                unplanned_qs
+            ).order_by(
+                *self.visit_ordering
+            ),
             'limit': limit
         }
         if unplanned['queryset'].count() > limit:
@@ -277,8 +274,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 u"%(count)d planlagte besøg",
                 'count'
             ),
-            'queryset': self.sort_vo_queryset(planned_qs)
-                .order_by(*self.visit_ordering),
+            'queryset': self.sort_vo_queryset(
+                planned_qs
+            ).order_by(
+                *self.visit_ordering
+            ),
             'limit': limit
         }
         if planned['queryset'].count() > limit:
@@ -335,8 +335,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er underviser",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(assigned_qs)
-                    .order_by(*self.visit_ordering),
+                'queryset': self.sort_vo_queryset(
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering
+                ),
                 'limit': limit
             }
         ]
@@ -386,8 +389,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er vært",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(assigned_qs)
-                    .order_by(*self.visit_ordering),
+                'queryset': self.sort_vo_queryset(
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering
+                ),
                 'limit': limit
             }
         ]
