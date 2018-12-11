@@ -823,6 +823,20 @@ class BookingForm(forms.ModelForm):
         required=False
     )
 
+    def clean_desired_datetime_date(self):
+        date = self.cleaned_data.get('desired_datetime_date')
+        for product in self.products:
+            bookability = product.is_bookable(date, return_reason=True)
+            if bookability is not True:
+                reason = unicode(
+                    _(u'Det er desværre ikke muligt at '
+                      u'bestille besøget på den valgte dato.\n')
+                )
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
+                raise forms.ValidationError(reason)
+
     class Meta:
         model = Booking
         fields = ['eventtime', 'notes']
@@ -1905,30 +1919,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                     _(u'Det er desværre ikke muligt at '
                       u'bestille besøget på den valgte dato.\n')
                 )
-                if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
-                    reason += unicode(
-                        _(u'Der er lukket for tilmelding '
-                          u'%d dage før afholdelse.') %
-                        product.booking_close_days_before
-                    )
-                elif bookability == Product.NONBOOKABLE_REASON__BOOKING_FUTURE:
-                    reason += unicode(
-                        _(u'Der er lukket for tilmelding '
-                          u'%d dage efter dags dato.') %
-                        product.booking_close_days_before
-                    )
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
-                    reason += unicode(_(u'Der er ingen ledige besøg.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__NO_CALENDAR_TIME:
-                    reason += unicode(_(u'Der er ikke er flere ledige tider.'))
-                elif bookability == Product.NONBOOKABLE_REASON__NOT_ACTIVE:
-                    reason += unicode(_(u'Tilbuddet er ikke aktivt.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
-                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes.'))
-
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
                 raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
 
