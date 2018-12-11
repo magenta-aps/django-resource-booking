@@ -705,7 +705,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 '%d-%m-%Y'
             )
             to_date = current_tz.localize(to_date) + \
-                      timedelta(days=1, microseconds=-1)
+                timedelta(days=1, microseconds=-1)
 
         if self.organizationalunits:
             context['organizationalunits'] = self.organizationalunits
