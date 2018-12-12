@@ -3599,10 +3599,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def responsible_persons(self):
-        responsible = set()
-        for product in self.products:
-            responsible.update(product.get_responsible_persons())
-        return responsible
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.responsible_persons
+        return self.product.get_responsible_persons()
 
     @property
     def total_required_rooms(self):
@@ -4801,6 +4800,13 @@ class MultiProductVisit(Visit):
             subvisit.needed_vehicles
             for subvisit in self.subvisits_unordered_noncancelled
         )
+
+    @property
+    def responsible_persons(self):
+        responsible = set()
+        for visit in self.subvisits_unordered_noncancelled:
+            responsible.update(visit.product.get_responsible_persons())
+        return responsible
 
     @property
     def available_seats(self):
