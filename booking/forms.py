@@ -185,6 +185,13 @@ class VisitSearchForm(forms.Form):
         required=False
     )
 
+    s = forms.ModelChoiceField(
+        label=_(u'Skole/Gymnasium'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=School.objects.all()
+    )
+
     WORKFLOW_STATUS_PENDING = -1
     WORKFLOW_STATUS_READY = -2
 
@@ -238,9 +245,6 @@ class VisitSearchForm(forms.Form):
         if not qdict.get("go", False):
             if qdict.get("u", "") == "":
                 qdict["u"] = self.MY_UNITS
-
-            if qdict.get("s", "") == "":
-                qdict["s"] = Product.ACTIVE
 
         super(VisitSearchForm, self).__init__(qdict, *args, **kwargs)
 

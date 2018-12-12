@@ -3031,6 +3031,7 @@ class VisitSearchView(VisitListView):
             self.filter_by_resource_id,
             self.filter_by_visit_id,
             self.filter_by_unit,
+            self.filter_by_school,
             self.filter_by_date,
             self.filter_by_workflow,
             self.filter_by_participants,
@@ -3081,7 +3082,6 @@ class VisitSearchView(VisitListView):
 
         u = int(u)
         profile = self.request.user.userprofile
-        unit_qs = None
 
         if u == form.MY_UNIT:
             unit_qs = profile.organizationalunit
@@ -3093,6 +3093,13 @@ class VisitSearchView(VisitListView):
             unit_qs = u
 
         return Visit.unit_filter(qs, unit_qs)
+
+    def filter_by_school(self, qs):
+        form = self.get_form()
+        s = form.cleaned_data.get("s", None)
+        if s is not None:
+            qs = qs.filter(bookings__booker__school=s)
+        return qs
 
     def filter_by_date(self, qs):
         form = self.get_form()
