@@ -5,7 +5,8 @@ import profile.constants
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
-from booking.utils import UnicodeWriter, force_list
+from booking.utils import UnicodeWriter
+from booking.utils import force_list
 from django.contrib import messages
 from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
@@ -57,8 +58,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             return super(ProfileView, self).get_template_names()
 
     def product_types(self):
-        product_types = self.request.GET.get('product_type', None)
-        if product_types is None:
+        product_types = self.request.GET.getlist('product_type', None)
+        if product_types is None or product_types == '':
             return Product.applicable_types
         product_types = force_list(product_types)
         return [
@@ -68,7 +69,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         ]
 
     def get_context_data(self, **kwargs):
-        context = {'lists': []}
+        context = {
+            'lists': [],
+            'types': Product.type_choices,
+        }
         limit = 10
 
         context['lists'].extend(self.lists_by_role())
@@ -76,6 +80,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         product_types = self.product_types()
+        if product_types is not None \
+                and len(product_types) > 0 \
+                and product_types != Product.applicable_types:
+            context['type'] = product_types[0]
 
         today_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_todays_visits()
