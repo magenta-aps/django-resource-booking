@@ -34,7 +34,7 @@ from booking.models import TeacherBooking
 from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
-from profile.constants import TEACHER, HOST
+from profile.constants import TEACHER, HOST, COORDINATOR
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -210,6 +210,14 @@ class VisitSearchForm(forms.Form):
         required=False,
         widget=forms.widgets.Select,
         queryset=User.objects.filter(userprofile__user_role__role=HOST),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    c = CustomModelChoiceField(
+        label=_(u'Koordinator'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=COORDINATOR),
         choice_label_transform=lambda user: user.get_full_name()
     )
 

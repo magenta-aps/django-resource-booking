@@ -118,7 +118,8 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
-from profile.models import EDIT_ROLES
+from profile.constants import COORDINATOR
+from profile.models import EDIT_ROLES, UserProfile
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -3034,6 +3035,7 @@ class VisitSearchView(VisitListView):
             self.filter_by_school,
             self.filter_by_teacher,
             self.filter_by_host,
+            self.filter_by_coordinator,
             self.filter_by_date,
             self.filter_by_workflow,
             self.filter_by_participants,
@@ -3120,6 +3122,18 @@ class VisitSearchView(VisitListView):
             qs = qs.filter(
                 Q(hosts=h) |
                 Q(resources__hostresource__user=h)
+            )
+        return qs
+
+    def filter_by_coordinator(self, qs):
+        form = self.get_form()
+        c = form.cleaned_data.get("c", None)
+        if c is not None:
+            qs = qs.filter(
+                Q(
+                    Q(eventtime__product__tilbudsansvarlig__isnull=True) &
+                    Q(eventtime__product__organizationalunit=c.userprofile.organizationalunit)
+                ) | Q(eventtime__product__tilbudsansvarlig=c)
             )
         return qs
 
