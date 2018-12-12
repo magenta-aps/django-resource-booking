@@ -7,10 +7,11 @@ from django.contrib.auth.models import User
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput, \
-    ModelMultipleChoiceField
+from django.forms import CheckboxInput
+from django.forms import CheckboxSelectMultiple
 from django.forms import EmailInput
 from django.forms import HiddenInput
+from django.forms import ModelMultipleChoiceField
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
@@ -19,8 +20,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
-from booking.models import ClassBooking, TeacherBooking, \
-    BookingGymnasieSubjectLevel
+from booking.models import BookingGymnasieSubjectLevel
+from booking.models import ClassBooking
 from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
@@ -29,10 +30,11 @@ from booking.models import Product
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
+from booking.models import TeacherBooking
 from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
-from profile.constants import TEACHER
+from profile.constants import TEACHER, HOST
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -200,6 +202,14 @@ class VisitSearchForm(forms.Form):
         required=False,
         widget=forms.widgets.Select,
         queryset=User.objects.filter(userprofile__user_role__role=TEACHER),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    h = CustomModelChoiceField(
+        label=_(u'Vært'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=HOST),
         choice_label_transform=lambda user: user.get_full_name()
     )
 

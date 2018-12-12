@@ -106,7 +106,6 @@ from booking.models import PostCode
 from booking.models import Product
 from booking.models import ProductGrundskoleFag
 from booking.models import ProductGymnasieFag
-from booking.models import Resource
 from booking.models import Room
 from booking.models import RoomResponsible
 from booking.models import School
@@ -3034,6 +3033,7 @@ class VisitSearchView(VisitListView):
             self.filter_by_unit,
             self.filter_by_school,
             self.filter_by_teacher,
+            self.filter_by_host,
             self.filter_by_date,
             self.filter_by_workflow,
             self.filter_by_participants,
@@ -3110,6 +3110,16 @@ class VisitSearchView(VisitListView):
             qs = qs.filter(
                 Q(teachers=l) |
                 Q(resources__teacherresource__user=l)
+            )
+        return qs
+
+    def filter_by_host(self, qs):
+        form = self.get_form()
+        h = form.cleaned_data.get("h", None)
+        if h is not None:
+            qs = qs.filter(
+                Q(hosts=h) |
+                Q(resources__hostresource__user=h)
             )
         return qs
 

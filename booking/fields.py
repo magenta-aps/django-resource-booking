@@ -1,15 +1,16 @@
+from collections import defaultdict
+
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import six
-from collections import defaultdict
 from django.forms.fields import ChoiceField, MultipleChoiceField
-from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
 from django.forms.models import ModelMultipleChoiceField, ModelChoiceField
+from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
+from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import EventTime
-from .widgets import OrderedMultipleHiddenChooser
 from .widgets import CheckboxSelectMultipleDisable, DurationWidget
+from .widgets import OrderedMultipleHiddenChooser
 from .widgets import SelectDisable, SelectMultipleDisable
 
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
