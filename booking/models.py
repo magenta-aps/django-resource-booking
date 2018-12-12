@@ -5387,6 +5387,9 @@ class School(models.Model):
     )
 
     def __unicode__(self):
+        if self.postcode is not None:
+            return "%s (%d %s)" % \
+                   (self.name, self.postcode.number, self.postcode.city)
         return self.name
 
     @staticmethod
