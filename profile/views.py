@@ -78,7 +78,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         product_types = self.product_types()
-        if product_types != None and len(product_types) > 0 and product_types != Product.applicable_types:
+        if product_types is not None \
+                and len(product_types) > 0 \
+                and product_types != Product.applicable_types:
             context['type'] = product_types[0]
 
         today_qs = Visit.objects.filter(id__in=[
