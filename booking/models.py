@@ -3064,6 +3064,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def is_cancelled(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_CANCELLED
 
+    @staticmethod
+    def active_qs(qs):
+        return qs.exclude(workflow_status__in=[
+            Visit.WORKFLOW_STATUS_CANCELLED, Visit.WORKFLOW_STATUS_REJECTED
+        ])
+
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
 
@@ -4231,6 +4237,10 @@ class MultiProductVisit(Visit):
         )
 
     @property
+    def subvisits_unordered_noncancelled(self):
+        return Visit.active_qs(self.subvisits_unordered)
+
+    @property
     def subvisits(self):
         return self.subvisits_unordered.order_by('multi_priority')
 
@@ -4240,7 +4250,7 @@ class MultiProductVisit(Visit):
 
     def potential_responsible(self):
         units = OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered
+            product__eventtime__visit__set=self.subvisits_unordered_noncancelled
         )
         return User.objects.filter(
             userprofile__organizationalunit=units
@@ -4251,7 +4261,7 @@ class MultiProductVisit(Visit):
 
     def resources_assigned(self, requirement):
         resource_list = []
-        for visit in self.subvisits_unordered:
+        for visit in self.subvisits_unordered_noncancelled:
             resource_list += list(visit.resources_assigned(requirement))
         # return resource_list
         # Return as a Queryset, because someone may need the db methods
@@ -4263,7 +4273,7 @@ class MultiProductVisit(Visit):
     def total_required_teachers(self):
         return sum(
             subvisit.total_required_teachers
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
@@ -4271,7 +4281,7 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_teachers]
-                for subvisit in self.subvisits_unordered
+                for subvisit in self.subvisits_unordered_noncancelled
             ])
         )
 
@@ -4279,12 +4289,12 @@ class MultiProductVisit(Visit):
     def needed_teachers(self):
         return sum(
             subvisit.needed_teachers
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_teachers(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_teachers:
                 return True
         return False
@@ -4293,7 +4303,7 @@ class MultiProductVisit(Visit):
     def total_required_hosts(self):
         return sum(
             subvisit.total_required_hosts
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
@@ -4301,7 +4311,7 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_hosts]
-                for subvisit in self.subvisits_unordered
+                for subvisit in self.subvisits_unordered_noncancelled
             ])
         )
 
@@ -4309,12 +4319,12 @@ class MultiProductVisit(Visit):
     def needed_hosts(self):
         return sum(
             subvisit.needed_hosts
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_hosts(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_hosts:
                 return True
         return False
@@ -4323,19 +4333,19 @@ class MultiProductVisit(Visit):
     def total_required_rooms(self):
         return sum(
             subvisit.total_required_rooms
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needed_rooms(self):
         return sum(
             subvisit.needed_rooms
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_room(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_room:
                 return True
         return False
@@ -4344,14 +4354,14 @@ class MultiProductVisit(Visit):
     def needed_items(self):
         return sum(
             subvisit.needed_items
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needed_vehicles(self):
         return sum(
             subvisit.needed_vehicles
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
@@ -4395,7 +4405,7 @@ class MultiProductVisit(Visit):
     def primary_visit(self):
         # For the purposes of determining who can manage this visit,
         # return the highest-priority non-cancelled visit with a unit
-        if self.subvisits_unordered.count() > 0:
+        if self.subvisits_unordered_noncancelled.count() > 0:
             active = self.subvisits.filter(workflow_status__in=[
                 Visit.WORKFLOW_STATUS_BEING_PLANNED,
                 Visit.WORKFLOW_STATUS_CONFIRMED,
@@ -4490,7 +4500,7 @@ class MultiProductVisit(Visit):
                         )
 
     def autoassign_resources(self):
-        for visit in self.subvisits_unordered:
+        for visit in self.subvisits_unordered_noncancelled:
             visit.autoassign_resources()
 
     def __unicode__(self):
