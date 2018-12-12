@@ -4685,8 +4685,9 @@ class MultiProductVisit(Visit):
 
     @property
     def unit_qs(self):
+        subvisits = self.subvisits_unordered_noncancelled
         return OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered
+            product__eventtime__visit__set=subvisits
         )
 
     @property
@@ -4698,7 +4699,7 @@ class MultiProductVisit(Visit):
 
     def resources_assigned(self, requirement):
         resource_list = []
-        for visit in self.subvisits_unordered:
+        for visit in self.subvisits_unordered_noncancelled:
             resource_list += list(visit.resources_assigned(requirement))
         # return resource_list
         # Return as a Queryset, because someone may need the db methods
@@ -4845,7 +4846,7 @@ class MultiProductVisit(Visit):
     def primary_visit(self):
         # For the purposes of determining who can manage this visit,
         # return the highest-priority non-cancelled visit with a unit
-        if self.subvisits_unordered.count() > 0:
+        if self.subvisits_unordered_noncancelled.count() > 0:
             active = self.subvisits.filter(workflow_status__in=[
                 Visit.WORKFLOW_STATUS_BEING_PLANNED,
                 Visit.WORKFLOW_STATUS_CONFIRMED,
@@ -4949,7 +4950,7 @@ class MultiProductVisit(Visit):
                     )
 
     def autoassign_resources(self):
-        for visit in self.subvisits_unordered:
+        for visit in self.subvisits_unordered_noncancelled:
             visit.autoassign_resources()
 
     def __unicode__(self):
