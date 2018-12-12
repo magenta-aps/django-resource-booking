@@ -3228,11 +3228,10 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
         c = form.cleaned_data.get("c", None)
         if c is not None:
-            unit = c.userprofile.organizationalunit
             qs = qs.filter(
                 Q(
                     Q(eventtime__product__tilbudsansvarlig__isnull=True) &
-                    Q(eventtime__product__organizationalunit=unit)
+                    Q(eventtime__product__created_by=c)
                 ) | Q(eventtime__product__tilbudsansvarlig=c)
             )
         return qs
