@@ -3475,6 +3475,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.hosts.all()
 
     @property
+    def responsible_persons(self):
+        responsible = set()
+        for product in self.products:
+            responsible.update(product.get_responsible_persons())
+        return responsible
+
+    @property
     def total_required_rooms(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts

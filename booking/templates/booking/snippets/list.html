@@ -60,25 +60,25 @@
                             <div class="col-sm-12 col-md-6">
                                 <dl class="dl-horizontal">
                                     <dt class="text-muted">{% trans 'Koordinator:' %}</dt>
-                                    {% for responsible in booking.visit.product.get_responsible_persons %}
+                                    {% for responsible in booking.visit.responsible_persons %}
                                         <dd>{{ responsible.get_full_name }}</dd>
                                     {% empty %}
                                         <dd></dd>
                                     {% endfor %}
                                     <dt class="text-muted">{% trans 'Underviser:' %}</dt>
-                                    {% for teacher in booking.visit.teachers.all %}
+                                    {% for teacher in booking.visit.assigned_teachers %}
                                         <dd>{{ teacher.get_full_name }}</dd>
                                     {% empty %}
                                         <dd></dd>
                                     {% endfor %}
                                     <dt class="text-muted">{% trans 'Vært:' %}</dt>
-                                    {% for host in booking.visit.hosts.all %}
+                                    {% for host in booking.visit.assigned_hosts %}
                                         <dd>{{ host.get_full_name }}</dd>
                                     {% empty %}
                                         <dd></dd>
                                     {% endfor %}
                                     <dt class="text-muted">{% trans 'Studieretning:' %}</dt>
-                                    <dd>{{ booking.booker.line|default:"" }}</dd>
+                                    <dd>{{ booking.booker.get_line_display|default:"" }}</dd>
                                     <dt class="text-muted">{% trans 'Niveau:' %}</dt>
                                     <dd>{{ booking.booker.get_level_display }}</dd>
                                     <dt class="text-muted">{% trans 'Fag:' %}</dt>
