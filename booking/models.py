@@ -4249,8 +4249,9 @@ class MultiProductVisit(Visit):
         return [visit.product for visit in self.subvisits if visit.product]
 
     def potential_responsible(self):
+        subvisits = self.subvisits_unordered_noncancelled
         units = OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered_noncancelled
+            product__eventtime__visit__set=subvisits
         )
         return User.objects.filter(
             userprofile__organizationalunit=units
