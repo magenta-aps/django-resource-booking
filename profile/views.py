@@ -59,7 +59,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def product_types(self):
         product_types = self.request.GET.getlist('product_type', None)
-        if product_types is None or product_types == '':
+        if product_types is None \
+                or product_types == '' \
+                or len(product_types) == 0:
             return Product.applicable_types
         product_types = force_list(product_types)
         return [
