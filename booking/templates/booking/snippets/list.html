@@ -6,70 +6,115 @@
 
             <input type="hidden" name="listname" value="{{ listname }}"/>
             <div style="display:none" data-move="input" data-target="#move_{data-attr}.input-container" data-attr="value">
-            {{ form }}
+                {{ form }}
             </div>
 
             {% for booking in list %}
                 <div class="list-group-item clearfix">
-                    <a href="{% url 'booking-view' booking.id %}">
-                        <dl class="dl-horizontal">
-                            <dt class="text-muted">{% trans 'Skole:' %}</dt>
-                            <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
-                            <dt class="text-muted">{% trans 'Navn:' %}</dt>
-                            <dd>{{ booking.booker.get_name }}</dd>
-                            <dt class="text-muted">{% trans 'Email:' %}</dt>
-                            <dd>{{ booking.booker.email }}</dd>
-                            <dt class="text-muted">{% trans 'Antal:' %}</dt>
-                            <dd>{{ booking.booker.attendee_count }}</dd>
-                            {% if booking.booker.teacher_count != None %}
-                                <dt class="text-muted">{% trans 'Antal lærere:' %}</dt>
-                                <dd>{{ booking.booker.teacher_count }}</dd>
-                            {% endif %}
-                            {% if booking.notes %}
-                                <dt class="text-muted">{% trans 'Kommentar:' %}</dt>
-                                <dd>{{ booking.notes }}</dd>
-                            {% endif %}
-                            {% if booking.classbooking %}
-                                <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
-                                <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
-                                <dt class="text-muted">{% trans 'Forplejning:' %}</dt>
-                                <dd>{{ booking.classbooking.catering_desired | yesno }}</dd>
-                                <dt class="text-muted">{% trans 'Oplæg om uddannelse:' %}</dt>
-                                <dd>{{ booking.classbooking.presentation_desired | yesno }}</dd>
-                                {% if booking.visit.product.custom_available %}
-                                    <dt class="text-muted">{{ booking.visit.product.custom_name }}:</dt>
-                                    <dd>{{ booking.classbooking.custom_desired | yesno }}</dd>
+                    <div class="row">
+                        <a href="{% url 'booking-view' booking.id %}">
+                            <div class="col-sm-12 col-md-6">
+                            <dl class="dl-horizontal">
+                                <dt class="text-muted">{% trans 'Skole:' %}</dt>
+                                <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
+                                <dt class="text-muted">{% trans 'Navn:' %}</dt>
+                                <dd>{{ booking.booker.get_name }}</dd>
+                                <dt class="text-muted">{% trans 'Email:' %}</dt>
+                                <dd>{{ booking.booker.email }}</dd>
+                                <dt class="text-muted">{% trans 'Antal:' %}</dt>
+                                <dd>{{ booking.booker.attendee_count }}</dd>
+                                {% if booking.booker.teacher_count != None %}
+                                    <dt class="text-muted">{% trans 'Antal lærere:' %}</dt>
+                                    <dd>{{ booking.booker.teacher_count }}</dd>
                                 {% endif %}
-                            {% endif %}
-                            {% if booking.teacherbooking %}
-                                {% if booking.teacherbooking.subjects %}
+                                {% if booking.notes %}
+                                    <dt class="text-muted">{% trans 'Kommentar:' %}</dt>
+                                    <dd>{{ booking.notes }}</dd>
+                                {% endif %}
+                                {% if booking.classbooking %}
+                                    <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
+                                    <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
+                                    <dt class="text-muted">{% trans 'Forplejning:' %}</dt>
+                                    <dd>{{ booking.classbooking.catering_desired | yesno }}</dd>
+                                    <dt class="text-muted">{% trans 'Oplæg om uddannelse:' %}</dt>
+                                    <dd>{{ booking.classbooking.presentation_desired | yesno }}</dd>
+                                    {% if booking.visit.product.custom_available %}
+                                        <dt class="text-muted">{{ booking.visit.product.custom_name }}:</dt>
+                                        <dd>{{ booking.classbooking.custom_desired | yesno }}</dd>
+                                    {% endif %}
+                                {% endif %}
+                                {% if booking.teacherbooking %}
+                                    {% if booking.teacherbooking.subjects %}
+                                        <dt class="text-muted">{% trans 'Fag:' %}</dt>
+                                        <dd>
+                                            <ul>
+                                                {% for subject in booking.teacherbooking.subjects.all %}
+                                                    <li>{{ subject }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </dd>
+                                    {% endif %}
+                                {% endif %}
+                            </dl>
+                            </div>
+                            <div class="col-sm-12 col-md-6">
+                                <dl class="dl-horizontal">
+                                    <dt class="text-muted">{% trans 'Koordinator:' %}</dt>
+                                    {% for responsible in booking.visit.product.get_responsible_persons %}
+                                        <dd>{{ responsible.get_full_name }}</dd>
+                                    {% empty %}
+                                        <dd></dd>
+                                    {% endfor %}
+                                    <dt class="text-muted">{% trans 'Underviser:' %}</dt>
+                                    {% for teacher in booking.visit.teachers.all %}
+                                        <dd>{{ teacher.get_full_name }}</dd>
+                                    {% empty %}
+                                        <dd></dd>
+                                    {% endfor %}
+                                    <dt class="text-muted">{% trans 'Vært:' %}</dt>
+                                    {% for host in booking.visit.hosts.all %}
+                                        <dd>{{ host.get_full_name }}</dd>
+                                    {% empty %}
+                                        <dd></dd>
+                                    {% endfor %}
+                                    <dt class="text-muted">{% trans 'Studieretning:' %}</dt>
+                                    <dd>{{ booking.booker.line|default:"" }}</dd>
+                                    <dt class="text-muted">{% trans 'Niveau:' %}</dt>
+                                    <dd>{{ booking.booker.get_level_display }}</dd>
                                     <dt class="text-muted">{% trans 'Fag:' %}</dt>
-                                    <dd>
-                                        <ul>
-                                            {% for subject in booking.teacherbooking.subjects.all %}
-                                                <li>{{ subject }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </dd>
-                                {% endif %}
-                            {% endif %}
-                        </dl>
-                    </a>
-                    <div class="pull-right">
-                        {% if listname == 'waiting' %}
-                        <button type="button"
-                                data-toggle="modal"
-                                data-target="#modalhost"
-                                class="btn btn-default btn-xs"
-                                data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}&nogroups=1"
-                                {% if booking.booker.attendee_count > object.available_seats %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}>
-                            {% trans 'Send venteliste-mail' %}
-                        </button>
-                        {% endif %}
-                        <label>{% trans 'Vælg:' %}
-                            <span class="input-container" id="move_{{ booking.id }}"></span>
-                        </label>
+                                    {% for subject in booking.bookinggymnasiesubjectlevel_set.all %}
+                                        <dd>
+                                            {{ subject.display_value }}
+                                        </dd>
+                                    {% endfor %}
+                                    {% for subject in booking.bookinggrundskolesubjectlevel_set.all %}
+                                        <dd>
+                                            {{ subject.display_value }}
+                                        </dd>
+                                    {% endfor %}
+                                </dl>
+                            </div>
+                        </a>
                     </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-12">
+                        <div class="pull-right">
+                            {% if listname == 'waiting' %}
+                            <button type="button"
+                                    data-toggle="modal"
+                                    data-target="#modalhost"
+                                    class="btn btn-default btn-xs"
+                                    data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}&nogroups=1"
+                                    {% if booking.booker.attendee_count > object.available_seats %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}>
+                                {% trans 'Send venteliste-mail' %}
+                            </button>
+                            {% endif %}
+                            <label>{% trans 'Vælg:' %}
+                                <span class="input-container" id="move_{{ booking.id }}"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 </div>
             {% endfor %}
             <button type="submit" name="action" value="delete" class="btn btn-danger pull-right" style="margin-left: 0.5em;">{% trans 'Slet valgte' %}</button>
