@@ -118,8 +118,7 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
-from profile.constants import COORDINATOR
-from profile.models import EDIT_ROLES, UserProfile
+from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -3129,10 +3128,11 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
         c = form.cleaned_data.get("c", None)
         if c is not None:
+            unit = c.userprofile.organizationalunit
             qs = qs.filter(
                 Q(
                     Q(eventtime__product__tilbudsansvarlig__isnull=True) &
-                    Q(eventtime__product__organizationalunit=c.userprofile.organizationalunit)
+                    Q(eventtime__product__organizationalunit=unit)
                 ) | Q(eventtime__product__tilbudsansvarlig=c)
             )
         return qs

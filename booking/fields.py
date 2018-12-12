@@ -177,5 +177,3 @@ class VisitEventTimeField(ChoiceField):
         except ValueError:
             pass
         return super(ChoiceField, self).clean(value)
-
-
