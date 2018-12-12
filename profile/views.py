@@ -207,6 +207,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             return []
 
     def lists_for_editors(self, limit=10):
+        product_types = self.product_types()
         visitlist = {
             'color': self.HEADING_BLUE,
             'type': 'Product',
@@ -220,7 +221,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             },
             'queryset': Product.objects.filter(
                 organizationalunit=self.request.user
-                .userprofile.get_unit_queryset()
+                .userprofile.get_unit_queryset(),
+                type__in=product_types
             ).order_by("-statistics__created_time"),
             'limit': limit
         }
@@ -233,7 +235,6 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             }
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        product_types = self.product_types()
 
         unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
         # See also VisitSearchView.filter_by_participants
@@ -324,7 +325,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits
+                    eventtime__visit=profile.potentially_assigned_visits,
+                    type__in=product_types
                 ).distinct().order_by("title"),
                 'limit': limit
             },
