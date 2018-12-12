@@ -1710,7 +1710,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     time_mode_choice_map = {
         STUDENT_FOR_A_DAY: set((
             TIME_MODE_SPECIFIC,
-            TIME_MODE_GUEST_SUGGESTED,
             TIME_MODE_RESOURCE_CONTROLLED,
             TIME_MODE_NONE,
             TIME_MODE_NO_BOOKING,
