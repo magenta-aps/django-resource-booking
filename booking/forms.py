@@ -1042,8 +1042,12 @@ class BookerForm(forms.ModelForm):
 
     repeatemail = forms.CharField(
         widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Gentag e-mail')}
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Gentag e-mail'),
+                'autocomplete': 'off',
+                'disablepaste': 'true'
+            }
         )
     )
     school = forms.CharField(

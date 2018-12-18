@@ -118,6 +118,7 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
+from profile.constants import FACULTY_EDITOR, ADMINISTRATOR
 from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -2625,9 +2626,19 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 lang = self.request.LANGUAGE_CODE
             else:
                 lang = 'da'
-            forms['bookerform'] = \
-                BookerForm(data, products=[self.product],
-                           language=lang)
+            forms['bookerform'] = BookerForm(
+                data,
+                products=[self.product],
+                language=lang
+            )
+            try:
+                user_role = self.request.user.userprofile.get_role()
+                if user_role in [FACULTY_EDITOR, ADMINISTRATOR]:
+                    repeatemail = forms['bookerform'].fields['repeatemail']
+                    repeatemail.widget.attrs['autocomplete'] = 'on'
+                    repeatemail.widget.attrs['disablepaste'] = 'false'
+            except:
+                pass
 
             type = self.product.type
             if type == Product.GROUP_VISIT:
