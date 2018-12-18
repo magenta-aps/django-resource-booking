@@ -1,10 +1,10 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 import traceback
@@ -300,3 +300,25 @@ class EvaluationReminderJob(KuCronJob):
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
+
+
+class AnonymizeGuests(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.guests'
+    description = "Anonymizes guests for visits that were held in the past"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        guests = Guest.objects.filter(
+            Q(booking__visit__eventtime__start__lt=limit) |
+            Q(booking__visit__cancelled_eventtime__start__lt=limit)
+        )
+        for guest in guests:
+            if hasattr(guest.booking.visit, 'eventtime'):
+                print "%d %s" % (guest.id, guest.booking.visit.eventtime.start)
+            elif guest.booking.visit.cancelled_eventtime is not None:
+                print "%d %s" % \
+                      (guest.id, guest.booking.visit.cancelled_eventtime.start)
+            else:
+                print "this should not happen!"

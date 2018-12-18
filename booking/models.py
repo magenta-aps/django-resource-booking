@@ -5731,6 +5731,11 @@ class Guest(models.Model):
     def get_full_email(self):
         return full_email(self.email, self.get_name())
 
+    def anonymize(self):
+        anon = "[anonymiseret]"
+        self.firstname = self.lastname = self.email = self.phone = anon
+        self.save()
+
 
 class Booking(models.Model):
 
