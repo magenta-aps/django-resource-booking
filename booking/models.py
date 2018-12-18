@@ -4273,8 +4273,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             context['is_assigned_as_host'] = False
         else:
             context['is_potential_host'] = (
-                self.product.potential_hosts.filter(pk=user.pk).exists() \
-                    if self.product is not None else False
+                self.product.potential_hosts.filter(pk=user.pk).exists()
+                if self.product is not None else False
             )
 
             context['is_assigned_as_host'] = (
