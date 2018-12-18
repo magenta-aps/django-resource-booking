@@ -3605,7 +3605,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def responsible_persons(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.responsible_persons
-        return self.product.get_responsible_persons()
+        if self.product is not None:
+            return self.product.get_responsible_persons()
+        return []
 
     @property
     def total_required_rooms(self):
@@ -4813,7 +4815,8 @@ class MultiProductVisit(Visit):
     def responsible_persons(self):
         responsible = set()
         for visit in self.subvisits_unordered_noncancelled:
-            responsible.update(visit.product.get_responsible_persons())
+            if visit.product is not None:
+                responsible.update(visit.product.get_responsible_persons())
         return responsible
 
     @property
