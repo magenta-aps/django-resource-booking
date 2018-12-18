@@ -313,12 +313,15 @@ class AnonymizeGuests(KuCronJob):
         guests = Guest.objects.filter(
             Q(booking__visit__eventtime__start__lt=limit) |
             Q(booking__visit__cancelled_eventtime__start__lt=limit)
+        ).exclude(
+            Guest.filter_anonymized()
         )
         for guest in guests:
-            if hasattr(guest.booking.visit, 'eventtime'):
-                print "%d %s" % (guest.id, guest.booking.visit.eventtime.start)
-            elif guest.booking.visit.cancelled_eventtime is not None:
-                print "%d %s" % \
-                      (guest.id, guest.booking.visit.cancelled_eventtime.start)
-            else:
-                print "this should not happen!"
+            visit = guest.booking.visit
+            if hasattr(visit, 'eventtime'):
+                time = visit.eventtime.start
+            elif visit.cancelled_eventtime is not None:
+                time = visit.cancelled_eventtime.start
+            print "Anonymizing guest #%d on visit %d (starttime %s)" % \
+                  (guest.id, visit.id, time)
+            guest.anonymize()
