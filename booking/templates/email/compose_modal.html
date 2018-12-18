@@ -118,6 +118,18 @@
                                 </div>
                             </div>
                         {% endif %}
+
+                        {% if form.consent != None %}
+                            <div class="form-group">
+                                <div class="col-sm-1 col-sm-offset-1">
+                                    {{ form.consent }}
+                                </div>
+                                <label class="col-sm-6 control-label label-unstyled {{ form.consent.css_classes }}" for="{{ form.consent.id_for_label }}">{{ form.consent.label }}</label>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.consent.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

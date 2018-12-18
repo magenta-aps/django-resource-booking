@@ -1797,6 +1797,12 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
         required=False
     )
 
+    consent = forms.BooleanField(
+        label=_(u'Samtykke'),
+        widget=CheckboxInput(),
+        required=True
+    )
+
 
 class EmailReplyForm(forms.Form):
     reply = forms.CharField(
