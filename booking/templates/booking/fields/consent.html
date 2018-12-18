@@ -1,0 +1,18 @@
+{% load i18n %}
+{% if bookerform.consent %}
+<div class="form-group">
+    <div class="col-sm-1 col-sm-offset-1">
+        {{ bookerform.consent }}
+    </div>
+    <div class="col-sm-6">
+        <label class="control-label label-unstyled {{ bookerform.consent.css_classes }}" for="{{ bookerform.consent.id_for_label }}">
+            {% trans "Samtykke" %}
+        </label>
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {% if bookerform.consent.errors %}
+            {{ bookerform.consent.errors }}
+        {% endif %}
+    </div>
+</div>
+{% endif %}

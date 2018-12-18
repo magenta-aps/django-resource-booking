@@ -921,7 +921,7 @@ class BookerForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count', 'teacher_count')
+                  'level', 'attendee_count', 'teacher_count', 'consent')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -1090,6 +1090,11 @@ class BookerForm(forms.ModelForm):
                   u'for at få hjælp til tilmelding.')
             )
         return school
+
+    def clean_consent(self):
+        consent = self.cleaned_data.get('consent', False)
+        if not consent:
+            raise forms.ValidationError(_(u'Du skal give dit samtykke'))
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
