@@ -3416,8 +3416,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
-
-        return self.product.total_required_teachers
+        if self.product is not None:
+            return self.product.total_required_teachers
+        return 0
 
     @property
     def needed_teachers(self):
@@ -3437,7 +3438,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def assigned_teachers(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.assigned_teachers
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return User.objects.filter(
                 teacherresource__visitresource__visit=self
             )
@@ -3448,7 +3449,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
-        return self.product.total_required_hosts
+        if self.product is not None:
+            return self.product.total_required_hosts
+        return 0
 
     @property
     def needed_hosts(self):
@@ -3484,7 +3487,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_rooms(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_rooms
-        elif self.product.is_resource_controlled:
+        elif self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_ROOM)
         else:
             return 1 if self.room_status == self.STATUS_NOT_ASSIGNED else 0
@@ -3497,7 +3500,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_items(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_items
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
         return 0
 
@@ -3505,7 +3508,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_vehicles(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_vehicles
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
         return 0
 
@@ -3672,7 +3675,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def available_seats(self):
-        limit = self.product.maximum_number_of_visitors
+        limit = self.product.maximum_number_of_visitors \
+            if self.product is not None else None
         if limit is None:
             return sys.maxint
         return max(limit - self.nr_attendees, 0)
@@ -4269,8 +4273,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             context['is_assigned_as_host'] = False
         else:
             context['is_potential_host'] = (
-                self.product.potential_hosts.filter(pk=user.pk).exists()
+                self.product.potential_hosts.filter(pk=user.pk).exists() \
+                    if self.product is not None else False
             )
+
             context['is_assigned_as_host'] = (
                 self.assigned_hosts.filter(pk=user.pk).exists()
             )
@@ -4288,6 +4294,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             context['is_potential_teacher'] = (
                 self.product.potential_teachers.filter(pk=user.pk).exists()
+                if self.product is not None else False
             )
             context['is_assigned_as_teacher'] = (
                 self.assigned_teachers.filter(pk=user.pk).exists()
