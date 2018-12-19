@@ -1990,7 +1990,7 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                 )
             else:
                 recipients.extend(
-                    KUEmailRecipient(
+                    KUEmailRecipient.multiple(
                         self.object.organizationalunit.get_editors(),
                         KUEmailRecipient.TYPE_EDITOR
                     )
