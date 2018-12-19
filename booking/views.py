@@ -1995,11 +1995,12 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                         KUEmailRecipient.TYPE_EDITOR
                     )
                 )
+            sender = KUEmailRecipient(full_email(
+                form.cleaned_data['email'], form.cleaned_data['name']
+            ), KUEmailRecipient.TYPE_GUEST)
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=full_email(
-                    form.cleaned_data['email'], form.cleaned_data['name']
-                )
+                original_from_email=sender
             )
             return super(ProductInquireView, self).form_valid(form)
 
@@ -4022,9 +4023,10 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             unit = visit.real.organizationalunit \
                 if visit is not None \
                 else product.organizationalunit
-
-            recipients = orig_message.original_from_email
-
+            recipients = KUEmailRecipient.multiple(
+                orig_message.original_from_email,
+                KUEmailRecipient.TYPE_GUEST
+            )
             KUEmailMessage.send_email(
                 EmailTemplateType.system__email_reply,
                 {
