@@ -989,17 +989,18 @@ class BookingForm(forms.ModelForm):
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit and 'desired_time' in self.cleaned_data:
-            booking.visit.desired_time = self.cleaned_data['desired_time']
-        if booking.visit \
-                and 'desired_datetime_date' in self.cleaned_data \
-                and 'desired_datetime_time' in self.cleaned_data:
-            desired_time = datetime.combine(
-                self.cleaned_data['desired_datetime_date'],
-                self.cleaned_data['desired_datetime_time']
-            )
-            booking.visit.desired_time = \
-                desired_time.strftime("%d.%m.%Y %H:%m")
+        if booking.visit:
+            if 'desired_time' in self.cleaned_data:
+                booking.visit.desired_time = self.cleaned_data['desired_time']
+            if self.cleaned_data.get('desired_datetime_date') is not None \
+                    and self.cleaned_data.get('desired_datetime_time') \
+                    is not None:
+                desired_time = datetime.combine(
+                    self.cleaned_data['desired_datetime_date'],
+                    self.cleaned_data['desired_datetime_time']
+                )
+                booking.visit.desired_time = \
+                    desired_time.strftime("%d.%m.%Y %H:%m")
         return booking
 
 
