@@ -37,6 +37,31 @@
                                         {{ visit.real.display_value }}
                                     </li>
                                     <li>
+                                        <label>{% trans 'Tilbud:' %}</label>
+                                        <ul>
+                                            {% for product in visit.real.products %}
+                                                <li>{{ product.title }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <label>{% trans 'Besøgsnr:' %}</label>
+                                        #{{ visit.id }}
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Klassetrin/niveau:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
+                                                {% for subjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
+                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }}</li>
+                                                {% endfor %}
+                                                {% for subjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
+                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
                                         <label>{% trans 'Antal tilmeldte:' %}</label>
                                         {{ visit.real.nr_attendees }}
                                     </li>
@@ -75,24 +100,7 @@
                                         </li>
                                     {% endif %}
 
-                                    <li data-hide-if-target-empty=">ul">
-                                        <label>{% trans 'Klassetrin/niveau:' %}</label>
-                                        <ul>
-                                            {% for booking in visit.get_bookings %}
-                                                {% for subjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
-                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }}</li>
-                                                {% endfor %}
-                                                {% for subjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
-                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
-                                                {% endfor %}
-                                            {% endfor %}
-                                        </ul>
-                                    </li>
 
-                                    <li>
-                                        <label>{% trans 'Besøgsnr:' %}</label>
-                                        #{{ visit.id }}
-                                    </li>
                                 </ul>
                             </div>
                         </a>
