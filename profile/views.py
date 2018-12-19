@@ -47,7 +47,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     HEADING_BLUE = 'alert-info'
     HEADING_YELLOW = 'alert-warning'
 
-    visit_ordering = ['-eventtime__start', '-eventtime__end']
+    visit_ordering_desc = ['-eventtime__start', '-eventtime__end']
+    visit_ordering_asc = ['eventtime__start', 'eventtime__end']
 
     """Display the user's profile."""
     def get_template_names(self):
@@ -92,14 +93,14 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             if visit.real.unit_qs & unit_qs
         ])
         today_qs = Visit.with_product_types(today_qs, product_types)
-        today_qs = today_qs.order_by(*self.visit_ordering)
+        today_qs = today_qs.order_by(*self.visit_ordering_asc)
 
         recent_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_recently_held()
             if visit.real.unit_qs & unit_qs
         ])
         recent_qs = Visit.with_product_types(recent_qs, product_types)
-        recent_qs = recent_qs.order_by(*self.visit_ordering)
+        recent_qs = recent_qs.order_by(*self.visit_ordering_desc)
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
@@ -239,7 +240,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'queryset': self.sort_vo_queryset(
                 unplanned_qs
             ).order_by(
-                *self.visit_ordering
+                *self.visit_ordering_asc
             ),
             'limit': limit
         }
@@ -265,7 +266,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'queryset': self.sort_vo_queryset(
                 planned_qs
             ).order_by(
-                *self.visit_ordering
+                *self.visit_ordering_asc
             ),
             'limit': limit
         }
@@ -313,7 +314,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': assignable_qs.order_by(*self.visit_ordering),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -327,7 +328,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'queryset': self.sort_vo_queryset(
                     assigned_qs
                 ).order_by(
-                    *self.visit_ordering
+                    *self.visit_ordering_desc
                 ),
                 'limit': limit
             }
@@ -367,7 +368,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': assignable_qs.order_by(*self.visit_ordering),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -381,7 +382,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'queryset': self.sort_vo_queryset(
                     assigned_qs
                 ).order_by(
-                    *self.visit_ordering
+                    *self.visit_ordering_desc
                 ),
                 'limit': limit
             }
