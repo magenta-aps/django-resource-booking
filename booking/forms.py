@@ -832,6 +832,7 @@ class BookingForm(forms.ModelForm):
                 if more_reason is not None:
                     reason += unicode(more_reason)
                 raise forms.ValidationError(reason)
+        return date
 
     class Meta:
         model = Booking
