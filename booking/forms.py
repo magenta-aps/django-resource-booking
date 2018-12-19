@@ -954,7 +954,8 @@ class BookingForm(forms.ModelForm):
             if 'desired_time' in self.cleaned_data:
                 booking.visit.desired_time = self.cleaned_data['desired_time']
             if self.cleaned_data.get('desired_datetime_date') is not None \
-                and self.cleaned_data.get('desired_datetime_time') is not None:
+                    and self.cleaned_data.get('desired_datetime_time') \
+                    is not None:
                 desired_time = datetime.combine(
                     self.cleaned_data['desired_datetime_date'],
                     self.cleaned_data['desired_datetime_time']
