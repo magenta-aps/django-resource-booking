@@ -1186,6 +1186,7 @@ class BookerForm(forms.ModelForm):
         consent = self.cleaned_data.get('consent', False)
         if not consent:
             raise forms.ValidationError(_(u'Du skal give dit samtykke'))
+        return True
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
