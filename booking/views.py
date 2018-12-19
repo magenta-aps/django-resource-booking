@@ -627,12 +627,39 @@ class SearchView(BreadcrumbMixin, ListView):
             self.needs_num_bookings = False
 
         if self.sort_grundskole_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+            SELECT
+                COUNT(nb_productgrundskolefag.subject_id)
+            FROM
+                booking_product nb_products
+                JOIN booking_productgrundskolefag nb_productgrundskolefag ON (
+                    nb_products.id = nb_productgrundskolefag.product_id
+                )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgrundskolefag.subject_id != %d
+            """ % all_subject_id
             qs = qs.annotate(
-                num_grundskolefag=Count('grundskolefag')
+                num_grundskolefag=RawSQL(sql, tuple())
             ).order_by('-num_grundskolefag')
+
         elif self.sort_gymnasie_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+                SELECT
+                    COUNT(nb_productgymnasiefag.subject_id)
+                FROM
+                    booking_product nb_products
+                    JOIN booking_productgymnasiefag nb_productgymnasiefag ON (
+                        nb_products.id = nb_productgymnasiefag.product_id
+                    )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgymnasiefag.subject_id != %d
+            """ % all_subject_id
             qs = qs.annotate(
-                num_gymnasiefag=Count('gymnasiefag')
+                num_gymnasiefag=RawSQL(sql, tuple())
             ).order_by('-num_gymnasiefag')
 
         return qs
@@ -777,7 +804,7 @@ class SearchView(BreadcrumbMixin, ListView):
     def get_queryset(self):
         filters = self.get_filters()
         qs = self.get_facet_queryset()
-        # qs = self.annotate_for_filters(qs)
+        qs = self.annotate_for_filters(qs)
         filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
         filter_kwargs = {
             k: v for k, v in filters.iteritems() if not k.startswith('__')
