@@ -1,5 +1,6 @@
 {% load i18n %}
 {% if bookingform.scheduled %}
+
     {% if bookingform.eventtime %}
         <div class="form-group">
             <div class="col-sm-2">
@@ -13,7 +14,9 @@
             </div>
         </div>
     {% endif %}
-{% else %}
+
+{% elif not bookingform.student_for_a_day_booking %}
+
     {% if bookingform.desired_time %}
         <div class="form-group">
             <div class="col-sm-2">
@@ -31,4 +34,5 @@
             </div>
         </div>
     {% endif %}
+
 {% endif %}

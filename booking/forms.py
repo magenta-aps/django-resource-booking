@@ -784,6 +784,8 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    classbooking = False
+    student_for_a_day_booking = False
     products = []
 
     eventtime = VisitEventTimeField(
@@ -824,6 +826,12 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
             product.time_mode for product in products
+        ]
+        self.classbooking = Product.GROUP_VISIT in [
+            product.type for product in products
+        ]
+        self.student_for_a_day_booking = Product.STUDENT_FOR_A_DAY in [
+            product.type for product in products
         ]
         if self.scheduled and len(products) > 0:
             product = products[0]
@@ -891,7 +899,9 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
-        else:
+        elif self.classbooking:
+            self.fields['desired_datetime_date'].required = True
+        elif not self.student_for_a_day_booking:
             self.fields['desired_time'].required = True
 
         if 'subjects' in self.fields:
