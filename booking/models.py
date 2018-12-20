@@ -6736,7 +6736,7 @@ class SurveyXactEvaluationGuest(models.Model):
 
         index = 1
         for visit in visits:
-            if visit.workflow_status != Visit.WORKFLOW_STATUS_CANCELLED:
+            if not visit.is_cancelled and not visit.is_rejected:
                 teachers = list(visit.assigned_teachers)
                 product = visit.product
                 data.update({
