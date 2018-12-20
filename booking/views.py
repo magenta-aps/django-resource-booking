@@ -2955,10 +2955,6 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
-        kwargs = {
-            'instance': self.object,
-            'products': products
-        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
@@ -2985,6 +2981,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         elif type == Product.STUDY_PROJECT:
             form_class = StudyProjectBookingBaseForm
 
+        kwargs = {
+            'instance': self.object,
+            'products': products
+        }
         bookingform = form_class(
             data,
             **kwargs
