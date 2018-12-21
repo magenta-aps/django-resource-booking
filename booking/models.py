@@ -5625,7 +5625,7 @@ class Guest(models.Model):
         (g1, _(u'1.g')),
         (g2, _(u'2.g')),
         (g3, _(u'3.g')),
-        (student, _(u'Student')),
+        (student, _(u'Afsluttet gymnasieuddannelse')),
         (other, _(u'Andet')),
     )
     level = models.IntegerField(
