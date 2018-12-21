@@ -52,11 +52,19 @@
                                         <label>{% trans 'Klassetrin/niveau:' %}</label>
                                         <ul>
                                             {% for booking in visit.get_bookings %}
+                                                <li>{{ booking.booker.get_level_display }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Fag:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
                                                 {% for subjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
-                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }}</li>
+                                                    <li>{{ subjectlevel.subject.name }}</li>
                                                 {% endfor %}
                                                 {% for subjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
-                                                    <li>{{ booking.booker.get_level_display }}, {{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
+                                                    <li>{{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
                                                 {% endfor %}
                                             {% endfor %}
                                         </ul>
