@@ -95,6 +95,7 @@ from booking.models import Booking, Guest
 from booking.models import CalendarEvent
 from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
+from booking.models import EventTime
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
 from booking.models import KUEmailRecipient
@@ -537,6 +538,15 @@ class SearchView(BreadcrumbMixin, ListView):
                 )
 
             if self.is_public:
+
+                # Accept the product if it has bookable eventtimes in our range
+                eventtimes = EventTime.objects.filter(bookable=True)
+                if self.t_to is not None:
+                    eventtimes = eventtimes.filter(start__lte=self.t_to)
+                if self.t_from is not None:
+                    eventtimes = eventtimes.filter(end__gte=self.t_from)
+                # A product can have a calendar as well as
+                # a set of bookable eventtimes
                 date_cond &= Q(
                     Q(calendar__isnull=True) |
                     Q(
@@ -546,7 +556,8 @@ class SearchView(BreadcrumbMixin, ListView):
                         Q(calendar__calendarevent__in=CalendarEvent.get_events(
                             CalendarEvent.NOT_AVAILABLE, self.t_from, self.t_to
                         ))
-                    )
+                    ) |
+                    Q(eventtime__in=eventtimes)
                 )
 
                 # Public users only want to search within bookable dates
