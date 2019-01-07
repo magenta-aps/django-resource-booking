@@ -6,6 +6,7 @@ from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
+from booking.utils import force_list
 from django.contrib import messages
 from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
@@ -57,21 +58,49 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         else:
             return super(ProfileView, self).get_template_names()
 
+    def product_types(self):
+        product_types = self.request.GET.getlist('product_type', None)
+        if product_types is None \
+                or len(product_types) == 0\
+                or (len(product_types) == 1 and product_types[0] == ''):
+            return Product.applicable_types
+        product_types = force_list(product_types)
+        return [
+            int(product_type)
+            for product_type in product_types
+            if int(product_type) in Product.applicable_types
+        ]
+
     def get_context_data(self, **kwargs):
-        context = {'lists': []}
+        context = {
+            'lists': [],
+            'types': Product.type_choices,
+        }
         limit = 10
 
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
+        product_types = self.product_types()
+        if product_types is not None \
+                and len(product_types) > 0 \
+                and product_types != Product.applicable_types:
+            context['type'] = product_types[0]
 
-        today_qs = Visit.get_todays_visits().filter(
-            eventtime__product__organizationalunit=unit_qs
-        ).order_by(*self.visit_ordering_asc)
-        recent_qs = Visit.get_recently_held().filter(
-            eventtime__product__organizationalunit=unit_qs
-        ).order_by(*self.visit_ordering_desc)
+        today_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_todays_visits()
+            if visit.real.unit_qs & unit_qs
+        ])
+        today_qs = Visit.with_product_types(today_qs, product_types)
+        today_qs = today_qs.order_by(*self.visit_ordering_asc)
+
+        recent_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_recently_held()
+            if visit.real.unit_qs & unit_qs
+        ])
+        recent_qs = Visit.with_product_types(recent_qs, product_types)
+        recent_qs = recent_qs.order_by(*self.visit_ordering_desc)
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
@@ -179,6 +208,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             return []
 
     def lists_for_editors(self, limit=10):
+        product_types = self.product_types()
         visitlist = {
             'color': self.HEADING_BLUE,
             'type': 'Product',
@@ -192,7 +222,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             },
             'queryset': Product.objects.filter(
                 organizationalunit=self.request.user
-                .userprofile.get_unit_queryset()
+                .userprofile.get_unit_queryset(),
+                type__in=product_types
             ).order_by("-statistics__created_time"),
             'limit': limit
         }
@@ -206,6 +237,23 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
+        unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
+        # See also VisitSearchView.filter_by_participants
+        unplanned_qs = Visit.unit_filter(
+            unplanned_qs,
+            unit_qs
+        )
+        unplanned_qs = unplanned_qs.annotate(
+            num_participants=(
+                Coalesce(Count("bookings__booker__pk"), 0) +
+                Coalesce(
+                    Sum("bookings__booker__attendee_count"),
+                    0
+                )
+            )
+        ).filter(num_participants__gte=1)
+        unplanned_qs = Visit.with_product_types(unplanned_qs, product_types)
+
         unplanned = {
             'color': self.HEADING_RED,
             'type': 'Visit',
@@ -215,20 +263,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.unit_filter(
-                    Visit.being_planned_queryset(
-                        is_multi_sub=False
-                    ),
-                    unit_qs
-                ).annotate(num_participants=(
-                    Coalesce(Count("bookings__booker__pk"), 0) +
-                    Coalesce(
-                        Sum("bookings__booker__attendee_count"),
-                        0
-                    )
-                )).filter(num_participants__gte=1)
-                # See also VisitSearchView.filter_by_participants
-            ).order_by(*self.visit_ordering_asc),
+                unplanned_qs
+            ).order_by(
+                *self.visit_ordering_asc
+            ),
             'limit': limit
         }
         if unplanned['queryset'].count() > limit:
@@ -237,6 +275,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
+
+        planned_qs = Visit.planned_queryset(is_multi_sub=False)
+        planned_qs = Visit.unit_filter(planned_qs, unit_qs)
+        planned_qs = Visit.with_product_types(planned_qs, product_types)
 
         planned = {
             'color': self.HEADING_GREEN,
@@ -247,13 +289,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.unit_filter(
-                    Visit.planned_queryset(
-                        is_multi_sub=False
-                    ),
-                    unit_qs
-                )
-            ).order_by(*self.visit_ordering_asc),
+                planned_qs
+            ).order_by(
+                *self.visit_ordering_asc
+            ),
             'limit': limit
         }
         if planned['queryset'].count() > limit:
@@ -268,6 +307,15 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
+        product_types = self.product_types()
+
+        assignable_qs = profile.can_be_assigned_to_qs
+        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
+        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+
+        assigned_qs = profile.all_assigned_visits()
+        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
+        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
 
         return [
             {
@@ -278,7 +326,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits
+                    eventtime__visit=profile.potentially_assigned_visits,
+                    type__in=product_types
                 ).distinct().order_by("title"),
                 'limit': limit
             },
@@ -290,9 +339,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': Visit.unit_filter(
-                    profile.can_be_assigned_to_qs, unit_qs
-                ).order_by(*self.visit_ordering_desc),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -304,11 +351,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    Visit.unit_filter(
-                        profile.all_assigned_visits(),
-                        unit_qs
-                    )
-                ).order_by(*self.visit_ordering_desc),
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering_desc
+                ),
                 'limit': limit
             }
         ]
@@ -316,6 +362,15 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     def lists_for_hosts(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
+        product_types = self.product_types()
+
+        assignable_qs = profile.can_be_assigned_to_qs
+        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
+        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+
+        assigned_qs = profile.all_assigned_visits()
+        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
+        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
 
         return [
             {
@@ -338,9 +393,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': Visit.unit_filter(
-                    profile.can_be_assigned_to_qs, unit_qs
-                ).order_by(*self.visit_ordering_desc),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -352,9 +405,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    Visit.unit_filter(
-                        profile.all_assigned_visits(), unit_qs
-                    ).order_by(*self.visit_ordering_desc)
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering_desc
                 ),
                 'limit': limit
             }
