@@ -1877,12 +1877,22 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             context.update(form.cleaned_data)
             recipients = []
             if self.object.tilbudsansvarlig:
-                recipients.append(self.object.tilbudsansvarlig)
+                recipients.append(
+                    KUEmailRecipient(
+                        self.object.tilbudsansvarlig,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             elif self.object.created_by:
-                recipients.append(self.object.created_by)
+                recipients.append(
+                    KUEmailRecipient(
+                        self.object.created_by,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             else:
                 recipients.extend(
-                    KUEmailRecipient(
+                    KUEmailRecipient.multiple(
                         self.object.organizationalunit.get_editors(),
                         KUEmailRecipient.TYPE_EDITOR
                     )
