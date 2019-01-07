@@ -2110,6 +2110,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if self.booking_close_days_before is not None else None
 
     @property
+    def booking_cutoff_after(self):
+        return timedelta(days=self.booking_max_days_in_future) \
+            if self.booking_max_days_in_future is not None else None
+
+    @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
             Q(bookable=True) &
@@ -2551,6 +2556,31 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS = 3
     NONBOOKABLE_REASON__BOOKING_CUTOFF = 4
     NONBOOKABLE_REASON__NO_CALENDAR_TIME = 5
+    NONBOOKABLE_REASON__BOOKING_FUTURE = 6
+
+    nonbookable_reason_text = {
+        NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
+            _(u'Tilbudstypen kan ikke tilmeldes.'),
+        NONBOOKABLE_REASON__NOT_ACTIVE:
+            _(u'Tilbuddet er ikke aktivt.'),
+        NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
+            _(u'Der er ingen ledige besøg.'),
+        NONBOOKABLE_REASON__BOOKING_CUTOFF:
+            _(u'Der er lukket for tilmelding %d dage før afholdelse.'),
+        NONBOOKABLE_REASON__NO_CALENDAR_TIME:
+            _(u'Der er ikke er flere ledige tider.'),
+        NONBOOKABLE_REASON__BOOKING_FUTURE:
+            _(u'Der er lukket for tilmelding %d dage efter dags dato.')
+    }
+
+    def nonbookable_text(self, bookability):
+        text = Product.nonbookable_reason_text.get(bookability, None)
+        if text is not None:
+            if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
+                return text % self.booking_close_days_before
+            if bookability == Product.NONBOOKABLE_REASON__BOOKING_FUTURE:
+                return text % self.booking_max_days_in_future
+            return text
 
     def is_bookable(self, start_time=None, end_time=None, return_reason=False):
 

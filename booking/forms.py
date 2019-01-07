@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 import sys
+from datetime import datetime
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput, \
-    ModelMultipleChoiceField
+from django.forms import CheckboxInput
+from django.forms import CheckboxSelectMultiple
+from django.forms import DateInput
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
+from django.forms import ModelMultipleChoiceField
+from django.forms import NumberInput
+from django.forms import Select
+from django.forms import TextInput
+from django.forms import Textarea
+from django.forms import TimeInput
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
@@ -784,6 +791,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    classbooking = False
     products = []
 
     eventtime = VisitEventTimeField(
@@ -799,6 +807,32 @@ class BookingForm(forms.ModelForm):
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=False
     )
+
+    desired_datetime_date = forms.DateField(
+        widget=DateInput(attrs={'class': 'form-control input-sm datepicker'}),
+        input_formats=['%d-%m-%Y'],
+        required=False
+    )
+
+    desired_datetime_time = forms.TimeField(
+        widget=TimeInput(attrs={'class': 'form-control input-sm clockpicker'}),
+        required=False
+    )
+
+    def clean_desired_datetime_date(self):
+        date = self.cleaned_data.get('desired_datetime_date')
+        for product in self.products:
+            bookability = product.is_bookable(date, return_reason=True)
+            if bookability is not True:
+                reason = unicode(
+                    _(u'Det er desværre ikke muligt at '
+                      u'bestille besøget på den valgte dato.\n')
+                )
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
+                raise forms.ValidationError(reason)
+        return date
 
     class Meta:
         model = Booking
@@ -824,6 +858,9 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
             product.time_mode for product in products
+        ]
+        self.classbooking = Product.GROUP_VISIT in [
+            product.type for product in products
         ]
         if self.scheduled and len(products) > 0:
             product = products[0]
@@ -891,6 +928,8 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
+        elif self.classbooking:
+            self.fields['desired_datetime_date'].required = True
         else:
             self.fields['desired_time'].required = True
 
@@ -911,8 +950,18 @@ class BookingForm(forms.ModelForm):
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit and 'desired_time' in self.cleaned_data:
-            booking.visit.desired_time = self.cleaned_data['desired_time']
+        if booking.visit:
+            if 'desired_time' in self.cleaned_data:
+                booking.visit.desired_time = self.cleaned_data['desired_time']
+            if self.cleaned_data.get('desired_datetime_date') is not None \
+                    and self.cleaned_data.get('desired_datetime_time') \
+                    is not None:
+                desired_time = datetime.combine(
+                    self.cleaned_data['desired_datetime_date'],
+                    self.cleaned_data['desired_datetime_time']
+                )
+                booking.visit.desired_time = \
+                    desired_time.strftime("%d.%m.%Y %H:%m")
         return booking
 
 
@@ -1867,24 +1916,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                     _(u'Det er desværre ikke muligt at '
                       u'bestille besøget på den valgte dato.\n')
                 )
-                if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
-                    reason += unicode(
-                        _(u'Der er lukket for tilmelding '
-                          u'%d dage før afholdelse.') %
-                        product.booking_close_days_before
-                    )
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
-                    reason += unicode(_(u'Der er ingen ledige besøg.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__NO_CALENDAR_TIME:
-                    reason += unicode(_(u'Der er ikke er flere ledige tider.'))
-                elif bookability == Product.NONBOOKABLE_REASON__NOT_ACTIVE:
-                    reason += unicode(_(u'Tilbuddet er ikke aktivt.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
-                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes.'))
-
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
                 raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
 
