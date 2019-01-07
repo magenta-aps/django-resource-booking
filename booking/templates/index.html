@@ -91,7 +91,7 @@
                 <li class="pull-right">
                     <a href="{% url 'logout' %}">
                         <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-                        </span>{% trans 'Log ud' %}
+                        {% trans 'Log ud' %}
                     </a>
                 </li>
                 <li class="pull-right">
@@ -111,12 +111,12 @@
             <div class="row">
                 <div id="branding-images" class="clearfix">
                     <div id="logo">
-                        <a href="http://www.ku.dk" title="{% trans 'Københavns Universitet' %}">
+                        <a href="{% url 'index' %}" title="{% trans 'Københavns Universitet' %}">
                             <img src="{% static 'img/faelles.gif' %}" height="87" width="65" alt="{% trans 'Københavns Universitet' %}">
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="{% url 'index' %}search" title="{% trans 'Velkommen til Københavns Universitet' %}">
+                        <a href="{% url 'index' %}" title="{% trans 'Velkommen til Københavns Universitet' %}">
                             <h2>{% trans 'FOKUS' %}</h2>
                             <p>{% trans 'Tilbud til gymnasie- og grundskolen' %}</p>
                         </a>

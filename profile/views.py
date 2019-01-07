@@ -208,32 +208,6 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             return []
 
     def lists_for_editors(self, limit=10):
-        product_types = self.product_types()
-        visitlist = {
-            'color': self.HEADING_BLUE,
-            'type': 'Product',
-            'title': {
-                'text': ungettext_lazy(
-                    u'%(count)d tilbud i min enhed',
-                    u'%(count)d tilbud i min enhed',
-                    'count'
-                ),
-                'link': reverse('search') + '?u=-3'
-            },
-            'queryset': Product.objects.filter(
-                organizationalunit=self.request.user
-                .userprofile.get_unit_queryset(),
-                type__in=product_types
-            ).order_by("-statistics__created_time"),
-            'limit': limit
-        }
-
-        if visitlist['queryset'].count() > limit:
-            visitlist['limited_qs'] = visitlist['queryset'][:limit]
-            visitlist['button'] = {
-                'text': _(u'Søg i alle'),
-                'link': reverse('search') + '?u=-3'
-            }
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
@@ -302,7 +276,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-search') + '?u=-3&w=-2&go=1'
             }
 
-        return [visitlist, unplanned, planned]
+        return [unplanned, planned]
 
     def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
