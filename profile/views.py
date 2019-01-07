@@ -209,6 +209,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_for_editors(self, limit=10):
 
+        product_types = self.product_types()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
