@@ -2039,6 +2039,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         null=True
     )
 
+    booking_max_days_in_future = models.IntegerField(
+        default=90,
+        verbose_name=_(
+            u'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
+        ),
+        blank=False,
+        null=True
+    )
+
     inquire_enabled = models.BooleanField(
         default=True,
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
@@ -2105,7 +2114,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
-    def booking_cutoff(self):
+    def booking_cutoff_before(self):
         return timedelta(days=self.booking_close_days_before) \
             if self.booking_close_days_before is not None else None
 
@@ -2156,13 +2165,26 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
     @property
-    def future_bookable_times(self):
-        cutoff = self.booking_cutoff
-        if cutoff is None:
-            cutoff = timedelta()
-        return self.bookable_times.filter(
-            start__gte=timezone.now() + cutoff
-        )
+    def cutoff_filter(self):
+        cutoff_before = self.booking_cutoff_before
+        if cutoff_before is None:
+            cutoff_before = timedelta()
+        filter = {'start__gte': timezone.now() + cutoff_before}
+        cutoff_after = self.booking_cutoff_after
+        if cutoff_after is not None:
+            filter['start__lte'] = timezone.now() + cutoff_after
+        return filter
+
+    def future_bookable_times(self, use_cutoff=False):
+        filter = {'start__gte': timezone.now()}
+        if use_cutoff:
+            cutoff_before = self.booking_cutoff_before
+            if cutoff_before is not None:
+                filter['start__gte'] = timezone.now() + cutoff_before
+            cutoff_after = self.booking_cutoff_after
+            if cutoff_after is not None:
+                filter['start__lte'] = timezone.now() + cutoff_after
+        return self.bookable_times.filter(**filter)
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
@@ -2525,7 +2547,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         # bookable time in the future, and that time isn't fully booked
         # if len(self.future_bookable_times) > 0:
         #     return True
-        for eventtime in self.future_bookable_times:
+        for eventtime in self.future_bookable_times(use_cutoff=True):
             if eventtime.visit is None:
                 return True
             if eventtime.visit.is_bookable:
@@ -2604,14 +2626,25 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
-            # We don't accept bookings made later
+            # The date that the user has chosen for his visit
+            start_date = start_time \
+                if isinstance(start_time, date) \
+                else start_time.date()
+
+            # We don't accept bookings performed later
             # than x days before visit start
-            cutoff = self.booking_cutoff
+            cutoff = self.booking_cutoff_before
             if cutoff is not None:
-                start_date = start_time if isinstance(start_time, date) \
-                    else start_time.date()
-                if start_date < timezone.now().date() + cutoff:
+                if timezone.now().date() > start_date - cutoff:
                     return self.NONBOOKABLE_REASON__BOOKING_CUTOFF \
+                        if return_reason else False
+
+            # We don't accept bookings for visits later
+            # than x days after today
+            cutoff = self.booking_cutoff_after
+            if cutoff is not None:
+                if start_date > timezone.now().date() + cutoff:
+                    return self.NONBOOKABLE_REASON__BOOKING_FUTURE \
                         if return_reason else False
 
             # If start_time is a date and there is no end_date assume
