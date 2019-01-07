@@ -6642,9 +6642,11 @@ class SurveyXactEvaluationGuest(models.Model):
             u'ID': product.id,
             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
-            u'niveau': Guest.grundskole_level_conversion[self.guest.level]
+            u'niveau': Guest.grundskole_level_conversion.get(
+                self.guest.level, None
+            )
             if guest.line is None
-            else Guest.sx_line_conversion[guest.line],
+            else Guest.sx_line_conversion.get(guest.line, None),
             u'antal': guest.attendee_count,
             u'elever': guest.student_count,
             u'lærere': guest.teacher_count or 0,
