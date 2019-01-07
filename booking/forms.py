@@ -792,6 +792,7 @@ class BookingForm(forms.ModelForm):
 
     scheduled = False
     classbooking = False
+    student_for_a_day_booking = False
     products = []
 
     eventtime = VisitEventTimeField(
@@ -862,6 +863,9 @@ class BookingForm(forms.ModelForm):
         self.classbooking = Product.GROUP_VISIT in [
             product.type for product in products
         ]
+        self.student_for_a_day_booking = Product.STUDENT_FOR_A_DAY in [
+            product.type for product in products
+        ]
         if self.scheduled and len(products) > 0:
             product = products[0]
             choices = [(None, BLANK_LABEL)]
@@ -930,7 +934,7 @@ class BookingForm(forms.ModelForm):
             self.fields['eventtime'].required = True
         elif self.classbooking:
             self.fields['desired_datetime_date'].required = True
-        else:
+        elif not self.student_for_a_day_booking:
             self.fields['desired_time'].required = True
 
         if 'subjects' in self.fields:
