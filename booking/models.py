@@ -4177,8 +4177,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # end of the day and ends after the beginning of the day
         return Visit.objects.filter(
             eventtime__start__lte=date + timedelta(days=1),
-            eventtime__end__gt=date,
             is_multi_sub=False
+        ).filter(
+            Q(eventtime__end__gt=date) | (
+                    Q(eventtime__end__isnull=True) &
+                    Q(eventtime__start__gt=date)
+            )
         )
 
     @staticmethod
@@ -4188,8 +4192,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_EVALUATED],
             eventtime__start__isnull=False,
-            eventtime__end__lt=time,
             is_multi_sub=False
+        ).filter(
+            Q(eventtime__end__lt=time) | (
+                    Q(eventtime__end__isnull=True) &
+                    Q(eventtime__start__lt=time + timedelta(hours=12))
+            )
         ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
@@ -4361,6 +4369,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             product.locality.id: product for product in self.products
         }
         return addresses.values()
+
+    @property
+    def unit_qs(self):
+        return OrganizationalUnit.objects.filter(
+            product__eventtime__visit=self
+        )
 
     @property
     def calendar_event_link(self):
@@ -4583,7 +4597,7 @@ class MultiProductVisit(Visit):
     def date_ref(self):
         return self.eventtime.start.date()
 
-    def create_eventtime(self, date=None):
+    def create_eventtime(self, date=None, endtime=None):
         if date is None:
             date = self.date
         if date is not None:
@@ -4628,11 +4642,14 @@ class MultiProductVisit(Visit):
         return self.products
 
     def potential_responsible(self):
-        units = OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered
-        )
         return User.objects.filter(
-            userprofile__organizationalunit=units
+            userprofile__organizationalunit=self.unit_qs
+        )
+
+    @property
+    def unit_qs(self):
+        return OrganizationalUnit.objects.filter(
+            product__eventtime__visit__set=self.subvisits_unordered
         )
 
     def planned_status_is_blocked(self):

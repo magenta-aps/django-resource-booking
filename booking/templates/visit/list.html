@@ -31,7 +31,13 @@
                                 <strong><a href="{% url 'visit-view' res.pk %}">{% trans 'Besøg' %} {{ res.pk }}</a></strong>
                                 <dl class="dl-horizontal">
                                     <dt>{% trans 'Tilbud:' %}</dt>
-                                    <dd><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></dd>
+                                    <dd>
+                                        <ul>
+                                            {% for product in res.products %}
+                                                <li class="list-unstyled"><a href="{% url 'product-view' product.pk %}">{{ product.title }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </dd>
                                     <dt>{% trans 'Booket af:' %}</dt>
                                     <dd>
                                         <ul class="list-unstyled">
