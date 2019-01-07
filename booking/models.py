@@ -1432,8 +1432,8 @@ class ProductGrundskoleFag(models.Model):
         # First element in value list is pk of subject
         f.subject = Subject.objects.get(pk=values.pop(0))
 
-        f.class_level_min = values.pop(0) or 0
-        f.class_level_max = values.pop(0) or 0
+        f.class_level_min = values.pop(0) or 0 if values else 0
+        f.class_level_max = values.pop(0) or 0 if values else 0
 
         f.save()
 
@@ -2067,6 +2067,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.surveyxactevaluation_set.filter(
             for_students=True, for_teachers=True
         ).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.student_evaluation, self.teacher_evaluation
+            ]
+            if evaluation is not None
+        ]
 
     def available_time_modes(self, unit=None):
         if self.type is None:
