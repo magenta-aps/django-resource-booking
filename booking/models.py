@@ -3298,13 +3298,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ):
             if self.planned_status_is_blocked(True):
                 self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
-            else:
+            elif not self.is_multiproductvisit:
                 self.workflow_status = self.WORKFLOW_STATUS_PLANNED
 
         elif self.workflow_status in [
             self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
-        ] and not self.planned_status_is_blocked(True):
+        ] and not self.is_multiproductvisit \
+                and not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
 
         elif self.workflow_status in [
