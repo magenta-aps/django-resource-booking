@@ -1410,11 +1410,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 )
 
         if self.request.method == 'POST':
-            forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST,
-                instance=self.object,
-                initial=self.get_initial_autosends()
-            )
+            if self.object.is_type_bookable:
+                forms['autosendformset'] = ProductAutosendFormSet(
+                    self.request.POST,
+                    instance=self.object,
+                    initial=self.get_initial_autosends()
+                )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
