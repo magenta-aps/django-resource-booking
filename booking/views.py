@@ -118,6 +118,7 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
+from profile.constants import FACULTY_EDITOR, ADMINISTRATOR
 from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -514,7 +515,9 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
-                qs = self.model.objects.search(searchexpression, raw=True)
+                qs = self.model.objects.search(
+                    searchexpression, raw=True, rank_field='rank'
+                )
             else:
                 qs = self.model.objects.all()
 
@@ -767,7 +770,7 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def get_queryset(self):
         filters = self.get_filters()
-        qs = self.get_facet_queryset()
+        qs = self.get_base_queryset()
         qs = self.annotate_for_filters(qs)
         qs = qs.filter(**filters)
         qs = self.annotate(qs)
@@ -1407,11 +1410,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 )
 
         if self.request.method == 'POST':
-            forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST,
-                instance=self.object,
-                initial=self.get_initial_autosends()
-            )
+            if self.object.is_type_bookable:
+                forms['autosendformset'] = ProductAutosendFormSet(
+                    self.request.POST,
+                    instance=self.object,
+                    initial=self.get_initial_autosends()
+                )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1803,7 +1807,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
-                    self.object.future_bookable_times
+                    self.object.future_bookable_times()
                 )
                 context['nr_unbookable'] = len(
                     self.object.eventtime_set.all()
@@ -1874,12 +1878,22 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             context.update(form.cleaned_data)
             recipients = []
             if self.object.tilbudsansvarlig:
-                recipients.append(self.object.tilbudsansvarlig)
+                recipients.append(
+                    KUEmailRecipient(
+                        self.object.tilbudsansvarlig,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             elif self.object.created_by:
-                recipients.append(self.object.created_by)
+                recipients.append(
+                    KUEmailRecipient(
+                        self.object.created_by,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             else:
                 recipients.extend(
-                    KUEmailRecipient(
+                    KUEmailRecipient.multiple(
                         self.object.organizationalunit.get_editors(),
                         KUEmailRecipient.TYPE_EDITOR
                     )
@@ -2532,9 +2546,19 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 lang = self.request.LANGUAGE_CODE
             else:
                 lang = 'da'
-            forms['bookerform'] = \
-                BookerForm(data, products=[self.product],
-                           language=lang)
+            forms['bookerform'] = BookerForm(
+                data,
+                products=[self.product],
+                language=lang
+            )
+            try:
+                user_role = self.request.user.userprofile.get_role()
+                if user_role in [FACULTY_EDITOR, ADMINISTRATOR]:
+                    repeatemail = forms['bookerform'].fields['repeatemail']
+                    repeatemail.widget.attrs['autocomplete'] = 'on'
+                    repeatemail.widget.attrs['disablepaste'] = 'false'
+            except:
+                pass
 
             type = self.product.type
             if type == Product.GROUP_VISIT:
@@ -2678,14 +2702,14 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
 
-        # for product in self.visit.products:
-        #     for evaluation in product.evaluations:
-        #         if evaluation is not None:
-        #             evaluationguest = SurveyXactEvaluationGuest(
-        #                 evaluation=evaluation,
-        #                 guest=object.booker
-        #             )
-        #             evaluationguest.save()
+        for product in self.visit.products:
+            for evaluation in product.evaluations:
+                if evaluation is not None:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=evaluation,
+                        guest=object.booker
+                    )
+                    evaluationguest.save()
 
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
@@ -2808,10 +2832,6 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
-        kwargs = {
-            'instance': self.object,
-            'products': products
-        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
@@ -2838,6 +2858,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         elif type == Product.STUDY_PROJECT:
             form_class = StudyProjectBookingBaseForm
 
+        kwargs = {
+            'instance': self.object,
+            'products': products
+        }
         bookingform = form_class(
             data,
             **kwargs
@@ -4312,19 +4336,6 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         if self.object.product is None:
             self.object.product = self.get_product()
             self.object.save()
-        for visit in self.object.product.get_visits():
-            for booking in visit.booking_list:
-                guest = booking.booker
-                evaluationguest = SurveyXactEvaluationGuest.objects.filter(
-                    evaluation=self.object,
-                    guest=guest
-                ).first()
-                if evaluationguest is None:
-                    evaluationguest = SurveyXactEvaluationGuest(
-                        evaluation=self.object,
-                        guest=guest
-                    )
-                    evaluationguest.save()
         return response
 
     def get_breadcrumb_args(self):
@@ -4344,14 +4355,37 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
             ]
 
 
-class EvaluationDetailView(BreadcrumbMixin, DetailView):
+class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
 
     template_name = "evaluation/details.html"
     model = SurveyXactEvaluation
 
-    def get(self, request, *args, **kwargs):
-        participant_id = kwargs.get('g', None)
-        message_id = kwargs.get('i', 1)
+    def get_visit(self):
+        visit_id = self.kwargs.get('visit', None)
+        if visit_id is not None:
+            return Visit.objects.get(id=visit_id)
+
+    def get_product(self):
+        return self.object.product
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        visit = self.get_visit()
+        if visit is not None:
+            context['guests'] = self.object.evaluationguests.filter(
+                guest__booking__visit=visit
+            )
+            context['visit'] = visit
+        else:
+            context['guests'] = self.object.evaluationguests
+        context.update(kwargs)
+        return super(EvaluationDetailView, self).get_context_data(
+            **context
+        )
+
+    def post(self, request, *args, **kwargs):
+        participant_id = request.POST.get('guest', None)
+        message_id = request.POST.get('type', 1)
         if participant_id is not None:
             participant = SurveyXactEvaluationGuest.objects.get(
                 id=participant_id
@@ -4360,19 +4394,30 @@ class EvaluationDetailView(BreadcrumbMixin, DetailView):
         return super(EvaluationDetailView, self).get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
-        return [self.object]
+        return [self.object, self.get_product(), self.get_visit()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation):
-        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
-            {
-                'text': _(u'Evaluering'),
-                'url': reverse(
-                    'evaluation-view',
-                    args=[evaluation.id]
-                )
-            }
-        ]
+    def build_breadcrumbs(evaluation, product, visit):
+        if visit is not None:
+            return VisitDetailView.build_breadcrumbs(visit) + [
+                {
+                    'text': _(u'Evaluering'),
+                    'url': reverse(
+                        'evaluation-view',
+                        args=[evaluation.id, visit.id]
+                    )
+                }
+            ]
+        else:
+            return ProductDetailView.build_breadcrumbs(product) + [
+                {
+                    'text': _(u'Evaluering'),
+                    'url': reverse(
+                        'evaluation-view',
+                        args=[evaluation.id]
+                    )
+                }
+            ]
 
 
 class EvaluationRedirectView(RedirectView):
@@ -4388,7 +4433,9 @@ class EvaluationRedirectView(RedirectView):
         return url
 
 
-class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
+class EvaluationStatisticsView(
+    LoginRequiredMixin, BreadcrumbMixin, TemplateView
+):
 
     template_name = "evaluation/statistics.html"
 

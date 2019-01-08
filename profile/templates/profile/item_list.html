@@ -33,13 +33,82 @@
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=visit.real.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
+                                        <label>{% trans 'Dato/tid:' %}</label>
+                                        {{ visit.real.display_value }}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
+                                    <li>
+                                        <label>{% trans 'Tilbud:' %}</label>
+                                        <ul>
+                                            {% for product in visit.real.products %}
+                                                <li>{{ product.title }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <label>{% trans 'Besøgsnr:' %}</label>
+                                        #{{ visit.id }}
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Klassetrin/niveau:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
+                                                <li>{{ booking.booker.get_level_display }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Fag:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
+                                                {% for subjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
+                                                    <li>{{ subjectlevel.subject.name }}</li>
+                                                {% endfor %}
+                                                {% for subjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
+                                                    <li>{{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <label>{% trans 'Antal tilmeldte:' %}</label>
+                                        {{ visit.real.nr_attendees }}
+                                    </li>
 {#                                    Deaktiveret jf. #20680 #}
 {#                                    {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %} #}
 {#                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li> #}
 {#                                    {% endif %} #}
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Undervisere:' %}</label>
+                                        <ul>
+                                            {% for underviser in visit.assigned_teachers %}
+                                                <li>{{ underviser.get_full_name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+
+                                    {% if visit.assigned_hosts.count %}
+                                        <li data-hide-if-target-empty=">ul">
+                                            <label>{% trans 'Værter:' %}</label>
+                                            <ul>
+                                                {% for host in visit.assigned_hosts %}
+                                                    <li>{{ host.get_full_name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+
+                                    {% if visit.unit.get_coordinators|length > 0 %}
+                                        <li data-hide-if-target-empty=">ul">
+                                            <label>{% trans 'Koordinatorer:' %}</label>
+                                            <ul>
+                                                {% for coordinator in visit.unit.get_coordinators %}
+                                                    <li>{{ coordinator.get_full_name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+
+
                                 </ul>
                             </div>
                         </a>

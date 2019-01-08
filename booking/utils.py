@@ -241,6 +241,15 @@ class UnicodeWriter:
             self.writerow(row)
 
 
+def force_list(item):
+    t = type(item)
+    if t == list:
+        return item
+    if t == set or t == tuple:
+        return list(item)
+    return [item]
+
+
 def merge_dicts(*dicts):
     result = {}
     for dict in dicts:

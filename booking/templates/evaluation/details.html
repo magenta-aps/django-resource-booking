@@ -14,9 +14,16 @@
         <div class="col-sm-12 col-md-9">
             <h1>
                 {% url 'product-view' object.product.pk as product_url %}
-                {% blocktrans with title=object.product.title %}
-                    Evaluering af <a href="{{ product_url }}">{{ title }}</a>
-                {% endblocktrans %}
+                {% if visit %}
+                    {% url 'visit-view' visit.pk as visit_url %}
+                    {% blocktrans with title=visit.display_title %}
+                        Evaluering af <a href="{{ visit_url }}">{{ title }}</a>
+                    {% endblocktrans %}
+                {% else %}
+                    {% blocktrans with title=object.product.title %}
+                        Evaluering af <a href="{{ product_url }}">{{ title }}</a>
+                    {% endblocktrans %}
+                {% endif %}
             </h1>
         </div>
         <div class="pull-right">
@@ -78,10 +85,10 @@
 
                     <div class="row row-border">
                         <strong class="col-sm-2">
-                            {% trans 'Email-udsendelse' %}
+                            {% trans 'SurveyID' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.product. }}
+                            {{ object.surveyId }}
                         </div>
                     </div>
 
@@ -101,17 +108,21 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for participant in object.evaluationguests %}
-                                    <tr>
-                                        <td><a href="{% url 'visit-view' participant.visit.id %}">{{ participant.visit.date_display }}</a></td>
-                                        <td>{{ participant.guest.get_name }}</td>
-                                        <td>{{ participant.guest.get_email }}</td>
-                                        <td>{{ participant.status_display }}</td> <!-- TODO: gennemgå status -->
-                                        <td>
-                                            <a href="{% url 'evaluation-view-send' object.id participant.id 1 %}">Send første</a>
-                                            <a href="{% url 'evaluation-view-send' object.id participant.id 2 %}">Send anden</a>
-                                        </td>
-                                    </tr>
+                                {% for participant in guests %}
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="guest" value="{{ participant.id }}"/>
+                                        <tr>
+                                            <td><a href="{% url 'visit-view' participant.visit.id %}">{{ participant.visit.date_display }}</a></td>
+                                            <td>{{ participant.guest.get_name }}</td>
+                                            <td>{{ participant.guest.get_email }}</td>
+                                            <td>{{ participant.status_display }}</td> <!-- TODO: gennemgå status -->
+                                            <td>
+                                                <button type="submit" name="type" value="1" class="btn btn-primary btn-xs" style="display:inline">{% trans 'Send første' %}</button>
+                                                <button type="submit" name="type" value="2" class="btn btn-primary btn-xs" style="display:inline">{% trans 'Send anden' %}</button>
+                                            </td>
+                                        </tr>
+                                    </form>
                                 {% empty %}
                                     <tr>
                                     <td colspan="3">{% trans 'Ingen deltagere' %}</td>

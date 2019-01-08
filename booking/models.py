@@ -890,6 +890,7 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
+            send_to_contactperson=True,
             send_to_room_responsible=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=False,
@@ -1431,8 +1432,8 @@ class ProductGrundskoleFag(models.Model):
         # First element in value list is pk of subject
         f.subject = Subject.objects.get(pk=values.pop(0))
 
-        f.class_level_min = values.pop(0) or 0
-        f.class_level_max = values.pop(0) or 0
+        f.class_level_min = values.pop(0) or 0 if values else 0
+        f.class_level_max = values.pop(0) or 0 if values else 0
 
         f.save()
 
@@ -2039,6 +2040,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         null=True
     )
 
+    booking_max_days_in_future = models.IntegerField(
+        default=90,
+        verbose_name=_(
+            u'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
+        ),
+        blank=False,
+        null=True
+    )
+
     inquire_enabled = models.BooleanField(
         default=True,
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
@@ -2057,6 +2067,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.surveyxactevaluation_set.filter(
             for_students=True, for_teachers=True
         ).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.student_evaluation, self.teacher_evaluation
+            ]
+            if evaluation is not None
+        ]
 
     def available_time_modes(self, unit=None):
         if self.type is None:
@@ -2105,9 +2124,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
-    def booking_cutoff(self):
+    def booking_cutoff_before(self):
         return timedelta(days=self.booking_close_days_before) \
             if self.booking_close_days_before is not None else None
+
+    @property
+    def booking_cutoff_after(self):
+        return timedelta(days=self.booking_max_days_in_future) \
+            if self.booking_max_days_in_future is not None else None
 
     @property
     def bookable_times(self):
@@ -2151,13 +2175,26 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
     @property
-    def future_bookable_times(self):
-        cutoff = self.booking_cutoff
-        if cutoff is None:
-            cutoff = timedelta()
-        return self.bookable_times.filter(
-            start__gte=timezone.now() + cutoff
-        )
+    def cutoff_filter(self):
+        cutoff_before = self.booking_cutoff_before
+        if cutoff_before is None:
+            cutoff_before = timedelta()
+        filter = {'start__gte': timezone.now() + cutoff_before}
+        cutoff_after = self.booking_cutoff_after
+        if cutoff_after is not None:
+            filter['start__lte'] = timezone.now() + cutoff_after
+        return filter
+
+    def future_bookable_times(self, use_cutoff=False):
+        filter = {'start__gte': timezone.now()}
+        if use_cutoff:
+            cutoff_before = self.booking_cutoff_before
+            if cutoff_before is not None:
+                filter['start__gte'] = timezone.now() + cutoff_before
+            cutoff_after = self.booking_cutoff_after
+            if cutoff_after is not None:
+                filter['start__lte'] = timezone.now() + cutoff_after
+        return self.bookable_times.filter(**filter)
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
@@ -2520,7 +2557,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         # bookable time in the future, and that time isn't fully booked
         # if len(self.future_bookable_times) > 0:
         #     return True
-        for eventtime in self.future_bookable_times:
+        for eventtime in self.future_bookable_times(use_cutoff=True):
             if eventtime.visit is None:
                 return True
             if eventtime.visit.is_bookable:
@@ -2551,6 +2588,31 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS = 3
     NONBOOKABLE_REASON__BOOKING_CUTOFF = 4
     NONBOOKABLE_REASON__NO_CALENDAR_TIME = 5
+    NONBOOKABLE_REASON__BOOKING_FUTURE = 6
+
+    nonbookable_reason_text = {
+        NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
+            _(u'Tilbudstypen kan ikke tilmeldes.'),
+        NONBOOKABLE_REASON__NOT_ACTIVE:
+            _(u'Tilbuddet er ikke aktivt.'),
+        NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
+            _(u'Der er ingen ledige besøg.'),
+        NONBOOKABLE_REASON__BOOKING_CUTOFF:
+            _(u'Der er lukket for tilmelding %d dage før afholdelse.'),
+        NONBOOKABLE_REASON__NO_CALENDAR_TIME:
+            _(u'Der er ikke er flere ledige tider.'),
+        NONBOOKABLE_REASON__BOOKING_FUTURE:
+            _(u'Der er lukket for tilmelding %d dage efter dags dato.')
+    }
+
+    def nonbookable_text(self, bookability):
+        text = Product.nonbookable_reason_text.get(bookability, None)
+        if text is not None:
+            if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
+                return text % self.booking_close_days_before
+            if bookability == Product.NONBOOKABLE_REASON__BOOKING_FUTURE:
+                return text % self.booking_max_days_in_future
+            return text
 
     def is_bookable(self, start_time=None, end_time=None, return_reason=False):
 
@@ -2574,14 +2636,25 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
-            # We don't accept bookings made later
+            # The date that the user has chosen for his visit
+            start_date = start_time \
+                if isinstance(start_time, date) \
+                else start_time.date()
+
+            # We don't accept bookings performed later
             # than x days before visit start
-            cutoff = self.booking_cutoff
+            cutoff = self.booking_cutoff_before
             if cutoff is not None:
-                start_date = start_time if isinstance(start_time, date) \
-                    else start_time.date()
-                if start_date < timezone.now().date() + cutoff:
+                if timezone.now().date() > start_date - cutoff:
                     return self.NONBOOKABLE_REASON__BOOKING_CUTOFF \
+                        if return_reason else False
+
+            # We don't accept bookings for visits later
+            # than x days after today
+            cutoff = self.booking_cutoff_after
+            if cutoff is not None:
+                if start_date > timezone.now().date() + cutoff:
+                    return self.NONBOOKABLE_REASON__BOOKING_FUTURE \
                         if return_reason else False
 
             # If start_time is a date and there is no end_date assume
@@ -2973,14 +3046,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
 
     status_to_class_map = {
-        WORKFLOW_STATUS_BEING_PLANNED: 'danger',
+        WORKFLOW_STATUS_BEING_PLANNED: 'warning',
         WORKFLOW_STATUS_REJECTED: 'danger',
         WORKFLOW_STATUS_PLANNED: 'success',
         WORKFLOW_STATUS_CONFIRMED: 'success',
         WORKFLOW_STATUS_REMINDED: 'success',
         WORKFLOW_STATUS_EXECUTED: 'success',
         WORKFLOW_STATUS_EVALUATED: 'success',
-        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_CANCELLED: 'danger',
         WORKFLOW_STATUS_NOSHOW: 'success',
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
         WORKFLOW_STATUS_AUTOASSIGN_FAILED: 'danger',
@@ -3179,6 +3252,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def is_cancelled(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_CANCELLED
 
+    @property
+    def is_rejected(self):
+        return self.workflow_status == Visit.WORKFLOW_STATUS_REJECTED
+
+    @staticmethod
+    def active_qs(qs):
+        return qs.exclude(workflow_status__in=[
+            Visit.WORKFLOW_STATUS_CANCELLED, Visit.WORKFLOW_STATUS_REJECTED
+        ])
+
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
 
@@ -3269,13 +3352,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ):
             if self.planned_status_is_blocked(True):
                 self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
-            else:
+            elif not self.is_multiproductvisit:
                 self.workflow_status = self.WORKFLOW_STATUS_PLANNED
 
         elif self.workflow_status in [
             self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
-        ] and not self.planned_status_is_blocked(True):
+        ] and not self.is_multiproductvisit \
+                and not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
 
         elif self.workflow_status in [
@@ -3289,6 +3373,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             # Send out planned notification if we switched to planned
             if self.workflow_status == self.WORKFLOW_STATUS_PLANNED:
                 self.autosend(EmailTemplateType.notify_all__booking_complete)
+        if self.is_multi_sub:
+            self.multi_master.resources_updated()
 
     def resource_accepts(self):
         self.resources_updated()
@@ -3308,20 +3394,21 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def on_expire(self):
         if self.workflow_status in [
-            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
-            self.WORKFLOW_STATUS_REMINDED,
-            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+            self.WORKFLOW_STATUS_REMINDED
         ]:
             self.workflow_status = self.WORKFLOW_STATUS_EXECUTED
             self.save()
 
     @property
     def display_title(self):
-        return self.product.title if self.product \
-            else _(u"Besøg #%d") % self.id
+        try:
+            return self.bookings.first().booker.school.name
+        except:
+            return self.product.title if self.product \
+                else _(u"Besøg #%d") % self.id
 
     @property
     def display_value(self):
@@ -3416,8 +3503,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
-
-        return self.product.total_required_teachers
+        if self.product is not None:
+            return self.product.total_required_teachers
+        return 0
 
     @property
     def needed_teachers(self):
@@ -3437,7 +3525,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def assigned_teachers(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.assigned_teachers
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return User.objects.filter(
                 teacherresource__visitresource__visit=self
             )
@@ -3448,7 +3536,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
-        return self.product.total_required_hosts
+        if self.product is not None:
+            return self.product.total_required_hosts
+        return 0
 
     @property
     def needed_hosts(self):
@@ -3475,6 +3565,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.hosts.all()
 
     @property
+    def responsible_persons(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.responsible_persons
+        if self.product is not None:
+            return self.product.get_responsible_persons()
+        return []
+
+    @property
     def total_required_rooms(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
@@ -3484,7 +3582,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_rooms(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_rooms
-        elif self.product.is_resource_controlled:
+        elif self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_ROOM)
         else:
             return 1 if self.room_status == self.STATUS_NOT_ASSIGNED else 0
@@ -3497,7 +3595,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_items(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_items
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
         return 0
 
@@ -3505,7 +3603,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_vehicles(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_vehicles
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
         return 0
 
@@ -3672,7 +3770,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def available_seats(self):
-        limit = self.product.maximum_number_of_visitors
+        limit = self.product.maximum_number_of_visitors \
+            if self.product is not None else None
         if limit is None:
             return sys.maxint
         return max(limit - self.nr_attendees, 0)
@@ -3736,6 +3835,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         except:
             pass
         return None
+
+    @property
+    def unit(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.unit
+        try:
+            return self.product.organizationalunit
+        except:
+            pass
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
@@ -4079,8 +4187,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # end of the day and ends after the beginning of the day
         return Visit.objects.filter(
             eventtime__start__lte=date + timedelta(days=1),
-            eventtime__end__gt=date,
             is_multi_sub=False
+        ).filter(
+            Q(eventtime__end__gt=date) | (
+                    Q(eventtime__end__isnull=True) &
+                    Q(eventtime__start__gt=date)
+            )
         )
 
     @staticmethod
@@ -4090,8 +4202,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_EVALUATED],
             eventtime__start__isnull=False,
-            eventtime__end__lt=time,
             is_multi_sub=False
+        ).filter(
+            Q(eventtime__end__lt=time) | (
+                    Q(eventtime__end__isnull=True) &
+                    Q(eventtime__start__lt=time + timedelta(hours=12))
+            )
         ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
@@ -4239,11 +4355,36 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return [self.product]
 
     @property
+    def product_qs(self):
+        return Product.objects.filter(id__in=[x.id for x in self.products])
+
+    @staticmethod
+    def with_product_types(visit_qs, product_types=None):
+        if product_types is None:
+            return visit_qs
+        return visit_qs.filter(
+            multiproductvisit__isnull=True,
+            eventtime__product__type__in=product_types
+        ) | visit_qs.filter(
+            multiproductvisit__isnull=False,
+            multiproductvisit__subvisit__in=Visit.objects.filter(
+                eventtime__product__type__in=product_types,
+                is_multi_sub=True
+            )
+        )
+
+    @property
     def products_unique_address(self):
         addresses = {
             product.locality.id: product for product in self.products
         }
         return addresses.values()
+
+    @property
+    def unit_qs(self):
+        return OrganizationalUnit.objects.filter(
+            product__eventtime__visit=self
+        )
 
     @property
     def calendar_event_link(self):
@@ -4270,7 +4411,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             context['is_potential_host'] = (
                 self.product.potential_hosts.filter(pk=user.pk).exists()
+                if self.product is not None else False
             )
+
             context['is_assigned_as_host'] = (
                 self.assigned_hosts.filter(pk=user.pk).exists()
             )
@@ -4288,6 +4431,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             context['is_potential_teacher'] = (
                 self.product.potential_teachers.filter(pk=user.pk).exists()
+                if self.product is not None else False
             )
             context['is_assigned_as_teacher'] = (
                 self.assigned_teachers.filter(pk=user.pk).exists()
@@ -4370,6 +4514,38 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             evaluation__for_students=False
         )
 
+    def evaluations(self, filter=None, ordered=False):
+        evaluation_ids = set()
+        for guest in SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+        ):
+            evaluation_ids.add(guest.evaluation.id)
+        evaluations = SurveyXactEvaluation.objects.filter(
+            id__in=evaluation_ids
+        )
+        if filter is not None:
+            evaluations = evaluations.filter(**filter)
+        evaluations = list(evaluations)
+        if ordered:
+            evaluations.sort(key=lambda e: self.products.index(e.product))
+        return evaluations
+
+    @property
+    def student_evaluation(self):
+        evaluations = self.evaluations({'for_students': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
+
+    @property
+    def teacher_evaluation(self):
+        evaluations = self.evaluations({'for_teachers': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
+
+    @property
+    def common_evaluation(self):
+        return self.evaluations.filter(
+            for_students=True, for_teachers=True
+        ).first()
+
     # Used by evaluation statistics page
     def evaluation_guestset(self):
         statuslist = [
@@ -4431,7 +4607,7 @@ class MultiProductVisit(Visit):
     def date_ref(self):
         return self.eventtime.start.date()
 
-    def create_eventtime(self, date=None):
+    def create_eventtime(self, date=None, endtime=None):
         if date is None:
             date = self.date
         if date is not None:
@@ -4456,6 +4632,10 @@ class MultiProductVisit(Visit):
         )
 
     @property
+    def subvisits_unordered_noncancelled(self):
+        return Visit.active_qs(self.subvisits_unordered)
+
+    @property
     def subvisits(self):
         return self.subvisits_unordered.order_by('multi_priority')
 
@@ -4472,12 +4652,25 @@ class MultiProductVisit(Visit):
         return self.products
 
     def potential_responsible(self):
-        units = OrganizationalUnit.objects.filter(
+        return User.objects.filter(
+            userprofile__organizationalunit=self.unit_qs
+        )
+
+    @property
+    def unit_qs(self):
+        return OrganizationalUnit.objects.filter(
             product__eventtime__visit__set=self.subvisits_unordered
         )
-        return User.objects.filter(
-            userprofile__organizationalunit=units
-        )
+
+    def planned_status_is_blocked(self):
+        return True
+
+    @property
+    def unit(self):
+        try:
+            return self.products[0].organizationalunit
+        except:
+            pass
 
     def resources_assigned(self, requirement):
         resource_list = []
@@ -4493,7 +4686,7 @@ class MultiProductVisit(Visit):
     def total_required_teachers(self):
         return sum(
             subvisit.total_required_teachers
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
@@ -4501,7 +4694,7 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_teachers]
-                for subvisit in self.subvisits_unordered
+                for subvisit in self.subvisits_unordered_noncancelled
             ])
         )
 
@@ -4509,12 +4702,12 @@ class MultiProductVisit(Visit):
     def needed_teachers(self):
         return sum(
             subvisit.needed_teachers
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_teachers(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_teachers:
                 return True
         return False
@@ -4523,7 +4716,7 @@ class MultiProductVisit(Visit):
     def total_required_hosts(self):
         return sum(
             subvisit.total_required_hosts
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
@@ -4531,7 +4724,7 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_hosts]
-                for subvisit in self.subvisits_unordered
+                for subvisit in self.subvisits_unordered_noncancelled
             ])
         )
 
@@ -4539,12 +4732,12 @@ class MultiProductVisit(Visit):
     def needed_hosts(self):
         return sum(
             subvisit.needed_hosts
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_hosts(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_hosts:
                 return True
         return False
@@ -4553,19 +4746,19 @@ class MultiProductVisit(Visit):
     def total_required_rooms(self):
         return sum(
             subvisit.total_required_rooms
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needed_rooms(self):
         return sum(
             subvisit.needed_rooms
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needs_room(self):
-        for subvisit in self.subvisits_unordered:
+        for subvisit in self.subvisits_unordered_noncancelled:
             if subvisit.needs_room:
                 return True
         return False
@@ -4574,15 +4767,23 @@ class MultiProductVisit(Visit):
     def needed_items(self):
         return sum(
             subvisit.needed_items
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
 
     @property
     def needed_vehicles(self):
         return sum(
             subvisit.needed_vehicles
-            for subvisit in self.subvisits_unordered
+            for subvisit in self.subvisits_unordered_noncancelled
         )
+
+    @property
+    def responsible_persons(self):
+        responsible = set()
+        for visit in self.subvisits_unordered_noncancelled:
+            if visit.product is not None:
+                responsible.update(visit.product.get_responsible_persons())
+        return responsible
 
     @property
     def available_seats(self):
@@ -5386,7 +5587,7 @@ class Guest(models.Model):
         (g1, _(u'1.g')),
         (g2, _(u'2.g')),
         (g3, _(u'3.g')),
-        (student, _(u'Student')),
+        (student, _(u'Afsluttet gymnasieuddannelse')),
         (other, _(u'Andet')),
     )
     level = models.IntegerField(
@@ -6240,8 +6441,10 @@ class BookerResponseNonce(models.Model):
 
 class SurveyXactEvaluation(models.Model):
 
-    DEFAULT_STUDENT_SURVEY_ID = 946435
-    DEFAULT_TEACHER_SURVEY_ID = 946493
+    DEFAULT_STUDENT_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['student']
+    DEFAULT_TEACHER_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['teacher']
 
     surveyId = models.IntegerField()
 
@@ -6319,6 +6522,26 @@ class SurveyXactEvaluation(models.Model):
                 EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
                 in autosends
         }
+
+    def save(self, *args, **kwargs):
+        super(SurveyXactEvaluation, self).save(*args, **kwargs)
+        for visit in self.product.get_visits():
+            if visit.is_multi_sub:
+                visit = visit.multi_master
+            for booking in visit.booking_list:
+                guest = booking.booker
+                if SurveyXactEvaluationGuest.objects.filter(
+                    evaluation=self,
+                    guest=guest
+                ).count() == 0:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=self,
+                        guest=guest
+                    )
+                    evaluationguest.save()
+
+    def __unicode__(self):
+        return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
 
 class SurveyXactEvaluationGuest(models.Model):
@@ -6424,18 +6647,16 @@ class SurveyXactEvaluationGuest(models.Model):
         product = self.product
         visit = self.visit
         guest = self.guest
-        teachers = list(visit.assigned_teachers)
-        return {
+        data = {
             u'email': guest.email,
             u'ID': product.id,
-            u'enhed': getattr_long(product, 'organizationalunit.id'),
-            u'type': product.type,
-            u'titel': product.title,
             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
-            u'niveau': Guest.grundskole_level_conversion[self.guest.level]
+            u'niveau': Guest.grundskole_level_conversion.get(
+                self.guest.level, None
+            )
             if guest.line is None
-            else Guest.sx_line_conversion[guest.line],
+            else Guest.sx_line_conversion.get(guest.line, None),
             u'antal': guest.attendee_count,
             u'elever': guest.student_count,
             u'lærere': guest.teacher_count or 0,
@@ -6451,14 +6672,38 @@ class SurveyXactEvaluationGuest(models.Model):
             u'postnr': getattr_long(guest, 'school.postcode.number'),
             u'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
-            ),
-            u'underv': ', '.join([
-                teacher.get_full_name() for teacher in teachers
-            ]),
-            u'underv_m': ', '.join([
-                teacher.email for teacher in teachers
-            ])
+            )
         }
+
+        visits = visit.real.subvisits \
+            if visit.is_multiproductvisit \
+            else [visit]
+
+        index = 1
+        for visit in visits:
+            if not visit.is_cancelled and not visit.is_rejected:
+                teachers = list(visit.assigned_teachers)
+                product = visit.product
+                data.update({
+                    u"akt%d" % index: product.title,
+                    u"type%d" % index: product.type,
+                    u"enhed%d" % index: getattr_long(
+                        product, 'organizationalunit.id'
+                    ),
+                    u"oenhed%d" % index: getattr_long(
+                        product, 'organizationalunit.parent.id'
+                    ),
+                    u"undvn%d" % index: ', '.join([
+                        teacher.get_full_name() for teacher in teachers
+                    ]),
+                    u"undvm%d" % index: ', '.join([
+                        teacher.email for teacher in teachers
+                    ])
+                })
+                index += 1
+                if index > 4:
+                    break
+        return data
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
