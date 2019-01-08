@@ -1,8 +1,11 @@
 <p>Kære {{ recipient.get_full_name }}</p>
 
-<p>Gæst {{ booking.booker.get_name }} ønsker ikke at gøre brug af sin ventelisteplads.</p>
+<p>
+    Gæst {{ booking.booker.get_name }} ønsker ikke at gøre brug af sin ventelisteplads på
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} {% include 'booking/email/snippets/visit_time.html' %}</a>.
+</p>
 
-<p>Se information om tilmeldingen:</p>
+<p>Information om tilmeldingen:</p>
 
 <p>
     {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}

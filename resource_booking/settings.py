@@ -24,6 +24,8 @@ SECRET_KEY = 'lfr72r#z^)_z=$-@b&0!eeu(rs5vd#ozlx__&u$wptk^cb3=6r'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ENABLE_DEBUG_TOOLBAR = False
+INTERNAL_IPS = ()
 
 ALLOWED_HOSTS = []
 
@@ -48,8 +50,12 @@ INSTALLED_APPS = (
     'django_cron',
     'macros',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'hijack',
+    'compat'
 )
+# INSTALLED_APPS might be extended with the debug toolbar
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -226,6 +232,24 @@ CKEDITOR_CONFIGS = {
 # 'theme_advanced_buttons2':
 # 'undo,redo,|,code,cleanup,visualaid,charmap,help'
 
+# Logging configuration: Log info level to console, even when running prod
+# Messages will end up in the webserver's log files
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
+
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
@@ -240,12 +264,15 @@ PUBLIC_URL_PROTOCOL = 'http'
 PUBLIC_URL_HOSTNAME = 'fokusku.dk'
 PUBLIC_URL_PORT = None
 
-local_settings_file = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'local_settings.py'
-)
-if os.path.exists(local_settings_file):
-    from local_settings import *  # noqa
+SURVEYXACT = {
+    'username': 'dummyuser',
+    'password': 'dummypassword',
+    'url': 'https://rest.survey-xact.dk/uploadrespondents?format=xml',
+    'default_survey_id': {
+        'student': 0,
+        'teacher': 0
+    }
+}
 
 # Add extra middleware defined in the local settings file to the ones
 # already specified.
@@ -276,3 +303,22 @@ CRON_CLASSES = [
     "booking.cron.NotifyEventTimeJob",
     "booking.cron.EvaluationReminderJob"
 ]
+
+HIJACK_USE_BOOTSTRAP = True
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)
+    MIDDLEWARE_CLASSES = (
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ) + MIDDLEWARE_CLASSES
+    if "127.0.0.1" not in INTERNAL_IPS:
+        INTERNAL_IPS = INTERNAL_IPS + ("127.0.0.1",)
+
+
+# Keep this in the end of the file
+local_settings_file = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'local_settings.py'
+)
+if os.path.exists(local_settings_file):
+    from local_settings import *  # noqa

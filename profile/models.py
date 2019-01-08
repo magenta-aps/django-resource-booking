@@ -15,11 +15,12 @@ from django.utils.translation import ugettext_lazy as _
 
 import booking.models
 
-from booking.models import OrganizationalUnit, Product
+from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
 
 # User roles
-from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
+    role_to_text
 from profile.constants import FACULTY_EDITOR, NONE
 from profile.constants import EDIT_ROLES, user_role_choices, available_roles
 
@@ -54,14 +55,6 @@ def get_public_web_user():
         profile.save()
 
     return user
-
-
-def role_to_text(role):
-    """Return text representation of role code."""
-    for r, t in user_role_choices:
-        if r == role:
-            return unicode(t)
-    return ""
 
 
 class AbsDateDist(Aggregate):
@@ -215,6 +208,21 @@ class UserProfile(models.Model):
     def can_edit_units(self):
         return self.get_role() in (ADMINISTRATOR, FACULTY_EDITOR)
 
+    def can_edit_model_instance(self, model):
+        role = self.get_role()
+        if role == ADMINISTRATOR:
+            return True
+        available_classes = CLASSES_BY_ROLE.get(role, None)
+        if available_classes is None:
+            return False
+        return model in available_classes
+
+    def can_edit_product(self):
+        return self.can_edit_model_instance(Product)
+
+    def can_edit_visit(self):
+        return self.can_edit_model_instance(Visit)
+
     def get_unit_queryset(self):
         role = self.get_role()
 
@@ -324,7 +332,7 @@ class UserProfile(models.Model):
         )
 
         if exclude_accepted:
-            accepted_qs = self.user.hosted_visits.all()
+            accepted_qs = self.all_assigned_visits()
             mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
 
         qs = bm.Visit.objects.filter(
@@ -436,6 +444,7 @@ class UserProfile(models.Model):
                     COUNT("booking_visitresource"."id") <
                         "booking_resourcerequirement"."required_amount"
             ''', [resource.pk, resource.pk, timezone.now()])
+
             # Turn it into a Django query
             qs1 = booking.models.Visit.objects.filter(
                 pk__in=[x.pk for x in qs1],
@@ -450,7 +459,10 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('teachers')
             ).filter(
-                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__product__time_mode__in=[
+                    Product.TIME_MODE_SPECIFIC,
+                    Product.TIME_MODE_GUEST_SUGGESTED
+                ],
                 eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit=unit_qs,
                 num_assigned__lt=Coalesce(
@@ -465,7 +477,10 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('hosts')
             ).filter(
-                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__product__time_mode__in=[
+                    Product.TIME_MODE_SPECIFIC,
+                    Product.TIME_MODE_GUEST_SUGGESTED
+                ],
                 eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit=unit_qs,
                 num_assigned__lt=Coalesce(

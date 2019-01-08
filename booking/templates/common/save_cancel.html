@@ -6,6 +6,9 @@
        data-dismiss="modal">
         {% trans "Annullér" %}
     </a>
+    {% if save_and_continue %}
+        <button class="btn btn-primary pull-right margin-right-10 formpartbutton" type="submit" name="continue">{% trans "Gem og fortsæt med at redigere" %}</button>
+    {% endif %}
     <button class="btn btn-primary pull-right margin-right-10 formpartbutton" type="submit">{% trans "Gem" %}</button>
 </div>
 </div>

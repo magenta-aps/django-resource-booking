@@ -1,14 +1,32 @@
-{% if recipient.guest %}
+{% if recipient.is_guest %}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
 
-    <p>
-        Vi glæder os til at se dig til {{ product.title }}
-        {% include 'booking/email/snippets/visit_time.html' %}
-        på Københavns Universitet:
-        {% include 'booking/email/snippets/product_maplink.html' %}.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
-    </p>
+    {% if visit.is_multiproductvisit %}
+        <p>
+            Vi glæder os til at se dig til:
+            <ul>
+            {% for subvisit in visit.real.subvisits_by_time %}
+                {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
+                <li>
+                    {{ subvisit.product.title }},
+                    {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
+                    {% include 'booking/email/snippets/product_maplink.html' with product=subvisit.product %}.
+                </li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+            {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.products|get:0 vedr=1 %}
+        </p>
+    {% else %}
+        <p>
+            Vi glæder os til at se dig til {{ product.title }}
+            {% include 'booking/email/snippets/visit_time.html' %}
+            på Københavns Universitet:
+            {% include 'booking/email/snippets/product_maplink.html' %}.
+            {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
+        </p>
+    {% endif %}
     <p>
         Detaljer for din tilmelding:
     </p>
@@ -24,7 +42,7 @@
 
     {% include 'booking/email/snippets/see_all.html' %}
 
-{% elif recipient.user.userprofile.is_host %}
+{% elif recipient.is_host %}
 
     {# Denne besked sendes til værter #}
 
@@ -33,7 +51,7 @@
     <p>
         Dette er en reminder om, at du skal være vært på besøg
         <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -49,15 +67,19 @@
     <p>
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
+    <p>
+        {% include 'booking/email/snippets/coordinators.html' %}
+    </p>
 
-{% elif recipient.user.userprofile.is_teacher %}
+{% elif recipient.is_teacher %}
 
     {# Denne besked sendes til undervisere #}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -73,14 +95,29 @@
     <p>
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
+    <p>
+        {% include 'booking/email/snippets/coordinators.html' %}
+    </p>
 {% else %}
 
     <p>
-        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} d. {{ visit.start_datetime }}</a> er nu færdigplanlagt.
+        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} {% include 'booking/email/snippets/visit_time.html' %}</a> er nu færdigplanlagt.
     </p>
     <p>
         Du kan læse yderligere om besøget på adressen
         <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+    </p>
+    <p>
+        Vær opmærksom på, om der er forberedelsestid.
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
     </p>
 
 {% endif %}

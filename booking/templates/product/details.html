@@ -40,8 +40,27 @@
                 {% else %}
                     <a class="btn btn-primary" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
+
+                {% if object.type == object.GROUP_VISIT %}
+                    {% if object.student_evaluation %}
+                        <a href="{% url 'evaluation-view' object.student_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                    {% endif %}
+                    {% if object.teacher_evaluation %}
+                        <a href="{% url 'evaluation-view' object.teacher_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                    {% endif %}
+                {% else %}
+                    {% if object.common_evaluation %}
+                        <a href="{% url 'evaluation-view' object.common_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                    {% endif %}
+                {% endif %}
             {% endif %}
-          </div>
+            </div>
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -99,6 +118,26 @@
             {% if object.is_bookable %}
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
+            {% if can_edit %}
+                <div class="row mails">
+                    <div class="col-sm-12 col-md-12">
+                        <div class="panel panel-default">
+                            <h2>{% trans 'Emails' %}</h2>
+                            <ul class="list-unstyled scroll-400">
+                                {% for email in emails %}
+                                    <li>
+                                        {% include 'email/display.html' with email=email %}
+                                    </li>
+                                    {% empty %}
+                                    <li>
+                                        {% trans 'Ingen emails' %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
             <div class="go-back">
                 {% url 'search' as basesearch %}
                 <a href="{{ searchurl }}" class="btn btn-default">
@@ -150,15 +189,25 @@
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
-                                <a href="{{ object.locality.location_url }}" target="_blank">
-                                    {{ object.locality.name }}<br>
-                                    {{ object.locality.address_line }}<br>
-                                    {{ object.locality.zip_city }}
-                                </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% if object.locality.no_address %}
+                                        {{ object.locality.name }}
+                                    {% else %}
+                                        <a href="{{ object.locality.location_url }}" target="_blank">
+                                        {{ object.locality.name }}<br>
+                                        {{ object.locality.address_line }}<br>
+                                        {{ object.locality.zip_city }}
+                                        </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% endif %}
                                 </dd>
                             {% endif %}
 
-                            <dt>{% trans 'Arrangør' %}:</dt>
+                            <dt>
+                                {% if object.type == object.STUDY_MATERIAL %}
+                                    {% trans 'Udgivet af:' %}
+                                {% else %}
+                                    {% trans 'Arrangør:' %}
+                                {% endif %}
+                            </dt>
                             <dd>
                                 {% if object.organizationalunit.url %}
                                     <a href="{{ object.organizationalunit.url }}" target="_blank">
@@ -213,8 +262,10 @@
                             {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}
+                                {% if object.is_guest_time_suggested or not object.time_mode == view.model.TIME_MODE_NO_BOOKING and not object.future_bookable_times %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
+                                {% endif %}
                             {% endif %}
 
                             {% if object.price %}

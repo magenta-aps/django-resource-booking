@@ -94,6 +94,29 @@ $.fn.enable = function(doEnable, key) {
 };
 
 
+$("[data-hide-if-target-empty]").each(function(){
+    var $this = $(this),
+        target = $this.find($this.attr("data-hide-if-target-empty")),
+        hasContent = false,
+        contents = target.contents();
+    for (var i=0; i<contents.length; i++) {
+        var childnode = contents[i];
+        if (childnode.nodeType === 1) { // element
+            hasContent = true;
+            break;
+        } else if (childnode.nodeType === 3) { // text node
+            if (childnode.nodeValue.trim().length > 0) {
+                hasContent = true;
+                break;
+            }
+        }
+    }
+    if (!hasContent) {
+        $this.hide();
+    }
+});
+
+
 (function($){
     $("input[type='number'][data-validation-number-min-message][min]").on('input.bs.validator change.bs.validator focusout.bs.validator', function(){
         var $this = $(this),

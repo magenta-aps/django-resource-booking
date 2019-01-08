@@ -1,16 +1,19 @@
 # encoding: utf-8
-from django.contrib.contenttypes.models import ContentType
+import cStringIO
+import codecs
+import csv
+import os
+import re
+import sys
+from itertools import chain
+from subprocess import Popen, PIPE
+
+import requests
+from django.conf import settings
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.storage import FileSystemStorage
-from subprocess import Popen, PIPE
-import os
-import sys
-
-import csv
-import codecs
-import cStringIO
-from itertools import chain
 
 
 class LogAction(object):
@@ -204,6 +207,7 @@ def get_model_field_map(model, visited_models=None):
         map[(field.name, label)] = value
     return map
 
+
 INFINITY = float("inf")
 
 
@@ -235,6 +239,15 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+def force_list(item):
+    t = type(item)
+    if t == list:
+        return item
+    if t == set or t == tuple:
+        return list(item)
+    return [item]
 
 
 def merge_dicts(*dicts):
@@ -303,3 +316,287 @@ class DummyRecipient(object):
 
     def get_email(self):
         return "email@example.com"
+
+
+class TemplateSplit(object):
+
+    if_re = r'{%\s*if[^}]+}'
+    elif_re = r'{%\s*elif[^}]+}'
+    else_re = r'{%\s*else[^}]+}'
+    endif_re = r'{%\s*endif[^}]+}'
+
+    class SubBlock(object):
+        def __init__(self, block, t_start, t_end):
+            self.t_start = t_start
+            self.t_end = t_end
+            self.block = block
+
+        def contains(self, index):
+            return self.t_start[0] <= index < self.t_end[1]
+
+        @property
+        def condition(self):
+            return self.block.templatesplit.text[
+                   self.t_start[0]:self.t_start[1]
+            ]
+
+        def has_condition(self, condition):
+            return condition in self.condition
+
+        @property
+        def text(self, inclusive=False):
+            start = self.t_start[0 if inclusive else 1]
+            end = self.t_end[1 if inclusive else 0]
+            return self.block.templatesplit.text[start:end]
+
+        def __str__(self):
+            return "SubBlock from %s to %s" % (self.t_start, self.t_end)
+
+    class Block(object):
+        def __init__(
+                self, templatesplit, t_if, t_endif, t_else=None, l_elif=None
+        ):
+            self.t_if = t_if
+            self.t_endif = t_endif
+            self.t_else = t_else
+            self.l_elif = l_elif
+            self.subblocks = []
+            self.templatesplit = templatesplit
+
+            idx_list = [t_if]
+            if l_elif is not None and len(l_elif) > 0:
+                idx_list.extend(l_elif)
+            if t_else is not None:
+                idx_list.append(t_else)
+            idx_list.append(t_endif)
+
+            for idx, tup in enumerate(idx_list):
+                if idx < len(idx_list) - 1:
+                    next = idx_list[idx+1]
+                    self.subblocks.append(
+                        TemplateSplit.SubBlock(self, tup, next)
+                    )
+
+        def get_subblock_containing(self, index):
+            for subblock in self.subblocks:
+                if subblock.contains(index):
+                    return subblock
+
+        def get_subblock_with_condition(self, condition):
+            for subblock in self.subblocks:
+                if subblock.has_condition(condition):
+                    return subblock
+
+        def get_else_subblock(self):
+            for subblock in self.subblocks:
+                if subblock.t_start == self.t_else:
+                    return subblock
+
+        def get_if(self, include_start=False, include_end=False):
+            start = self.t_if[0 if include_start else 1]
+            if len(self.l_elif) > 0:
+                end = self.l_elif[0][1 if include_end else 0]
+            elif self.t_else is not None:
+                end = self.t_else[1 if include_end else 0]
+            else:
+                end = self.t_endif[1 if include_end else 0]
+            return self.templatesplit.text[start:end]
+
+        def get_elifs(self, include_start=False, include_end=False):
+            elifs = []
+            if self.t_else is not None:
+                end = self.t_else[1 if include_end else 0]
+            else:
+                end = self.t_endif[1 if include_end else 0]
+            last_index = len(self.l_elif) - 1
+            for index, el in enumerate(self.l_elif):
+                elifs.append(self.templatesplit.text[
+                                 el[0 if include_start else 1],
+                                 self.l_elif[index+1][1 if include_end else 0]
+                                 if index < last_index
+                                 else end
+                             ])
+            return elifs
+
+        def get_else(self, include_start=False, include_end=False):
+            if self.t_else is not None:
+                start = self.t_else[0 if include_start else 1]
+                end = self.t_endif[1 if include_end else 0]
+                return self.templatesplit.text[start:end]
+
+        @property
+        def text(self, inclusive=False):
+            start = self.t_if[0 if inclusive else 1]
+            end = self.t_endif[1 if inclusive else 0]
+            return self.templatesplit.text[start:end]
+
+        @property
+        def text_before(self):
+            end = self.t_if[0]
+            return self.templatesplit.text[0:end]
+
+        @property
+        def text_after(self):
+            start = self.t_endif[1]
+            return self.templatesplit.text[start:]
+
+    def __init__(self, text):
+        self.text = text
+        if_locations = list([
+            match.span(0) for match in re.finditer(self.if_re, text)
+        ])
+        elif_locations = list([
+            match.span(0) for match in re.finditer(self.elif_re, text)
+        ])
+        else_locations = list([
+            match.span(0) for match in re.finditer(self.else_re, text)
+        ])
+        endif_locations = list([
+            match.span(0) for match in re.finditer(self.endif_re, text)
+        ])
+
+        all_locations = [
+            (i[0], i[1], 'if') for i in if_locations
+        ] + [
+            (i[0], i[1], 'elif') for i in elif_locations
+        ] + [
+            (i[0], i[1], 'else') for i in else_locations
+        ] + [
+            (i[0], i[1], 'endif') for i in endif_locations
+        ]
+        all_locations.sort(key=lambda item: item[0])
+
+        self.blocks = []
+        stack = []
+        current = None
+        for location in all_locations:
+            start = location[0]
+            end = location[1]
+            kind = location[2]
+            tup = (start, end)
+            if kind == 'if':
+                current = {'if': tup, 'elif': [], 'else': None, 'endif': None}
+                stack.append(current)
+            elif kind == 'elif':
+                current['elif'].append(tup)
+            elif kind == 'else':
+                current['else'] = tup
+            elif kind == 'endif':
+                current['endif'] = tup
+                self.blocks.append(
+                    TemplateSplit.Block(
+                        self, current['if'], current['endif'],
+                        current['else'], current['elif']
+                    )
+                )
+                stack.pop()
+                current = stack[-1] if len(stack) > 0 else None
+
+    def get_subblock_containing(self, c):
+        candidates = []
+        for block in self.blocks:
+            if isinstance(c, basestring):
+                subblock = block.get_subblock_with_condition(c)
+            else:
+                subblock = block.get_subblock_containing(c)
+            if subblock is not None:
+                candidates.append(subblock)
+        if len(candidates) > 0:
+            best_candidate = None
+            for candidate in candidates:
+                if best_candidate is None or \
+                        candidate.t_start[0] > best_candidate.t_start[0]:
+                    best_candidate = candidate
+            return best_candidate
+
+    def get_blocktext_containing(self, c, inclusive=False):
+        block = self.get_subblock_containing(c)
+        if block is not None:
+            return block.text(inclusive)
+
+    @staticmethod
+    def find_next(locations, start, before=None):
+        for (begin, end) in locations:
+            if begin >= start:
+                if before is not None and begin >= before:
+                    return None
+                return (begin, end)
+
+    @staticmethod
+    def find_all_next(locations, start, before=None):
+        all = []
+        while 1:
+            found = TemplateSplit.find_next(locations, start, before)
+            if found:
+                all.append(found)
+                start = found[1]
+            else:
+                return all
+
+
+def surveyxact_upload(survey_id, data):
+    config = settings.SURVEYXACT
+    csv_prefix = '\xff\xfe'
+    csv_suffix = '\x0a\x00'
+    header = []
+    body = []
+    for key, value in data.iteritems():
+        header.append(unicode(key))
+        if value is None:
+            value = ''
+        if not isinstance(value, basestring):
+            value = unicode(value)
+        body.append(value)
+    csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
+
+    response = requests.post(
+        config['url'],
+        headers={
+            'Expect': '100-continue'
+        },
+        data={
+            'username': config['username'],
+            'password': config['password'],
+            'surveyId': str(survey_id)
+        },
+        files={
+            'dataFile': (
+                'data.csv',
+                csv_prefix + csv_body.encode('UTF-16LE') + csv_suffix
+            )
+        }
+    )
+    if response.status_code != 200:
+        print "Error creating respondent with data:"
+        print body
+    else:
+        m = re.search(r'<collecturl>([^<]*)</collecturl>', response.text)
+        if m is not None:
+            return m.group(1)
+        else:
+            print "Didn't find collecturl in %s" % response.text
+
+
+def bool2int(bool):
+    return 1 if bool else 0
+
+
+def prune_list(l, prune_empty_string=False):
+    return [
+        x for x in l
+        if x is not None and not (prune_empty_string and x == '')
+    ]
+
+
+def getattr_long(object, path, default=None):
+    for p in path.split('.'):
+        try:
+            object = getattr(object, p)
+        except AttributeError:
+            return default
+    return object
+
+
+def prose_list_join(items, sep, lsep):
+    return sep.join([unicode(item) for item in items[:-1]]) + \
+           unicode(lsep) + unicode(items[-1])

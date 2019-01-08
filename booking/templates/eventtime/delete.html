@@ -5,7 +5,9 @@
 {% block htmltitle %} - {% trans "Slet tidspunkter for" %} '{{ product.title }}'{% endblock %}
 
 {% block content %}
-    <div class="divider"></div>
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% trans "Slet tidspunkter for" %}
         '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'

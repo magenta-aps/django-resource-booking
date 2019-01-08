@@ -52,9 +52,13 @@ class ReminderJob(KuCronJob):
     description = "sends reminder emails"
 
     def run(self):
+        emailtemplatetypes = [
+            EmailTemplateType.notity_all__booking_reminder,
+            EmailTemplateType.notify_guest_reminder
+        ]
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_type=EmailTemplateType.notity_all__booking_reminder,
+            template_type__in=emailtemplatetypes,
             days__isnull=False,
             inherit=False,
             visit__eventtime__start__isnull=False,
@@ -64,7 +68,9 @@ class ReminderJob(KuCronJob):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_type=EmailTemplateType.notity_all__booking_reminder,
+            template_type__in=emailtemplatetypes,
+            visit__eventtime__start__isnull=False,
+            visit__eventtime__start__gte=timezone.now()
         ).all())
 
         extra = []
@@ -96,7 +102,7 @@ class ReminderJob(KuCronJob):
                         if reminderday == today:
                             print "    That's today; send reminder now"
                             autosend.visit.autosend(
-                                EmailTemplateType.notity_all__booking_reminder
+                                autosend.template_type
                             )
                         else:
                             print "    That's not today. Not sending reminder"
@@ -209,15 +215,11 @@ class NotifyEventTimeJob(KuCronJob):
     def run(self):
         prev = self.get_last_run()
         if prev:
-            start = prev.start_time
             end = timezone.now()
-            print "Notifying eventtimes between %s and %s" % (
-                unicode(start), unicode(end)
-            )
+            print "Notifying eventtimes before %s" % (unicode(end))
 
             for eventtime in EventTime.objects.filter(
                     has_notified_start=False,
-                    start__gte=start,
                     start__lt=end
             ):
                 print "Notifying EventTime %d (starting)" % eventtime.id
@@ -225,7 +227,6 @@ class NotifyEventTimeJob(KuCronJob):
 
             for eventtime in EventTime.objects.filter(
                     has_notified_end=False,
-                    end__gte=start,
                     end__lt=end
             ):
                 print "Notifying EventTime %d (ending)" % eventtime.id
@@ -237,11 +238,15 @@ class EvaluationReminderJob(KuCronJob):
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.evaluationreminder'
     description = "sends evaluation reminder emails"
+    days = 5
 
     def run(self):
-        emailtemplate = EmailTemplateType.notify_guest__evaluation_second
+        emailtemplate = [
+            EmailTemplateType.notify_guest__evaluation_second,
+            EmailTemplateType.notify_guest__evaluation_second_students
+        ]
         filter = {
-            'template_type': emailtemplate,
+            'template_type__in': emailtemplate,
         }
 
         autosends = list(VisitAutosend.objects.filter(
@@ -258,9 +263,7 @@ class EvaluationReminderJob(KuCronJob):
         extra = []
         for autosend in inheriting_autosends:
             inherited = autosend.get_inherited()
-            if inherited is not None and inherited.enabled and \
-                    (inherited.days is not None or autosend.days is not None):
-                autosend.days = autosend.days or inherited.days
+            if inherited is not None and inherited.enabled:
                 autosend.enabled = inherited.enabled
                 extra.append(autosend)
         print "Found %d enabled inheriting autosends" % len(extra)
@@ -274,17 +277,26 @@ class EvaluationReminderJob(KuCronJob):
                     visit = autosend.visit
                     print "Autosend %d for Visit %d:" % \
                           (autosend.id, visit.id)
-                    print "    Visit ends on %s" % \
-                          unicode(visit.end_datetime.date())
-                    alertday = visit.end_datetime.date() + \
-                        timedelta(autosend.days)
-                    print "    Autosend specifies to send %d days after " \
-                          "completion, on %s" % (autosend.days, alertday)
-                    if alertday == today:
-                        print "    That's today; sending messages now"
-                        visit.evaluation.send_second_notification()
+                    if visit.end_datetime is None:
+                        print "Visit %d has no apparent end_datetime" %\
+                              visit.id
                     else:
-                        print "    That's not today. Not sending messages"
+                        print "    Visit ends on %s" % \
+                              unicode(visit.end_datetime.date())
+                        alertday = visit.end_datetime.date() + \
+                            timedelta(self.days)
+                        print "    Hardcoded to send %d days after " \
+                              "completion, on %s" % (self.days, alertday)
+                        if alertday == today:
+                            print "    That's today; sending messages now"
+                            product = visit.product
+                            if product is not None:
+                                evals = product.surveyxactevaluation_set.all()
+                                for evaluation in evals:
+                                    evaluation.send_second_notification(visit)
+
+                        else:
+                            print "    That's not today. Not sending messages"
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()

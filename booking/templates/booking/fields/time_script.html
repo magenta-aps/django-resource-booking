@@ -1,6 +1,9 @@
 {% load booking_tags %}
 {% load i18n %}
 
+{% include 'common/resources/datepicker_script.html' %}
+{% include 'common/resources/clockpicker_script.html' %}
+{% include 'common/resources/clockpicker_style.html' %}
 {% if bookerform.attendee_count and bookingform.eventtime %}
     <script type="text/javascript" id="time_script">
         <!--
@@ -44,6 +47,13 @@
                 updateVisit();
             }
         })();
+
+        $('input.clockpicker').clockpicker({
+            'donetext': "Opdater",
+            'autoclose': true
+        });
+
+
         //-->
     </script>
 {% endif %}

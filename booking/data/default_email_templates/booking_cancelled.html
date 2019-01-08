@@ -3,7 +3,7 @@
     Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     på Københavns Universitet er desværre blevet aflyst. Vi beklager.
 </p>
-{% if recipient.guest %}
+{% if recipient.is_guest %}
 
     {# Denne del sendes til gæster #}
 

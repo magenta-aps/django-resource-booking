@@ -1,0 +1,4 @@
+{% if booking.classbooking.tour_desired or booking.classbooking.catering_desired or booking.classbooking.presentation_desired or booking.classbooking.custom_desired %}
+    {% load i18n %}
+    {% blocktrans with desires=booking.classbooking.verbose_desires %}med ønske om {{ desires }}{% endblocktrans %}
+{% endif %}

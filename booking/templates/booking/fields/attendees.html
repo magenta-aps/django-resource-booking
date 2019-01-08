@@ -15,3 +15,16 @@
     </div>
 </div>
 {% endif %}
+{% if bookerform.teacher_count %}
+    <div class="form-group">
+        <div class="col-sm-2">
+            <label class="control-label required nowrap {{ bookerform.teacher_count.css_classes }}" for="{{ bookerform.teacher_count.id_for_label }}">{% trans "Heraf lærere" %}</label>
+        </div>
+        <div class="col-sm-6{% if bookerform.teacher_count.errors %} has-error{% endif %}">
+            {{ bookerform.teacher_count }}
+        </div>
+        <div class="col-sm-4 help-block with-errors">
+            {{ bookerform.teacher_count.errors }}
+        </div>
+    </div>
+{% endif %}

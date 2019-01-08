@@ -20,7 +20,9 @@
 
 
 {% block content %}
-    <div class="divider"></div>
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% if object.pk %}
         {% trans "Rediger tid i kalender" %}
@@ -271,6 +273,15 @@
         startDate.change(update_dates);
         endDate.change(update_dates);
 
+        {# Overload recurrence widget method in order to set a default count #}
+        {# Standard implementation has a default of 1, and does not provide a #}
+        {# way to change that #}
+        recurrence.widget.Widget.prototype.add_rule = function(rule) {
+            rule = rule || new recurrence.Rule(this.default_freq, {count: 10});
+            this.data.rrules.push(rule);
+            this.add_rule_panel(recurrence.widget.INCLUSION, rule).expand();
+        };
+
         $('#id_enable_recurrences').on('change', function() {
             var recurrencesField = $('#id_recurrences');
             var recurrenceFieldContainer = $('#recurrence_field_container');
@@ -279,7 +290,7 @@
                 recurrencesField.val(
                     $(this).attr('data-last-value') || ''
                 );
-                $rec_widget = recurrencesField.parent();
+                var $rec_widget = recurrencesField.parent();
                 if ($rec_widget.find('div.panel').length < 1) {
                     $rec_widget.find('.add-button.add-rule').last().trigger(
                         'click'

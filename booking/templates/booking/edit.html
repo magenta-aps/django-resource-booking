@@ -1,0 +1,50 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% blocktrans with id=object.id %}Redigér tilmelding #{{ id }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Redigér tilmelding #{{ id }}{% endblocktrans %}</h1>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+        {% csrf_token %}
+        {{ bookerform.non_field_errors }}
+        {{ bookingform.non_field_errors }}
+        {% include "booking/fields/basedata.html" %}
+        {% include "booking/fields/subjects.html" %}
+        {% include "booking/fields/school.html" %}
+        {% include "booking/fields/location.html" %}
+        {% include "booking/fields/attendees.html" %}
+        {% include "booking/fields/services.html" %}
+        {% include "booking/fields/notes.html" %}
+        {% include 'common/save_cancel.html' %}
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'booking/fields/location_script.html' %}
+    {% include 'booking/fields/school_script.html' %}
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+            $("#cancelbutton").click(function(){
+                {% if back %}
+                    document.location = "{{ back }}";
+                {% else %}
+                    history.back();
+                {% endif %}
+            });
+        });
+    </script>
+{% endblock %}

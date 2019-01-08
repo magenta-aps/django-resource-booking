@@ -1,16 +1,26 @@
-{% if recipient.guest %}
-
+{% if recipient.is_guest %}
     {# Denne besked sendes til gæster #}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
         Vi glæder os til at se dig til
-        <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}
+        {% for product in visit.products %}
+            {% if not forloop.first %}{% if forloop.last %} og {% else %}, {% endif %}{% endif %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+        {% endfor %}
+        {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet:
-        {% include 'booking/email/snippets/product_maplink.html' %}.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
+        {% if visit.products_unique_address|length < 2 %}
+            {% include 'booking/email/snippets/product_maplink.html' %}.
+        {% else %}
+            <ul>
+            {% for p in visit.products_unique_address %}
+                <li>{% include 'booking/email/snippets/product_maplink.html' with product=p %}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% include 'booking/email/snippets/contact_addresses.html' with product=visit.products|get:0 vedr=1 %}
     </p>
     <p>
         Detaljer for din tilmelding:
@@ -35,15 +45,31 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
-        Dette er en påmindelse om at besøget
-        <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
-        afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-        kl. {{ visit.start_datetime|time:"H.i" }}{% endif %} på Københavns Universitet:
+        Dette er en påmindelse om at {% blocktrans count c=visit.products.count %}besøget{% plural %}besøgene{% endblocktrans %}
+        {% for product in visit.products %}
+            {% if not forloop.first %}{% if forloop.last %} og {% else %}, {% endif %}{% endif %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+        {% endfor %}
+        afholdes
+        {% include 'booking/email/snippets/visit_time.html' %}
+        på Københavns Universitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
     <p>
         Du kan læse yderligere om besøget på adressen
         <a href="{% full_url 'product-view' product.pk %}">{% full_url 'product-view' product.pk %}</a>
+    </p>
+    <p>
+        {% include 'booking/email/snippets/coordinators.html' %}
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
     </p>
 
 {% endif %}
