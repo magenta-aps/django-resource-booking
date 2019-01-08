@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import profile.constants
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
+from booking.utils import force_list
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
@@ -23,8 +25,9 @@ from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
-from booking.views import LoginRequiredMixin, AccessDenied
-from booking.views import EditorRequriedMixin, VisitCustomListView
+from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
+    EditorRequriedMixin
+from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 from profile.models import EmailLoginURL
@@ -34,14 +37,18 @@ from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
 import profile.models as profile_models
+import sys
 
 
-class ProfileView(LoginRequiredMixin, TemplateView):
+class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     HEADING_RED = 'alert-danger'
     HEADING_GREEN = 'alert-success'
     HEADING_BLUE = 'alert-info'
     HEADING_YELLOW = 'alert-warning'
+
+    visit_ordering_desc = ['-eventtime__start', '-eventtime__end']
+    visit_ordering_asc = ['eventtime__start', 'eventtime__end']
 
     """Display the user's profile."""
     def get_template_names(self):
@@ -51,39 +58,51 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         else:
             return super(ProfileView, self).get_template_names()
 
+    def product_types(self):
+        product_types = self.request.GET.getlist('product_type', None)
+        if product_types is None \
+                or len(product_types) == 0\
+                or (len(product_types) == 1 and product_types[0] == ''):
+            return Product.applicable_types
+        product_types = force_list(product_types)
+        return [
+            int(product_type)
+            for product_type in product_types
+            if int(product_type) in Product.applicable_types
+        ]
+
     def get_context_data(self, **kwargs):
-        context = {'lists': []}
+        context = {
+            'lists': [],
+            'types': Product.type_choices,
+        }
         limit = 10
 
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
+        product_types = self.product_types()
+        if product_types is not None \
+                and len(product_types) > 0 \
+                and product_types != Product.applicable_types:
+            context['type'] = product_types[0]
 
-        today_qs = Visit.get_todays_visits().filter(
-            eventtime__product__organizationalunit=unit_qs
-        )
-        recent_qs = Visit.get_recently_held().filter(
-            eventtime__product__organizationalunit=unit_qs
-        )
+        today_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_todays_visits()
+            if visit.real.unit_qs & unit_qs
+        ])
+        today_qs = Visit.with_product_types(today_qs, product_types)
+        today_qs = today_qs.order_by(*self.visit_ordering_asc)
+
+        recent_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_recently_held()
+            if visit.real.unit_qs & unit_qs
+        ])
+        recent_qs = Visit.with_product_types(recent_qs, product_types)
+        recent_qs = recent_qs.order_by(*self.visit_ordering_desc)
 
         context['lists'].extend([{
-            'color': self.HEADING_GREEN,
-            'type': 'Visit',
-            'title': ungettext_lazy(
-                u'%(count)d senest afviklet besøg',
-                u'%(count)d seneste afviklede besøg',
-                'count'
-            ) % {'count': recent_qs.count()},
-            'queryset': recent_qs,
-            'limit': limit,
-            'limited_qs': recent_qs[:limit],
-            'button': {
-                'text': _(u'Søg i alle'),
-                'link': reverse('visit-customlist') + "?type=%s" %
-                VisitCustomListView.TYPE_LATEST_COMPLETED
-            }
-        }, {
             'color': self.HEADING_BLUE,
             'type': 'Visit',
             'title': ungettext_lazy(
@@ -98,6 +117,22 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_TODAY
+            }
+        }, {
+            'color': self.HEADING_GREEN,
+            'type': 'Visit',
+            'title': ungettext_lazy(
+                u'%(count)d afviklet besøg',
+                u'%(count)d afviklede besøg',
+                'count'
+            ) % {'count': recent_qs.count()},
+            'queryset': recent_qs,
+            'limit': limit,
+            'limited_qs': recent_qs[:limit],
+            'button': {
+                'text': _(u'Søg i alle'),
+                'link': reverse('visit-customlist') + "?type=%s" %
+                VisitCustomListView.TYPE_LATEST_COMPLETED
             }
         }])
 
@@ -128,6 +163,13 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
+
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = [
+            {'url': reverse('user_profile'), 'text': _(u'Min side')}
+        ]
+        return breadcrumbs
 
     datediff_sql = """
         LEAST(
@@ -166,32 +208,26 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             return []
 
     def lists_for_editors(self, limit=10):
-        visitlist = {
-            'color': self.HEADING_BLUE,
-            'type': 'Product',
-            'title': {
-                'text': ungettext_lazy(
-                    u'%(count)d tilbud i min enhed',
-                    u'%(count)d tilbud i min enhed',
-                    'count'
-                ),
-                'link': reverse('search') + '?u=-3'
-            },
-            'queryset': Product.objects.filter(
-                organizationalunit=self.request.user
-                .userprofile.get_unit_queryset()
-            ).order_by("-statistics__created_time"),
-            'limit': limit
-        }
 
-        if visitlist['queryset'].count() > limit:
-            visitlist['limited_qs'] = visitlist['queryset'][:limit]
-            visitlist['button'] = {
-                'text': _(u'Søg i alle'),
-                'link': reverse('search') + '?u=-3'
-            }
-
+        product_types = self.product_types()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
+
+        unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
+        # See also VisitSearchView.filter_by_participants
+        unplanned_qs = Visit.unit_filter(
+            unplanned_qs,
+            unit_qs
+        )
+        unplanned_qs = unplanned_qs.annotate(
+            num_participants=(
+                Coalesce(Count("bookings__booker__pk"), 0) +
+                Coalesce(
+                    Sum("bookings__booker__attendee_count"),
+                    0
+                )
+            )
+        ).filter(num_participants__gte=1)
+        unplanned_qs = Visit.with_product_types(unplanned_qs, product_types)
 
         unplanned = {
             'color': self.HEADING_RED,
@@ -202,19 +238,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.unit_filter(
-                    Visit.being_planned_queryset(
-                        is_multi_sub=False
-                    ),
-                    unit_qs
-                ).annotate(num_participants=(
-                    Coalesce(Count("bookings__booker__pk"), 0) +
-                    Coalesce(
-                        Sum("bookings__booker__attendee_count"),
-                        0
-                    )
-                )).filter(num_participants__gte=1)
-                # See also VisitSearchView.filter_by_participants
+                unplanned_qs
+            ).order_by(
+                *self.visit_ordering_asc
             ),
             'limit': limit
         }
@@ -225,6 +251,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
+        planned_qs = Visit.planned_queryset(is_multi_sub=False)
+        planned_qs = Visit.unit_filter(planned_qs, unit_qs)
+        planned_qs = Visit.with_product_types(planned_qs, product_types)
+
         planned = {
             'color': self.HEADING_GREEN,
             'type': 'Visit',
@@ -234,12 +264,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.unit_filter(
-                    Visit.planned_queryset(
-                        is_multi_sub=False
-                    ),
-                    unit_qs
-                )
+                planned_qs
+            ).order_by(
+                *self.visit_ordering_asc
             ),
             'limit': limit
         }
@@ -250,11 +277,20 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-search') + '?u=-3&w=-2&go=1'
             }
 
-        return [visitlist, unplanned, planned]
+        return [unplanned, planned]
 
     def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
+        product_types = self.product_types()
+
+        assignable_qs = profile.can_be_assigned_to_qs
+        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
+        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+
+        assigned_qs = profile.all_assigned_visits()
+        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
+        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
 
         return [
             {
@@ -265,7 +301,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits
+                    eventtime__visit=profile.potentially_assigned_visits,
+                    type__in=product_types
                 ).distinct().order_by("title"),
                 'limit': limit
             },
@@ -277,11 +314,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': Visit.unit_filter(
-                    profile.can_be_assigned_to_qs, unit_qs
-                ).order_by(
-                    'eventtime__start', 'eventtime__end'
-                ),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -293,10 +326,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    Visit.unit_filter(
-                        profile.all_assigned_visits(),
-                        unit_qs
-                    )
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering_desc
                 ),
                 'limit': limit
             }
@@ -305,6 +337,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_hosts(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
+        product_types = self.product_types()
+
+        assignable_qs = profile.can_be_assigned_to_qs
+        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
+        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+
+        assigned_qs = profile.all_assigned_visits()
+        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
+        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
 
         return [
             {
@@ -327,11 +368,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': Visit.unit_filter(
-                    profile.can_be_assigned_to_qs, unit_qs
-                ).order_by(
-                    'eventtime__start', 'eventtime__end'
-                ),
+                'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
                 'limit': limit
             },
             {
@@ -343,16 +380,45 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    Visit.unit_filter(
-                        profile.all_assigned_visits(), unit_qs
-                    )
+                    assigned_qs
+                ).order_by(
+                    *self.visit_ordering_desc
                 ),
                 'limit': limit
             }
         ]
 
 
-class CreateUserView(FormView, UpdateView):
+class ListAjaxView(TemplateView):
+    template_name = 'profile/item_list.html'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    type_map = {
+        'Visit': Visit,
+        'Product': Product
+    }
+
+    def get_context_data(self, **kwargs):
+        type = self.kwargs['type']
+        cls = self.type_map[type]
+        ids = self.request.POST.getlist('id[]')
+        ordering = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+        context = {
+            'headerless': True,
+            'list': {
+                'type': type,
+                'limit': sys.maxint,
+                'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
+            }
+        }
+        context.update(kwargs)
+        return super(ListAjaxView, self).get_context_data(**context)
+
+
+class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
     model = User
     form_class = UserCreateForm
     template_name = 'profile/create_user.html'
@@ -414,7 +480,7 @@ class CreateUserView(FormView, UpdateView):
                     raise AccessDenied(
                         _(u"Du har ikke rettigheder til at redigere brugere "
                           u"med rollen \"%s\""
-                          % profile_models.role_to_text(object_role))
+                          % profile.constants.role_to_text(object_role))
                     )
             return result
         else:
@@ -492,24 +558,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-
-        context['breadcrumbs'] = [
-            {'url': reverse('user_profile'), 'text': _(u'Min side')},
-            {'url': reverse('user_list'), 'text': _(u'Administrér brugere')},
-        ]
-        if self.object and self.object.pk:
-            context['breadcrumbs'].append({
-                'url': reverse('user_edit', args=[self.object.pk]),
-                'text': _(u"Redigér bruger '%s'") % self.object.username
-            })
-        else:
-            context['breadcrumbs'].append({
-                'url': reverse('user_create'),
-                'text': _(u'Opret ny bruger')
-            })
-
         context.update(kwargs)
-
         return super(CreateUserView, self).get_context_data(**context)
 
     def get_form_kwargs(self):
@@ -532,8 +581,26 @@ class CreateUserView(FormView, UpdateView):
         except:
             return '/'
 
+    def get_breadcrumb_args(self):
+        return [self.object]
 
-class DeleteUserView(DeleteView):
+    @staticmethod
+    def build_breadcrumbs(object):
+        breadcrumbs = UserListView.build_breadcrumbs()
+        if object and object.pk:
+            breadcrumbs.append({
+                'url': reverse('user_edit', args=[object.pk]),
+                'text': _(u"Redigér bruger '%s'") % object.username
+            })
+        else:
+            breadcrumbs.append({
+                'url': reverse('user_create'),
+                'text': _(u'Opret ny bruger')
+            })
+        return breadcrumbs
+
+
+class DeleteUserView(BreadcrumbMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
@@ -545,8 +612,20 @@ class DeleteUserView(DeleteView):
         VisitComment.on_delete_user(self.get_object())
         return super(DeleteUserView, self).delete(request, *args, **kwargs)
 
+    def get_breadcrumb_args(self):
+        return [self.object]
 
-class UserListView(EditorRequriedMixin, ListView):
+    @staticmethod
+    def build_breadcrumbs(object):
+        breadcrumbs = UserListView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('user_delete', args=[object.pk]),
+            'text': _(u"Slet bruger '%s'") % object.username
+        })
+        return breadcrumbs
+
+
+class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = User
     template_name = 'profile/user_list.html'
     context_object_name = "users"
@@ -560,8 +639,9 @@ class UserListView(EditorRequriedMixin, ListView):
 
         qs = self.model.objects.filter(
             userprofile__organizationalunit__in=unit_qs
+        ).exclude(
+             userprofile__user_role__role=NONE
         )
-
         try:
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
@@ -600,15 +680,19 @@ class UserListView(EditorRequriedMixin, ListView):
         ]
 
         context['selected_role'] = self.selected_role
-        context['possible_roles'] = user_role_choices
-
-        context['breadcrumbs'] = [
-            {'url': reverse('user_profile'), 'text': _(u'Min side')},
-            {'text': _(u'Administrér brugere')},
+        context['possible_roles'] = [
+            (id, label) for (id, label) in user_role_choices if id != NONE
         ]
 
         context.update(kwargs)
         return super(UserListView, self).get_context_data(**context)
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'text': _(u'Administrér brugere'),
+            'url': reverse('user_list')
+        }]
 
 
 class UnitListView(EditorRequriedMixin, ListView):
@@ -623,7 +707,7 @@ class UnitListView(EditorRequriedMixin, ListView):
         return user.userprofile.get_unit_queryset()
 
 
-class StatisticsView(EditorRequriedMixin, TemplateView):
+class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
     organizationalunits = []
@@ -647,7 +731,8 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 self.request.GET.get('to_date', None),
                 '%d-%m-%Y'
             )
-            to_date = current_tz.localize(to_date)
+            to_date = current_tz.localize(to_date) + \
+                timedelta(days=1, microseconds=-1)
 
         if self.organizationalunits:
             context['organizationalunits'] = self.organizationalunits
@@ -662,13 +747,25 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visit__eventtime__product__organizationalunit=self
-                    .organizationalunits
+                    Q(**{
+                        'visit__eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    }) |
+                    Q(**{
+                        'visit__cancelled_eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    })
                 )
             if from_date:
-                qs = qs.filter(visit__eventtime__start__gte=from_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__start__gte=from_date) |
+                    Q(visit__cancelled_eventtime__start__gte=from_date)
+                )
             if to_date:
-                qs = qs.filter(visit__eventtime__end__lt=to_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__end__lt=to_date) |
+                    Q(visit__cancelled_eventtime__end__lt=to_date)
+                )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
@@ -716,11 +813,13 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         # Heading
         writer.writerow([
             _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-            _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
-            _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Andet"),
-            _(u"Region"), _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"),
-            _(u"Lærer"), _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
-            _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
+            _(u"Besøgsdato"), _(u"Klassetrin"), _(u"Niveau"),
+            _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
+            _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
+            _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
+            _(u"Lærer email"), _(u"Bemærkninger på tilbud"),
+            _(u"Bemærkninger fra koordinator"), _(u"Bemærkninger fra lærer"),
+            _(u"Værter"), _(u"Undervisere")
         ])
         # Rows
         for booking in context['bookings']:
@@ -743,36 +842,69 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 if booking.classbooking.custom_desired:
                     custom_desired = booking.visit.product.custom_name
 
+            # Figure out which eventtime to use
+            if hasattr(booking.visit, 'eventtime'):
+                eventtime = booking.visit.eventtime
+                time_extra = ""
+            else:
+                eventtime = booking.visit.cancelled_eventtime
+                time_extra = " (aflyst)"
+
+            timetext = " til " .join([x.strip() for x in [
+                str(eventtime.l10n_start or "")[0:16],
+                str(eventtime.l10n_end or "")[0:16]
+            ] if len(x.strip()) > 0])
+
+            try:
+                postalregion = booking.booker.school.\
+                                     postcode.region.name or ""
+            except:
+                postalregion = ""
+            try:
+                postalcode = booking.booker.school.postcode.number or ""
+            except:
+                postalcode = ""
+            try:
+                postalcity = booking.booker.school.postcode.city or ""
+            except:
+                postalcity = ""
+
+            leveltext = u", ".join(
+                [
+                    u"%s - %s" % (x.subject, x.level)
+                    for x in booking.bookinggrundskolesubjectlevel_set.all()
+                ] + [
+                    u"%s - niveau %s" % (
+                        x.subject, x.level.get_level_display()
+                    )
+                    for x in
+                    booking.bookinggymnasiesubjectlevel_set.all()
+                ]
+            )
+
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
-                str(booking.visit.eventtime.start or "") + " til " +
-                str(booking.visit.eventtime.end or ""),
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in booking.bookinggrundskolesubjectlevel_set.all()
-                ]) +
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in
-                    booking.bookinggymnasiesubjectlevel_set.all()
-                ]),
+                timetext + time_extra,
+                booking.booker.get_level_display(),
+                leveltext,
                 str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,
                 custom_desired,
-                booking.booker.school.postcode.region.name or "",
+                postalregion,
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number or "") + " " +
-                booking.booker.school.postcode.city or "",
+                str(postalcode) + " " +
+                postalcity,
                 unicode(booking.booker.school.address or ""),
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
-                booking.comments or "",
+                booking.visit.comments or "",
+                booking.notes or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
@@ -786,6 +918,13 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             ])
 
         return response
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('statistics'),
+            'text': _(u'Statistik over tilmeldinger')
+        }]
 
 
 class EmailLoginView(DetailView):
@@ -841,7 +980,7 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyProductsView(EditorRequriedMixin, UpdateView):
+class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
     model = UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
@@ -868,6 +1007,13 @@ class EditMyProductsView(EditorRequriedMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('user_profile')
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('my-resources'),
+            'text': _(u'Mine tilbud')
+        }]
 
 
 class AvailabilityView(LoginRequiredMixin, DetailView):

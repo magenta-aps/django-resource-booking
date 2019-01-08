@@ -11,7 +11,9 @@
 
 
 {% block content %}
-    <div class="divider"></div>
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% trans "Opret besøg for tidspunkt for" %}
         '<a href="{% url 'product-view' object.product.pk %}">{{ object.product.title }}</a>'

@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
+{% if not headerless %}
 <div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
@@ -15,16 +16,13 @@
             {% endif %}
         </div>
         <div class="panel-body list" data-list-item=".list-group-item">
-
+            <div class="list-within-limit">
+{% endif %}
             {% if list.type == 'Visit' %}
-                <div class="list-within-limit">
 
                 {% for visit in list.queryset %}
 
-                    {% if forloop.counter0 == list.limit %}
-                        </div>
-                        <div class="list-outside-limit">
-                    {% endif %}
+                    {% if forloop.counter0 < list.limit %}
 
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-view' visit.real.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
@@ -35,12 +33,82 @@
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=visit.real.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
+                                        <label>{% trans 'Dato/tid:' %}</label>
+                                        {{ visit.real.display_value }}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
-                                    {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %}
-                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li>
+                                    <li>
+                                        <label>{% trans 'Tilbud:' %}</label>
+                                        <ul>
+                                            {% for product in visit.real.products %}
+                                                <li>{{ product.title }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <label>{% trans 'Besøgsnr:' %}</label>
+                                        #{{ visit.id }}
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Klassetrin/niveau:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
+                                                <li>{{ booking.booker.get_level_display }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Fag:' %}</label>
+                                        <ul>
+                                            {% for booking in visit.get_bookings %}
+                                                {% for subjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
+                                                    <li>{{ subjectlevel.subject.name }}</li>
+                                                {% endfor %}
+                                                {% for subjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
+                                                    <li>{{ subjectlevel.subject.name }} {{ subjectlevel.subject.level }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <label>{% trans 'Antal tilmeldte:' %}</label>
+                                        {{ visit.real.nr_attendees }}
+                                    </li>
+{#                                    Deaktiveret jf. #20680 #}
+{#                                    {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %} #}
+{#                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li> #}
+{#                                    {% endif %} #}
+                                    <li data-hide-if-target-empty=">ul">
+                                        <label>{% trans 'Undervisere:' %}</label>
+                                        <ul>
+                                            {% for underviser in visit.assigned_teachers %}
+                                                <li>{{ underviser.get_full_name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+
+                                    {% if visit.assigned_hosts.count %}
+                                        <li data-hide-if-target-empty=">ul">
+                                            <label>{% trans 'Værter:' %}</label>
+                                            <ul>
+                                                {% for host in visit.assigned_hosts %}
+                                                    <li>{{ host.get_full_name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
                                     {% endif %}
+
+                                    {% if visit.unit.get_coordinators|length > 0 %}
+                                        <li data-hide-if-target-empty=">ul">
+                                            <label>{% trans 'Koordinatorer:' %}</label>
+                                            <ul>
+                                                {% for coordinator in visit.unit.get_coordinators %}
+                                                    <li>{{ coordinator.get_full_name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+
+
                                 </ul>
                             </div>
                         </a>
@@ -89,17 +157,13 @@
                             </p>
                         {% endif %}
                     </div>
+                    {% endif %}
                 {% endfor %}
-                </div>
 
             {% elif list.type == 'Product' %}
 
-                <div class="list-within-limit">
                 {% for res in list.queryset %}
-                    {% if forloop.counter0 == list.limit %}
-                        </div>
-                        <div class="list-outside-limit">
-                    {% endif %}
+                    {% if forloop.counter0 < list.limit %}
 
                         <div class="list-group-item clearfix">
 
@@ -158,15 +222,28 @@
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
-                </div>
             {% endif %}
+{% if not headerless %}
+            </div>
+            <div class="list-outside-limit"></div>
 
             {% if list.queryset.count > list.limit %}
-                <button class="btn btn-primary reveal-link label label-primary pull-right" data-text-reveal="{% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}" data-text-unreveal="{% trans 'Skjul' %}">
+                <button
+                        class="btn btn-primary reveal-link label label-primary pull-right"
+                        data-text-reveal="{% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}"
+                        data-text-unreveal="{% trans 'Skjul' %}"
+                        data-text-loading="{% trans 'Henter...' %}"
+                        data-text-error="{% trans 'Fejl' %}"
+                        data-item-type="{{ list.type }}"
+                        data-item-ids="{% for item in list.queryset %}{% if forloop.counter0 >= list.limit %}{{ item.id }},{% endif %}{% endfor %}"
+                        data-csrf-token="{{ csrf_token }}"
+                >
                     {% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}
                 </button>
             {% endif %}
         </div>
     </div>
 </div>
+{% endif %}

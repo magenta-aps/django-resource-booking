@@ -10,7 +10,15 @@
 
             {% include 'common/breadcrumbrow.html' %}
             <a class="batoToKU" href="http://fokus.ku.dk/">Tilbage til portal</a>
-            <h1 class="results-title">{% trans 'Tilbud' %}</h1>
+            <h1 class="results-title">
+                {% if type == 'latest_booked' %}
+                    {% trans 'Senest tilmeldte tilbud' %}
+                {% elif type == 'latest_updated' %}
+                    {% trans 'Senest opdaterede tilbud' %}
+                {% else %}
+                    {% trans 'Tilbud' %}
+                {% endif %}
+            </h1>
 
             {% if not results %}
                 <p>{% trans 'Ingen tilbud fundet.' %}</p>

@@ -54,11 +54,13 @@ class ResourceTypeForm(forms.Form):
             for x in ResourceType.objects.all()
             if x.id not in EXCEPT_TYPES
         ],
-        required=True
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
         queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     def __init__(self, **kwargs):
@@ -114,10 +116,11 @@ class EditResourceForm(forms.ModelForm):
         old_save_m2m = self.save_m2m
 
         def save_m2m():
+            values = tuple(self.cleaned_data['resourcepools'])
+
             old_save_m2m()
             instance.resourcepool_set.clear()
-            for resourcepool in self.cleaned_data['resourcepools']:
-                instance.resourcepool_set.add(resourcepool)
+            instance.resourcepool_set.add(*values)
 
         self.save_m2m = save_m2m
         if commit:
@@ -143,7 +146,8 @@ class EditItemResourceForm(EditResourceForm):
     class Meta:
         model = ItemResource
         fields = EditResourceForm.Meta.fields + ['name', 'locality']
-        widgets = EditResourceForm.Meta.widgets
+        widgets = {'locality': forms.Select(attrs={'class': 'form-control'})}
+        widgets.update(EditResourceForm.Meta.widgets)
 
 
 class EditRoomResourceForm(EditResourceForm):
@@ -180,11 +184,13 @@ class ResourcePoolTypeForm(forms.Form):
         choices=[
             (x.id, x.name) for x in ResourceType.objects.all()
         ],
-        required=True
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        queryset=OrganizationalUnit.objects.all()
+        queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     def __init__(self, **kwargs):
@@ -213,14 +219,18 @@ class EditResourcePoolForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(EditResourcePoolForm, self).__init__(*args, **kwargs)
         # Limit choices to the same unit and type
-        self.fields['resources'].choices = [
-            (resource.subclass_instance.id,
-             resource.subclass_instance.get_name())
-            for resource in Resource.objects.filter(
-                organizationalunit=self.instance.organizationalunit,
-                resource_type=self.instance.resource_type
-            )
-        ]
+        choices = []
+        for resource in Resource.objects.filter(
+            organizationalunit=self.instance.organizationalunit,
+            resource_type=self.instance.resource_type
+        ):
+            try:
+                # This lookup might fail, see ticket #20705
+                si = resource.subclass_instance
+                choices.append((si.id, si.get_name()))
+            except:
+                pass
+        self.fields['resources'].choices = choices
 
 
 class EditResourceRequirementForm(forms.ModelForm):

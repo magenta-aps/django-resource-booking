@@ -38,7 +38,11 @@
             </div>
         </div>
 
-        {% include 'common/continue_cancel.html' %}
+        {% if object.pk %}
+            {% include 'common/save_cancel.html' %}
+        {% else %}
+            {% include 'common/create_cancel.html' %}
+        {% endif %}
         <div class="divider"></div>
 
     </form>

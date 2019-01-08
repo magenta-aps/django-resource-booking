@@ -11,10 +11,14 @@ import booking.models
 
 
 class ChangeVisitStatusForm(forms.ModelForm):
-
     class Meta:
         model = Visit
         fields = ['workflow_status']
+        widgets = {
+            'workflow_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitStatusForm, self).__init__(*args, **kwargs)
@@ -34,6 +38,11 @@ class ChangeVisitResponsibleForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisit
         fields = ['responsible']
+        widgets = {
+            'responsible': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitResponsibleForm, self).__init__(*args, **kwargs)
@@ -95,18 +104,17 @@ class ChangeVisitRoomsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['room_status']
+        widgets = {
+            'room_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
 
 class ChangeVisitCommentsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['comments']
-
-
-class ChangeVisitEvalForm(forms.ModelForm):
-    class Meta:
-        model = Visit
-        fields = ['evaluation_link']
 
 
 class VisitAddLogEntryForm(forms.Form):
@@ -239,7 +247,12 @@ class VisitAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def inherit_from(self):
-        return self.associated_visit.product.get_autosend(self.template_type)
+        visit = self.associated_visit
+        for product in visit.products:
+            autosend = product.get_autosend(self.template_type)
+            if autosend is not None:
+                return autosend
+        # return self.associated_visit.product.get_autosend(self.template_type)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
@@ -271,7 +284,9 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                     autosend.template_type for autosend in visit_autosends
                 ]
                 for type in all_types:
-                    if type.key not in existing_types:
+                    if type.key not in existing_types and \
+                            instance.product.type not in \
+                            type.disabled_product_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,

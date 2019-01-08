@@ -16,6 +16,9 @@
             {% if object.can_delete %}
                 <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-danger" role="button">{% trans 'Slet ressourcen' %}</a>
             {% endif %}
+            {% if object.user %}
+                <a href="{% url 'availability' object.user.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Se oversigt' %}</a>
+            {% endif %}
         </div>
     </div>
 

@@ -11,15 +11,15 @@
 <p>
     Vær opmærksom på, om der er forberedelsestid.
 </p>
+<p>
+    {% include 'booking/email/snippets/preparation.html' %}
+</p>
 {% if booking %}
 
     {# Denne del bruges når mailen sendes i forbindelse med en tilmelding #}
-
+    
     <p>
         Detaljer for tilmelding:
-    </p>
-    <p>
-        <strong>Forberedelsestid: </strong>{{ product.preparation_time|default:'Ingen' }}
     </p>
     <p>
         {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
@@ -31,9 +31,6 @@
 
     <p>
         Detaljer for tilmeldte:
-    </p>
-    <p>
-        {% include 'booking/email/snippets/preparation.html' %}
     </p>
     <p>
         {% include 'booking/email/snippets/booking_list.html' %}
