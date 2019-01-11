@@ -1322,7 +1322,7 @@ class KUEmailRecipient(models.Model):
         NONE: TYPE_UNKNOWN
     }
 
-    all_types = set([k for k,v in type_choices])
+    all_types = set([k for k, v in type_choices])
 
     email_message = models.ForeignKey('KUEmailMessage')
     name = models.TextField(blank=True, null=True)
