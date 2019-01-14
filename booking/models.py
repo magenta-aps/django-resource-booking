@@ -1385,6 +1385,7 @@ class KUEmailRecipient(models.Model):
                 self.formatted_address = u"\"%s\" <%s>" % (self.name, address)
             else:
                 self.formatted_address = address
+        self.email = address
 
     def get_full_name(self):
         return self.name if self.name is not None else self.formatted_address
