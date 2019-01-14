@@ -17,6 +17,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
+from django.forms import HiddenInput
 from django.http import Http404, HttpResponseBadRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -2831,33 +2832,52 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
             return self.form_invalid(forms)
 
     def form_valid(self, forms):
-        object = self.object = forms['bookingform'].save(commit=False)
-        object.visit = self.visit
-        if 'bookerform' in forms:
-            object.booker = forms['bookerform'].save()
-        object.save()
+        bookingform = forms['bookingform']
+        booking = self.object = bookingform.save(commit=False)
+        visit = booking.visit = self.visit
 
-        for product in self.visit.products:
+        if visit:
+            cleaned_data = bookingform.cleaned_data
+            if 'desired_time' in cleaned_data:
+                visit.desired_time = cleaned_data['desired_time']
+            desired_date = cleaned_data.get('desired_datetime_date')
+            desired_time = cleaned_data.get('desired_datetime_time')
+            if desired_date is not None and desired_time is not None:
+                desired_datetime = datetime.combine(desired_date, desired_time)
+                visit.desired_time = \
+                    desired_datetime.strftime("%d.%m.%Y %H:%M")
+                visit.save()
+                # if visit.is_multiproductvisit \
+                #       and hasattr(visit, 'eventtime'):
+                #     print "form save: %s" % str(visit.eventtime.start)
+                #     visit.eventtime.start = desired_time
+                #     print "form save: %s" % str(visit.eventtime.start)
+                #     visit.eventtime.save()
+        if 'bookerform' in forms:
+            booking.booker = forms['bookerform'].save()
+        booking.save()
+
+        for product in visit.products:
             for evaluation in product.evaluations:
                 if evaluation is not None:
                     evaluationguest = SurveyXactEvaluationGuest(
                         evaluation=evaluation,
-                        guest=object.booker
+                        guest=booking.booker
                     )
                     evaluationguest.save()
 
-        object.autosend(
+        booking.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
         )
 
-        object.autosend(EmailTemplateType.notify_editors__booking_created)
+        booking.autosend(EmailTemplateType.notify_editors__booking_created)
 
-        object.autosend(EmailTemplateType.notify_host__req_room)
+        booking.autosend(EmailTemplateType.notify_host__req_room)
 
         return redirect(
             reverse(
                 'visit-booking-success',
-                args=[object.visit.products[0].id]
+                args=[visit.products[0].id]
             ) + "?modal=0"
         )
 
@@ -2866,7 +2886,6 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 
     def get_forms(self, data=None):
         forms = {}
-        bookingform = None
 
         if hasattr(self.request, 'LANGUAGE_CODE'):
             lang = self.request.LANGUAGE_CODE
@@ -2921,6 +2940,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 
         if bookingform is not None:
             if self.visit.multiproductvisit:
+                print "bookingform.class: %s" % bookingform.__class__.__name__
                 if 'tmp' in self.request.GET:
                     temp = MultiProductVisitTemp.objects.get(
                         id=self.request.GET['tmp']
@@ -2928,6 +2948,12 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
                     bookingform.initial['notes'] = temp.notes
                 if 'desired_time' in bookingform.fields:
                     del bookingform.fields['desired_time']
+                if temp is not None and temp.date is not None and \
+                        'desired_datetime_date' in bookingform.fields:
+                    bookingform.fields['desired_datetime_date'].widget = \
+                        HiddenInput()
+                    bookingform.initial['desired_datetime_date'] = \
+                        temp.date.strftime('%d-%m-%Y')
 
             forms['bookingform'] = bookingform
         return forms
