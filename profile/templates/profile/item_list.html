@@ -97,11 +97,11 @@
                                         </li>
                                     {% endif %}
 
-                                    {% if visit.unit.get_coordinators|length > 0 %}
+                                    {% if visit.responsible_persons|length > 0 %}
                                         <li data-hide-if-target-empty=">ul">
-                                            <label>{% trans 'Koordinatorer:' %}</label>
+                                            <label>{% trans 'Koordinator:' %}</label>
                                             <ul>
-                                                {% for coordinator in visit.unit.get_coordinators %}
+                                                {% for coordinator in visit.responsible_persons %}
                                                     <li>{{ coordinator.get_full_name }}</li>
                                                 {% endfor %}
                                             </ul>
