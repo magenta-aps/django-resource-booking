@@ -5,12 +5,20 @@
 
     {# Denne besked sendes til brugere der login i systemet (koordinatorer) #}
     {% if visit.is_multiproductvisit %}
-        En eller flere gæster har tilmeldt sig
+        En eller flere gæster har tilmeldt sig tilbuddene:
+        <ul>
+            {% for subvisit in visit.real.subvisits_by_time %}
+                {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
+                    <li><a href="{% full_url 'product-view' visit.product.pk %}">{{ visit.product.title }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        Samlet i dette besøg: <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.display_title }}</a>
+        {% include 'booking/email/snippets/visit_time.html' %}.
     {% else %}
         En eller flere gæster har tilmeldt sig besøget
-    {% endif %}
-    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
-    {% if not visit.is_multiproductvisit %}
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.product.title }}</a>
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet:
         {% include 'booking/email/snippets/product_maplink.html' %}.
     {% endif %}
@@ -23,11 +31,19 @@
 
     {# Denne besked sendes til kontaktpersoner (uden login) der er angivet på tilbuddet #}
     {% if visit.is_multiproductvisit %}
-        En eller flere gæster har tilmeldt sig
+        En eller flere gæster har tilmeldt sig tilbuddene:
+        <ul>
+            {% for subvisit in visit.real.subvisits_by_time %}
+                {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
+                    <li><a href="{% full_url 'product-view' visit.product.pk %}">{{ visit.product.title }}</a></li>
+                {% endif %}
+        {% endfor %}
+        </ul>
     {% else %}
         En eller flere gæster har tilmeldt sig besøget
+        <a href="{% full_url 'product-view' product.pk %}">{{ visit.product.title }}</a>
+        {% include 'booking/email/snippets/visit_time.html' %}.
     {% endif %}
-    <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     {% if not visit.is_multiproductvisit %}
         Besøget afholdes på denne lokalitet: {% include 'booking/email/snippets/product_maplink.html' %}.
     {% endif %}
