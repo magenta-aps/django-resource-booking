@@ -1,4 +1,3 @@
-Aflysning af besøg {{ visit.display_title }}
 {% if visit.is_multiproductvisit %}
 Aflysning af besøgene
 {% for subvisit in visit.real.subvisits_unordered_noncancelled %}
