@@ -2,6 +2,7 @@
 
 import math
 import random
+import re
 import sys
 import uuid
 from datetime import timedelta, datetime, date, time
@@ -6453,6 +6454,10 @@ class KUEmailMessage(models.Model):
                 ).first()
 
             subject = template.expand_subject(ctx)
+            subject = ''.join([
+                re.sub(r'\s+', ' ', x)
+                for x in subject.split('\n')
+            ]).strip()
             subject = subject.replace('\n', '')
 
             body = template.expand_body(ctx, encapsulate=True).strip()
