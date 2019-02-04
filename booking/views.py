@@ -3498,6 +3498,7 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
         if form.is_valid():
             self.object.cancelled = True
             self.object.save()
+            self.object.visit.resources_updated()
             return redirect(
                 reverse('booking-view', args=[self.object.pk])
             )
@@ -3633,6 +3634,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                         booking.enqueue()
                     elif action == 'dequeue':
                         booking.dequeue()
+                self.object.resources_updated()
         return self.get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
