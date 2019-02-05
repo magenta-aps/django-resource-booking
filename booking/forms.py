@@ -394,13 +394,18 @@ class ProductForm(forms.ModelForm):
             'tilbudsansvarlig': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
+
             'booking_close_days_before': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
             'booking_max_days_in_future': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
-            'inquire_enabled': CheckboxInput()
+            'inquire_enabled': CheckboxInput(),
+            'education_name': TextInput(attrs={
+                'class': 'form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
         }
         labels = {
             'custom_name': _('Navn')
@@ -542,6 +547,7 @@ class StudentForADayForm(ProductForm):
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
                   'booking_max_days_in_future', 'inquire_enabled',
+                  'education_name'
                   )
         widgets = ProductForm.Meta.widgets
 
