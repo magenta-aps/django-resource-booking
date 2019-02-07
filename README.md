@@ -9,6 +9,11 @@ Django Resource Booking - KUBooking
 ## Run install.sh in the root folder of the project
 	./install.sh
 
+## Setup database in psql (sudo -u postgres psql)
+	create database resource_booking;
+	create user resource_booking with password 'resource_booking';
+	grant all privileges on database resource_booking to resource_booking;
+
 ## Setup frontend
 	cd thirdparty && npm install && cd ..
 	python manage.py collectstatic
@@ -29,7 +34,7 @@ Django Resource Booking - KUBooking
 	user_role = UserRole.objects.create(role=ADMINISTRATOR)
 	UserProfile.objects.create(user=user, user_role=user_role)
 
-## Run the following which generates the data for our models
+## Run the following which generates the preliminary data for our models
 	from booking.models import *
 	from profiles.models import *
 
