@@ -4401,7 +4401,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         )
 
     @staticmethod
-    def get_recently_held(time=timezone.now()):
+    def get_recently_held(time=None):
+        if not time:
+            time = timezone.now()
+
         return Visit.objects.filter(
             workflow_status__in=[
                 Visit.WORKFLOW_STATUS_EXECUTED,
