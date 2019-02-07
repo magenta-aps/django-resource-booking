@@ -5,11 +5,11 @@ Django Resource Booking - KUBooking
 
 ## Clone the project
 ```bash
-	git clone git@github.com:magenta-aps/django-resource-booking.git
+git clone git@github.com:magenta-aps/django-resource-booking.git
 ```
 ## Run install.sh in the root folder of the project
 ```bash
-	./install.sh
+./install.sh
 ```
 
 ## Setup local database in psql (sudo -u postgres psql)
@@ -21,8 +21,8 @@ grant all privileges on database resource_booking to resource_booking;
 
 ## Setup frontend
 ```bash
-	cd thirdparty && npm install && cd ..
-	python manage.py collectstatic
+cd thirdparty && npm install && cd ..
+python manage.py collectstatic
 ```
 
 ## Create your user
