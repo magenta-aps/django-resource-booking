@@ -172,14 +172,23 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
 class DisabledChoiceMixin(object):
     disabled_values = []
 
-    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+    def create_option(self, name,
+                      value, label,
+                      selected, index,
+                      subindex=None, attrs=None):
         disabled = False
         if isinstance(label, dict):
-            label, disabled = label['label'], label['label'] in self.disabled_values
-        option_dict = super(SelectWithDisabled, self).create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+            label, disabled = (label['label'],
+                               label['label'] in self.disabled_values)
+        option_dict = super(widgets.Select, self).create_option(
+            name, value,
+            label, selected,
+            index, subindex=subindex,
+            attrs=attrs)
         if disabled:
             option_dict['attrs']['disabled'] = 'disabled'
         return option_dict
+
 
 # A Select widget that may have disabled options
 class SelectDisable(DisabledChoiceMixin, widgets.Select):

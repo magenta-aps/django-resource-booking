@@ -112,7 +112,9 @@ resourcepool_calendarevent_kwargs['related_kwargs_name'] = 'pool'
 
 
 urlpatterns = [
-    url('jsi18n/', JavaScriptCatalog.as_view(packages=['recurrence']), name='javascript-catalog'),
+    url('jsi18n/',
+        JavaScriptCatalog.as_view(packages=['recurrence']),
+        name='javascript-catalog'),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     url('^(?:da|en)/.*', LocaleRedirectView.as_view()),
