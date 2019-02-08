@@ -172,27 +172,14 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
 class DisabledChoiceMixin(object):
     disabled_values = []
 
-    def render_option(self, selected_choices, option_value, option_label):
-        if option_value is None:
-            option_value = ''
-        option_value = force_text(option_value)
-        if option_value in selected_choices:
-            selected_html = mark_safe(' selected="selected"')
-            if not self.allow_multiple_selected:
-                # Only allow for a single selection.
-                selected_choices.remove(option_value)
-        else:
-            selected_html = ''
-        if option_value in self.disabled_values:
-            disabled_html = mark_safe(' disabled="disabled"')
-        else:
-            disabled_html = ''
-        return format_html('<option value="{}"{}{}>{}</option>',
-                           option_value,
-                           selected_html,
-                           disabled_html,
-                           force_text(option_label))
-
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        disabled = False
+        if isinstance(label, dict):
+            label, disabled = label['label'], label['label'] in self.disabled_values
+        option_dict = super(SelectWithDisabled, self).create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if disabled:
+            option_dict['attrs']['disabled'] = 'disabled'
+        return option_dict
 
 # A Select widget that may have disabled options
 class SelectDisable(DisabledChoiceMixin, widgets.Select):
@@ -204,50 +191,7 @@ class SelectMultipleDisable(DisabledChoiceMixin, widgets.SelectMultiple):
     pass
 
 
-# Renderer class for choicefields that may have disabled options
-class DisabledChoiceFieldRenderer(widgets.ChoiceFieldRenderer):
-    disabled_values = []
-    real_choice_input_class = None
-
-    def __init__(self, *args, **kwargs):
-        if 'disabled_values' in kwargs:
-            values = kwargs.pop('disabled_values')
-            if type(values) == set:
-                values = list(values)
-            elif type(values) != list:
-                values = [values]
-            self.disabled_values = [unicode(x) for x in values]
-        super(DisabledChoiceFieldRenderer, self).__init__(*args, **kwargs)
-
-    # Overriding an attribute on the superclass that is a class reference
-    # replacing it with a regular function that returns an instance
-    def choice_input_class(self, name, value, attrs, choice, index):
-        (choice_value, choice_label) = choice
-        if unicode(choice_value) in self.disabled_values:
-            attrs['disabled'] = "disabled"
-        return self.real_choice_input_class(name, value, attrs, choice, index)
-
-
-class DisabledRadioFieldRenderer(DisabledChoiceFieldRenderer):
-    real_choice_input_class = widgets.RadioChoiceInput
-
-
-class DisabledCheckboxFieldRenderer(DisabledChoiceFieldRenderer):
-    real_choice_input_class = widgets.CheckboxChoiceInput
-
-
 # A CheckboxSelectMultiple widget that may have disabled options
 class CheckboxSelectMultipleDisable(DisabledChoiceMixin,
                                     widgets.CheckboxSelectMultiple):
-    renderer = DisabledCheckboxFieldRenderer
-    disabled_values = []
-
-    def get_renderer(self, name, value, attrs=None, choices=()):
-        if value is None:
-            value = self._empty_value
-        final_attrs = self.build_attrs(attrs)
-        choices = list(chain(self.choices, choices))
-        return self.renderer(
-            name, value, final_attrs, choices,
-            disabled_values=self.disabled_values
-        )
+    pass

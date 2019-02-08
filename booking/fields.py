@@ -17,7 +17,7 @@ COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
 COLUMN_TYPES["django.contrib.gis.db.backends.postgis"] = "interval"
 
 
-class DurationField(six.with_metaclass(models.SubfieldBase, models.Field)):
+class DurationField(models.Field):
     """
         Store a datetime.timedelta as an INTERVAL in postgres, or a
         CHAR(20) in other database backends.

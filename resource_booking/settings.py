@@ -45,7 +45,6 @@ INSTALLED_APPS = (
     'booking',
     'profile',
     'recurrence',
-    'timedelta',
     'tinymce',
     'django_cron',
     'macros',
