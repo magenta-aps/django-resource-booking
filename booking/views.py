@@ -2425,6 +2425,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     product = None
     modal = True
     back = None
+    fields = '__all__'
 
     def set_product(self, product_id):
         if product_id is not None:
