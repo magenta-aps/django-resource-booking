@@ -58,4 +58,5 @@ Municipality.create_defaults()
 School.create_defaults()
 GrundskoleLevel.create_defaults()
 EmailTemplateType.set_defaults()
+ResourceType.create_defaults()
 ```
