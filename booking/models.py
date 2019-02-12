@@ -4659,7 +4659,7 @@ class MultiProductVisit(Visit):
     @property
     def unit_qs(self):
         return OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered
+            product__eventtime__visit__in=self.subvisits_unordered
         )
 
     def planned_status_is_blocked(self):
