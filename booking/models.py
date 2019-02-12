@@ -4110,11 +4110,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def unit_filter(qs, unit_qs):
         mpv_qs = MultiProductVisit.objects.filter(
             subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit=unit_qs
+            subvisit__eventtime__product__organizationalunit__in=unit_qs
         )
         return qs.filter(
-            Q(eventtime__product__organizationalunit=unit_qs) |
-            Q(multiproductvisit=mpv_qs)
+            Q(eventtime__product__organizationalunit__in=unit_qs) |
+            Q(multiproductvisit__in=mpv_qs)
         )
 
     # This is used from booking.signals.update_search_indexes
