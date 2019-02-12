@@ -4872,9 +4872,8 @@ class MultiProductVisit(Visit):
 
     @property
     def unit_qs(self):
-        subvisits = self.subvisits_unordered_noncancelled
         return OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=subvisits
+            product__eventtime__visit__in=self.subvisits_unordered
         )
 
     @property
