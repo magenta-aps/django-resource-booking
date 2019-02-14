@@ -1,8 +1,10 @@
 from datetime import timedelta
+from itertools import chain
 
 from django.forms import widgets
 from django.forms.widgets import HiddenInput
 from django.utils.encoding import force_text
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 
