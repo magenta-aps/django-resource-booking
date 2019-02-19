@@ -52,7 +52,8 @@ INSTALLED_APPS = (
     'ckeditor',
     'ckeditor_uploader',
     'hijack',
-    'compat'
+    'compat',
+    'django_extensions'
 )
 # INSTALLED_APPS might be extended with the debug toolbar
 
