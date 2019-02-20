@@ -13,7 +13,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.models import Room, Visit, EmailTemplateType, Product
+from booking.models import Room, Visit, EmailTemplateType, Product, \
+    KUEmailRecipient
 from profile.constants import TEACHER, HOST, NONE
 
 import datetime
@@ -2049,12 +2050,22 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
                 self.visit.autosend(
                     EmailTemplateType.notify_teacher__associated,
-                    [self.resource.teacherresource.user],
+                    [
+                        KUEmailRecipient(
+                            self.resource.teacherresource.user,
+                            KUEmailRecipient.TYPE_TEACHER
+                        )
+                    ],
                     True
                 )
             if resourcetype == ResourceType.RESOURCE_TYPE_HOST:
                 self.visit.autosend(
                     EmailTemplateType.notify_host__associated,
-                    [self.resource.hostresource.user],
+                    [
+                        KUEmailRecipient(
+                            self.resource.hostresource.user,
+                            KUEmailRecipient.TYPE_HOST
+                        )
+                    ],
                     True
                 )

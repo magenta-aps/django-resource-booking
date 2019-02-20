@@ -1288,6 +1288,154 @@ class EmailTemplate(models.Model):
             emailtemplate.save()
 
 
+class KUEmailRecipient(models.Model):
+
+    TYPE_UNKNOWN = 0
+    TYPE_GUEST = 1
+    TYPE_TEACHER = 2
+    TYPE_HOST = 3
+    TYPE_COORDINATOR = 4
+    TYPE_EDITOR = 5
+    TYPE_INQUIREE = 6
+    TYPE_ROOM_RESPONSIBLE = 7
+    TYPE_PRODUCT_RESPONSIBLE = 8
+    TYPE_UNIT_RESPONSIBLE = 9
+
+    type_choices = [
+        (TYPE_UNKNOWN, u'Anden'),
+        (TYPE_GUEST, u'Gæst'),
+        (TYPE_TEACHER, u'Underviser'),
+        (TYPE_HOST, u'Vært'),
+        (TYPE_COORDINATOR, u'Koordinator'),
+        (TYPE_INQUIREE, u'Modtager af spørgsmål'),
+        (TYPE_ROOM_RESPONSIBLE, u'Lokaleansvarlig'),
+        (TYPE_PRODUCT_RESPONSIBLE, u'Tilbudsansvarlig'),
+        (TYPE_UNIT_RESPONSIBLE, u'Enhedsansvarlig')
+    ]
+
+    type_map = {
+        TEACHER: TYPE_TEACHER,
+        HOST: TYPE_HOST,
+        COORDINATOR: TYPE_COORDINATOR,
+        # ADMINISTRATOR = 3
+        FACULTY_EDITOR: TYPE_EDITOR,
+        NONE: TYPE_UNKNOWN
+    }
+
+    all_types = set([k for k, v in type_choices])
+
+    email_message = models.ForeignKey('KUEmailMessage')
+    name = models.TextField(blank=True, null=True)
+    formatted_address = models.TextField(blank=True, null=True)
+    email = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+    guest = models.ForeignKey('Guest', blank=True, null=True)
+    type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
+
+    def __init__(self, base=None, recipient_type=None, *args, **kwargs):
+        super(KUEmailRecipient, self).__init__(*args, **kwargs)
+        address = None
+        if isinstance(base, basestring):
+            address = base
+        elif isinstance(base, User):
+            self.user = base
+            self.name = base.get_full_name()
+            self.type = KUEmailRecipient.type_map.get(
+                self.user.userprofile.get_role(), recipient_type
+            )
+            address = base.email
+        elif isinstance(base, Guest):
+            self.guest = base
+            self.name = base.get_name()
+            self.type = KUEmailRecipient.TYPE_GUEST
+            address = base.get_email()
+        else:
+            try:
+                self.name = base.get_name()
+            except:
+                pass
+            try:
+                address = base.get_email()
+            except:
+                pass
+
+        if recipient_type is not None:
+            self.type = recipient_type
+
+        if address is not None and address != '':
+            if self.name is not None:
+                self.formatted_address = u"\"%s\" <%s>" % (self.name, address)
+            else:
+                self.formatted_address = address
+        self.email = address
+
+    def get_full_name(self):
+        return self.name if self.name is not None else self.formatted_address
+
+    @property
+    def role_name(self):
+        for recipient_type, name in KUEmailRecipient.type_choices:
+            if self.type == recipient_type:
+                return name
+        return u"Ukendt (%d)" % self.type
+
+    @staticmethod
+    def multiple(bases, recipient_type=None):
+        if isinstance(bases, QuerySet):
+            bases = list(bases)
+        if type(bases) is not list:
+            bases = [bases]
+        return list([
+            x for x in [
+                KUEmailRecipient(base, recipient_type) for base in bases
+            ] if x.formatted_address is not None
+        ])
+
+    @property
+    def is_guest(self):
+        return self.type == KUEmailRecipient.TYPE_GUEST
+
+    @property
+    def is_teacher(self):
+        return self.type == KUEmailRecipient.TYPE_TEACHER
+
+    @property
+    def is_host(self):
+        return self.type == KUEmailRecipient.TYPE_HOST
+
+    @property
+    def is_coordinator(self):
+        return self.type == KUEmailRecipient.TYPE_COORDINATOR
+
+    @property
+    def is_editor(self):
+        return self.type == KUEmailRecipient.TYPE_EDITOR
+
+    @property
+    def is_inquiree(self):
+        return self.type == KUEmailRecipient.TYPE_INQUIREE
+
+    @property
+    def is_room_responsible(self):
+        return self.type == KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
+
+    @property
+    def is_product_responsible(self):
+        return self.type == KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+
+    @property
+    def is_unit_responsible(self):
+        return self.type == KUEmailRecipient.TYPE_UNIT_RESPONSIBLE
+
+    @staticmethod
+    def filter_list(recp_list, types=all_types):
+        return [x for x in recp_list if x.type in types]
+
+    @staticmethod
+    def exclude_list(recp_list, types=all_types):
+        return [x for x in recp_list if x.type not in types]
+
+
 class ObjectStatistics(models.Model):
 
     created_time = models.DateTimeField(
@@ -6291,143 +6439,6 @@ class KUEmailMessage(models.Model):
     def replies(self):
         return KUEmailMessage.objects.filter(reply_to_message=self)\
             .order_by('-created')
-
-
-class KUEmailRecipient(models.Model):
-
-    TYPE_UNKNOWN = 0
-    TYPE_GUEST = 1
-    TYPE_TEACHER = 2
-    TYPE_HOST = 3
-    TYPE_COORDINATOR = 4
-    TYPE_EDITOR = 5
-    TYPE_INQUIREE = 6
-    TYPE_ROOM_RESPONSIBLE = 7
-    TYPE_PRODUCT_RESPONSIBLE = 8
-    TYPE_UNIT_RESPONSIBLE = 9
-
-    type_choices = [
-        (TYPE_UNKNOWN, u'Anden'),
-        (TYPE_GUEST, u'Gæst'),
-        (TYPE_TEACHER, u'Underviser'),
-        (TYPE_HOST, u'Vært'),
-        (TYPE_COORDINATOR, u'Koordinator'),
-        (TYPE_INQUIREE, u'Modtager af spørgsmål'),
-        (TYPE_ROOM_RESPONSIBLE, u'Lokaleansvarlig'),
-        (TYPE_PRODUCT_RESPONSIBLE, u'Tilbudsansvarlig'),
-        (TYPE_UNIT_RESPONSIBLE, u'Enhedsansvarlig')
-    ]
-
-    type_map = {
-        TEACHER: TYPE_TEACHER,
-        HOST: TYPE_HOST,
-        COORDINATOR: TYPE_COORDINATOR,
-        # ADMINISTRATOR = 3
-        FACULTY_EDITOR: TYPE_EDITOR,
-        NONE: TYPE_UNKNOWN
-    }
-
-    email_message = models.ForeignKey(KUEmailMessage)
-    name = models.TextField(blank=True, null=True)
-    formatted_address = models.TextField(blank=True, null=True)
-    email = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User, blank=True, null=True)
-    guest = models.ForeignKey(Guest, blank=True, null=True)
-    type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
-
-    def __init__(self, base=None, recipient_type=None, *args, **kwargs):
-        super(KUEmailRecipient, self).__init__(*args, **kwargs)
-        address = None
-        if isinstance(base, basestring):
-            address = base
-        elif isinstance(base, User):
-            self.user = base
-            self.name = base.get_full_name()
-            self.type = KUEmailRecipient.type_map.get(
-                self.user.userprofile.get_role(), recipient_type
-            )
-            address = base.email
-        elif isinstance(base, Guest):
-            self.guest = base
-            self.name = base.get_name()
-            self.type = KUEmailRecipient.TYPE_GUEST
-            address = base.get_email()
-        else:
-            try:
-                self.name = base.get_name()
-            except:
-                pass
-            try:
-                address = base.get_email()
-            except:
-                pass
-
-        if recipient_type is not None:
-            self.type = recipient_type
-
-        if address is not None and address != '':
-            if self.name is not None:
-                self.formatted_address = u"\"%s\" <%s>" % (self.name, address)
-            else:
-                self.formatted_address = address
-
-    def get_full_name(self):
-        return self.name if self.name is not None else self.formatted_address
-
-    @property
-    def role_name(self):
-        for recipient_type, name in KUEmailRecipient.type_choices:
-            if self.type == recipient_type:
-                return name
-        return u"Ukendt (%d)" % self.type
-
-    @staticmethod
-    def multiple(bases, recipient_type=None):
-        if isinstance(bases, QuerySet):
-            bases = list(bases)
-        if type(bases) is not list:
-            bases = [bases]
-        return list([
-            x for x in [
-                KUEmailRecipient(base, recipient_type) for base in bases
-            ] if x.formatted_address is not None
-        ])
-
-    @property
-    def is_guest(self):
-        return self.type == KUEmailRecipient.TYPE_GUEST
-
-    @property
-    def is_teacher(self):
-        return self.type == KUEmailRecipient.TYPE_TEACHER
-
-    @property
-    def is_host(self):
-        return self.type == KUEmailRecipient.TYPE_HOST
-
-    @property
-    def is_coordinator(self):
-        return self.type == KUEmailRecipient.TYPE_COORDINATOR
-
-    @property
-    def is_editor(self):
-        return self.type == KUEmailRecipient.TYPE_EDITOR
-
-    @property
-    def is_inquiree(self):
-        return self.type == KUEmailRecipient.TYPE_INQUIREE
-
-    @property
-    def is_room_responsible(self):
-        return self.type == KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
-
-    @property
-    def is_product_responsible(self):
-        return self.type == KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
-
-    @property
-    def is_unit_responsible(self):
-        return self.type == KUEmailRecipient.TYPE_UNIT_RESPONSIBLE
 
 
 class BookerResponseNonce(models.Model):
