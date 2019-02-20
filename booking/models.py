@@ -5011,7 +5011,6 @@ class MultiProductVisitTemp(models.Model):
             )
             eventtime.save()
             eventtime.make_visit(
-                product=product,
                 multi_master=mpv,
                 multi_priority=index,
                 is_multi_sub=True
