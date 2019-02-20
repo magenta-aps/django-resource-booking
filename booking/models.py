@@ -2054,6 +2054,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
     )
 
+    education_name = models.CharField(
+        blank=True,
+        null=True,
+        verbose_name=_(u'Navn på uddannelsen'),
+        max_length=50
+    )
+
     @property
     def student_evaluation(self):
         return self.surveyxactevaluation_set.filter(for_students=True).first()
