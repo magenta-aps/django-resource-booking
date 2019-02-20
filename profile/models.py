@@ -464,7 +464,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
@@ -482,7 +482,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'

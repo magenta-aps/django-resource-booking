@@ -3,8 +3,8 @@
 from django.contrib import admin
 from django.db import models as django_models
 from django.db.models import Q
-from django.db.models.fields.related import \
-    ReverseSingleRelatedObjectDescriptor
+from django.db.models.fields.related_descriptors import \
+    ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
@@ -84,7 +84,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         unit_filter_match = None
         if hasattr(self.model, 'organizationalunit') and isinstance(
                 self.model.organizationalunit,
-                ReverseSingleRelatedObjectDescriptor
+                ForwardManyToOneDescriptor
         ):
             unit_filter_match = 'organizationalunit'
         elif model_name in MODEL_UNIT_FILTER_MAP:

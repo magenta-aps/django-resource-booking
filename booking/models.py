@@ -224,7 +224,7 @@ class OrganizationalUnit(models.Model):
 
         # If no coordinators was found use faculty editors
         res = User.objects.filter(
-            userprofile__organizationalunit=self.get_faculty_queryset(),
+            userprofile__organizationalunit__in=self.get_faculty_queryset(),
             userprofile__user_role__role=FACULTY_EDITOR
         )
         if len(res) > 0:
@@ -3904,11 +3904,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def unit_filter(qs, unit_qs):
         mpv_qs = MultiProductVisit.objects.filter(
             subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit=unit_qs
+            subvisit__eventtime__product__organizationalunit__in=unit_qs
         )
         return qs.filter(
-            Q(eventtime__product__organizationalunit=unit_qs) |
-            Q(multiproductvisit=mpv_qs)
+            Q(eventtime__product__organizationalunit__in=unit_qs) |
+            Q(multiproductvisit__in=mpv_qs)
         )
 
     # This is used from booking.signals.update_search_indexes
@@ -4653,13 +4653,13 @@ class MultiProductVisit(Visit):
 
     def potential_responsible(self):
         return User.objects.filter(
-            userprofile__organizationalunit=self.unit_qs
+            userprofile__organizationalunit__in=self.unit_qs
         )
 
     @property
     def unit_qs(self):
         return OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits_unordered
+            product__eventtime__visit__in=self.subvisits_unordered
         )
 
     def planned_status_is_blocked(self):
@@ -5762,7 +5762,7 @@ class Booking(models.Model):
 
         unit_qs = user.userprofile.get_unit_queryset()
         return qs.filter(
-            visit__eventtime__product__organizationalunit=unit_qs
+            visit__eventtime__product__organizationalunit__in=unit_qs
         )
 
     def get_absolute_url(self):
