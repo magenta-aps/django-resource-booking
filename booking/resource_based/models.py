@@ -724,11 +724,15 @@ class EventTime(models.Model):
 class Calendar(AvailabilityUpdaterMixin, models.Model):
 
     def available_list(self, from_dt, to_dt):
-        for x in self.calendarevent_set.filter(
+        calendar_event_instances = []
+        for event in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ).order_by("start", "end"):
-            for y in x.between(from_dt, to_dt):
-                yield y
+            for instance in event.between(from_dt, to_dt):
+                calendar_event_instances.append(instance)
+        calendar_event_instances.sort(key=lambda instance: instance.start)
+        for instance in calendar_event_instances:
+            yield instance
 
     def generate_unavailable_events(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
