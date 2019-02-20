@@ -18,59 +18,71 @@
 {% elif bookingform.classbooking %}
 
     {% if bookingform.desired_datetime_date %}
-        <div class="form-group">
-            <div class="col-sm-2">
-                <label class="control-label required" for="{{ bookingform.desired_datetime_date.id_for_label }}">
-                    {% trans "Ønsket dato" %}{% if bookingform.desired_datetime_date.field.required %}{% endif %}
-                </label>
+        {% if bookingform.desired_datetime_date.field.widget.input_type == 'hidden' %}
+            {{ bookingform.desired_datetime_date }}
+        {% else %}
+            <div class="form-group">
+                <div class="col-sm-2">
+                    <label class="control-label required" for="{{ bookingform.desired_datetime_date.id_for_label }}">
+                        {% trans "Ønsket dato" %}{% if bookingform.desired_datetime_date.field.required %}{% endif %}
+                    </label>
+                </div>
+                <div class="col-sm-6{% if bookingform.desired_datetime_date.errors %} has-error{% endif %}">
+                    {{ bookingform.desired_datetime_date }}
+                </div>
+                <div class="col-sm-4 help-block with-errors">
+                    {% if bookingform.desired_datetime_date.errors %}
+                        {{ bookingform.desired_datetime_date.errors }}
+                    {% endif %}
+                </div>
             </div>
-            <div class="col-sm-6{% if bookingform.desired_datetime_date.errors %} has-error{% endif %}">
-                {{ bookingform.desired_datetime_date }}
-            </div>
-            <div class="col-sm-4 help-block with-errors">
-                {% if bookingform.desired_datetime_date.errors %}
-                    {{ bookingform.desired_datetime_date.errors }}
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     {% endif %}
 
     {% if bookingform.desired_datetime_time %}
-        <div class="form-group">
-            <div class="col-sm-2">
-                <label class="control-label required" for="{{ bookingform.desired_datetime_time.id_for_label }}">
-                    {% trans "Ønsket tidspunkt" %}{% if bookingform.desired_datetime_time.field.required %}{% endif %}
-                </label>
+        {% if bookingform.desired_datetime_time.field.widget.input_type == 'hidden' %}
+            {{ bookingform.desired_datetime_time }}
+        {% else %}
+            <div class="form-group">
+                <div class="col-sm-2">
+                    <label class="control-label required" for="{{ bookingform.desired_datetime_time.id_for_label }}">
+                        {% trans "Ønsket tidspunkt" %}{% if bookingform.desired_datetime_time.field.required %}{% endif %}
+                    </label>
+                </div>
+                <div class="col-sm-6{% if bookingform.desired_datetime_time.errors %} has-error{% endif %}">
+                    {{ bookingform.desired_datetime_time }}
+                </div>
+                <div class="col-sm-4 help-block with-errors">
+                    {% if bookingform.desired_datetime_time.errors %}
+                        {{ bookingform.desired_datetime_time.errors }}
+                    {% endif %}
+                </div>
             </div>
-            <div class="col-sm-6{% if bookingform.desired_datetime_time.errors %} has-error{% endif %}">
-                {{ bookingform.desired_datetime_time }}
-            </div>
-            <div class="col-sm-4 help-block with-errors">
-                {% if bookingform.desired_datetime_time.errors %}
-                    {{ bookingform.desired_datetime_time.errors }}
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     {% endif %}
 
 {% elif not bookingform.student_for_a_day_booking %}
 
     {% if bookingform.desired_time %}
-        <div class="form-group">
-            <div class="col-sm-2">
-                <label class="control-label required" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt" %}{% if bookingform.desired_time.field.required %}{% endif %}</label>
+        {% if bookingform.desired_time.field.widget.input_type == 'hidden' %}
+            {{ bookingform.desired_time }}
+        {% else %}
+            <div class="form-group">
+                <div class="col-sm-2">
+                    <label class="control-label required" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt" %}{% if bookingform.desired_time.field.required %}{% endif %}</label>
+                </div>
+                <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
+                    {{ bookingform.desired_time }}
+                </div>
+                <div class="col-sm-4 help-block with-errors">
+                    {% if bookingform.desired_time.errors %}
+                        {{ bookingform.desired_time.errors }}
+                    {% else %}
+                        {% trans 'Du har her mulighed for at angive nogle tidspunker, hvor du ønsker at deltage i tilbuddet, det kan være specifikke datoer, uger eller tidspunkter på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra os, så snart vi ved, om det kan lade sig gøre.' %}
+                    {% endif %}
+                </div>
             </div>
-            <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
-                {{ bookingform.desired_time }}
-            </div>
-            <div class="col-sm-4 help-block with-errors">
-                {% if bookingform.desired_time.errors %}
-                    {{ bookingform.desired_time.errors }}
-                {% else %}
-                    {% trans 'Du har her mulighed for at angive nogle tidspunker, hvor du ønsker at deltage i tilbuddet, det kan være specifikke datoer, uger eller tidspunkter på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra os, så snart vi ved, om det kan lade sig gøre.' %}
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     {% endif %}
 
 {% endif %}

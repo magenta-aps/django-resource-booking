@@ -4608,7 +4608,8 @@ class MultiProductVisit(Visit):
 
     @property
     def date_ref(self):
-        return timezone.localtime(self.eventtime.start).date()
+        return timezone.localtime(self.eventtime.start).date() \
+            if self.eventtime.start is not None else None
 
     def create_eventtime(self, date=None, endtime=None):
         if date is None:
@@ -4617,9 +4618,9 @@ class MultiProductVisit(Visit):
             if not hasattr(self, 'eventtime') or self.eventtime is None:
                 time = datetime(
                     date.year, date.month, date.day,
-                    8, tzinfo=timezone.get_current_timezone()
+                    8, 0, 0, tzinfo=timezone.get_current_timezone()
                 )
-                EventTime(visit=self, start=time).save()
+                EventTime(visit=self, start=time, end=endtime).save()
 
     @staticmethod
     def migrate_to_eventtime():
@@ -4810,11 +4811,13 @@ class MultiProductVisit(Visit):
 
     @property
     def date_display(self):
-        return formats.date_format(self.date_ref, "DATE_FORMAT")
+        return formats.date_format(self.date_ref, "DATE_FORMAT") \
+            if self.date_ref is not None else _(u'Intet tidspunkt')
 
     @property
     def date_display_context(self):
-        return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT")
+        return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT") \
+            if self.date_ref is not None else _(u'Intet tidspunkt')
 
     @property
     def start_datetime(self):
@@ -5004,7 +5007,12 @@ class MultiProductVisitTemp(models.Model):
         )
         mpv.needs_attention_since = timezone.now()
         mpv.save()
-        mpv.create_eventtime(self.date)
+        mpv.eventtime = EventTime(
+            bookable=False,
+            has_specific_time=False,
+            visit=mpv
+        )
+        mpv.eventtime.save()
         mpv.ensure_statistics()
         for index, product in enumerate(self.products_ordered):
             eventtime = EventTime(
