@@ -204,5 +204,6 @@ var foo = iso_datetime(from);
         $time_mode.on("change", on_timemode_change);
         on_timemode_change();
         update_widgets();
+        update_datetimes();
     };
 })(KU);

@@ -199,8 +199,8 @@ class BackMixin(ContextMixin):
 
 class AccessDenied(PermissionDenied):
     def __init__(self, text, *args, **kwargs):
-        _text = text
-        print _text.encode('utf-8')
+        self._text = text
+        print self._text.encode('utf-8')
         return super(AccessDenied, self).__init__(text, *args, **kwargs)
 
     def __unicode__(self):
