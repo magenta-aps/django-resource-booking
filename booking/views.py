@@ -3553,6 +3553,9 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     def get_context_data(self, **kwargs):
         context = {}
+        context['booking_enabled_keys'] = EmailTemplateType.get_keys(
+            enable_booking=True
+        )
         context['modelmap'] = modelmap = {}
 
         for model in [Booking, Visit, Product]:
