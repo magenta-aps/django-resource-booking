@@ -3384,6 +3384,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if self.room_status == Visit.STATUS_NOT_ASSIGNED:
                 return True
 
+        # Visits of bookable products, that have no uncancelled bookings
+        if not self.is_multi_sub \
+                and len([
+                    x for x in self.products
+                    if x.type in Product.bookable_types
+                ]) \
+                and self.bookings.filter(cancelled=False).count() == 0:
+            return True
+
         return False
 
     def possible_status_choices(self):
@@ -4820,9 +4829,6 @@ class MultiProductVisit(Visit):
         return OrganizationalUnit.objects.filter(
             product__eventtime__visit__set=self.subvisits_unordered
         )
-
-    def planned_status_is_blocked(self):
-        return True
 
     @property
     def unit(self):
