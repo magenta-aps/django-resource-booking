@@ -2804,6 +2804,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
     object = None
     template_name = 'booking/form.html'
     modal = False
+    fields = '__all__'
 
     def dispatch(self, request, *args, **kwargs):
         self.visit = Visit.objects.get(id=kwargs['visit'])
