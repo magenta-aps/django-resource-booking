@@ -4196,7 +4196,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         )
 
     @staticmethod
-    def get_recently_held(time=timezone.now()):
+    def get_recently_held(time=None):
+        if not time:
+            time = timezone.now()
+
         return Visit.objects.filter(
             workflow_status__in=[
                 Visit.WORKFLOW_STATUS_EXECUTED,
@@ -4605,7 +4608,7 @@ class MultiProductVisit(Visit):
 
     @property
     def date_ref(self):
-        return self.eventtime.start.date()
+        return timezone.localtime(self.eventtime.start).date()
 
     def create_eventtime(self, date=None, endtime=None):
         if date is None:
