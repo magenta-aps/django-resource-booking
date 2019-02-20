@@ -9,6 +9,7 @@ from itertools import chain
 from subprocess import Popen, PIPE
 
 import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.contenttypes.models import ContentType
@@ -135,17 +136,10 @@ class CustomStorage(FileSystemStorage):
 
 def html2text(value):
     """
-    Pipes given HTML string into the text browser W3M, which renders it.
-    Rendered text is grabbed from STDOUT and returned.
+    Use BeautifulSoup to parse the HTML and retrieve the text.
     """
-    try:
-        cmd = "w3m -dump -T text/html -O utf-8"
-        proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
-        enc_str = unicode(value).encode('ascii', 'xmlcharrefreplace')
-        return proc.communicate(enc_str)[0]
-    except OSError:
-        # something bad happened, so just return the input
-        return value
+    soup = BeautifulSoup(value, "html.parser")
+    return soup.text
 
 
 def get_model_field_map(model, visited_models=None):

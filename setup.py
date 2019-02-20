@@ -35,7 +35,8 @@ designed for the University of Copenhagen.""",
           'django-macros==0.4.0',
           'requests==2.20.0',
           'django-debug-toolbar==1.9',
-          'django-hijack'
+          'django-hijack',
+          'beautifulsoup4==4.7.1'
       ],
       entry_points="""
       # -*- Entry points: -*-
