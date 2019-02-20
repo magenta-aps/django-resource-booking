@@ -991,7 +991,7 @@ class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
         userprofile = self.request.user.userprofile
 
         form.fields['my_resources'].queryset = Product.objects.filter(
-            organizationalunit=userprofile.get_unit_queryset()
+            organizationalunit__in=userprofile.get_unit_queryset()
         ).order_by('title')
 
         return form

@@ -224,7 +224,7 @@ class OrganizationalUnit(models.Model):
 
         # If no coordinators was found use faculty editors
         res = User.objects.filter(
-            userprofile__organizationalunit=self.get_faculty_queryset(),
+            userprofile__organizationalunit__in=self.get_faculty_queryset(),
             userprofile__user_role__role=FACULTY_EDITOR
         )
         if len(res) > 0:
@@ -4653,7 +4653,7 @@ class MultiProductVisit(Visit):
 
     def potential_responsible(self):
         return User.objects.filter(
-            userprofile__organizationalunit=self.unit_qs
+            userprofile__organizationalunit__in=self.unit_qs
         )
 
     @property
@@ -5763,7 +5763,7 @@ class Booking(models.Model):
 
         unit_qs = user.userprofile.get_unit_queryset()
         return qs.filter(
-            visit__eventtime__product__organizationalunit=unit_qs
+            visit__eventtime__product__organizationalunit__in=unit_qs
         )
 
     def get_absolute_url(self):
