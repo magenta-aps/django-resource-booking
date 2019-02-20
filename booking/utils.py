@@ -6,7 +6,6 @@ import os
 import re
 import sys
 from itertools import chain
-from subprocess import Popen, PIPE
 
 import requests
 from bs4 import BeautifulSoup
