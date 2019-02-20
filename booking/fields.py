@@ -1,15 +1,16 @@
+from collections import defaultdict
+
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import six
-from collections import defaultdict
 from django.forms.fields import ChoiceField, MultipleChoiceField
+from django.forms.models import ModelMultipleChoiceField, ModelChoiceField
 from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
-from django.forms.models import ModelMultipleChoiceField
+from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import EventTime
-from .widgets import OrderedMultipleHiddenChooser
 from .widgets import CheckboxSelectMultipleDisable, DurationWidget
+from .widgets import OrderedMultipleHiddenChooser
 from .widgets import SelectDisable, SelectMultipleDisable
 
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
@@ -112,12 +113,31 @@ class DisableFieldMixin(object):
     disabled_values = property(_get_disabled_values, _set_disabled_values)
 
 
+class OptionLabelFieldMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        self.choice_label_transform = \
+            kwargs.pop('choice_label_transform', None)
+        super(OptionLabelFieldMixin, self).__init__(*args, **kwargs)
+
+    def label_from_instance(self, user):
+        if self.choice_label_transform is not None:
+            return self.choice_label_transform(user)
+        return super(OptionLabelFieldMixin, self).label_from_instance(user)
+
+
 class ChoiceDisableField(DisableFieldMixin, ChoiceField):
     widget = SelectDisable
 
 
 class MultipleChoiceDisableField(DisableFieldMixin, MultipleChoiceField):
     widget = SelectMultipleDisable
+
+
+class CustomModelChoiceField(
+    OptionLabelFieldMixin, DisableFieldMixin, ModelChoiceField
+):
+    widget = SelectDisable
 
 
 class OrderedModelMultipleChoiceField(ModelMultipleChoiceField):
