@@ -494,7 +494,10 @@ class UserProfile(models.Model):
         else:
             qs2 = booking.models.Visit.objects.none()
 
-        return qs1 | qs2
+        # Return new queryset with objects from either
+        return booking.models.Visit.objects.filter(
+            Q(pk__in=qs1) | Q(pk__in=qs2)
+        )
 
     @property
     def potentially_assigned_visits(self):
