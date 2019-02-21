@@ -143,7 +143,7 @@ def html2text(value):
     Use BeautifulSoup to parse the HTML and retrieve the text.
     """
     soup = BeautifulSoup(value, "html.parser")
-    return soup.text
+    return soup.get_text()
 
 
 def get_model_field_map(model, visited_models=None):

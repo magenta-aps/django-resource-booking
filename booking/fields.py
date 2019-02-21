@@ -6,6 +6,7 @@ from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import EventTime
+
 from .widgets import CheckboxSelectMultipleDisable
 from .widgets import OrderedMultipleHiddenChooser
 from .widgets import SelectDisable, SelectMultipleDisable

@@ -4819,7 +4819,8 @@ class MultiProductVisit(Visit):
 
     @property
     def date_ref(self):
-        return timezone.localtime(self.eventtime.start).date()
+        return timezone.localtime(self.eventtime.start).date() \
+            if self.eventtime.start is not None else None
 
     def create_eventtime(self, date=None, endtime=None):
         if date is None:
