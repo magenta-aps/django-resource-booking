@@ -210,7 +210,6 @@
                 dropdownbutton.removeClass("disabled");
                 if (target.length && target.hasClass("enable-field-insert")) {
                     currentFocus = target;
-                    console.log("set currentFocus",currentFocus);
                 }
             };
             var blur = function() {
@@ -274,7 +273,7 @@
                 }
             ];
             {% endautoescape %}
-            var keyselect = $("#{{ form.key.id_for_label }}"),
+            var keyselect = $("#{{ form.type.id_for_label }}"),
                 info = $("#key_info"),
                 info_list = info.find("ul");
             var updateInfo = function(){
@@ -294,7 +293,7 @@
                 }
             };
             {% autoescape off %}
-            var enable_booking = {{ object.type.enable_booking | jsonify }};
+            var enable_booking = {{ booking_enabled_keys | jsonify }};
             {% endautoescape %}
             var updateFields = function() {
                 var value = parseInt(keyselect.val(), 10),

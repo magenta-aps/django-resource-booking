@@ -13,7 +13,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.models import Room, Visit, EmailTemplateType, Product
+from booking.models import Room, Visit, EmailTemplateType, Product, \
+    KUEmailRecipient
 from profile.constants import TEACHER, HOST, NONE
 
 import datetime
@@ -723,11 +724,15 @@ class EventTime(models.Model):
 class Calendar(AvailabilityUpdaterMixin, models.Model):
 
     def available_list(self, from_dt, to_dt):
-        for x in self.calendarevent_set.filter(
+        calendar_event_instances = []
+        for event in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ).order_by("start", "end"):
-            for y in x.between(from_dt, to_dt):
-                yield y
+            for instance in event.between(from_dt, to_dt):
+                calendar_event_instances.append(instance)
+        calendar_event_instances.sort(key=lambda instance: instance.start)
+        for instance in calendar_event_instances:
+            yield instance
 
     def generate_unavailable_events(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
@@ -2045,12 +2050,22 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
                 self.visit.autosend(
                     EmailTemplateType.notify_teacher__associated,
-                    [self.resource.teacherresource.user],
+                    [
+                        KUEmailRecipient(
+                            self.resource.teacherresource.user,
+                            KUEmailRecipient.TYPE_TEACHER
+                        )
+                    ],
                     True
                 )
             if resourcetype == ResourceType.RESOURCE_TYPE_HOST:
                 self.visit.autosend(
                     EmailTemplateType.notify_host__associated,
-                    [self.resource.hostresource.user],
+                    [
+                        KUEmailRecipient(
+                            self.resource.hostresource.user,
+                            KUEmailRecipient.TYPE_HOST
+                        )
+                    ],
                     True
                 )
