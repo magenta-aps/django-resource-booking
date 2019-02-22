@@ -301,7 +301,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits,
+                    eventtime__visit__in=profile.potentially_assigned_visits,
                     type__in=product_types
                 ).distinct().order_by("title"),
                 'limit': limit
@@ -356,7 +356,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits
+                    eventtime__visit__in=profile.potentially_assigned_visits
                 ).distinct().order_by("title"),
                 'limit': limit
             },
