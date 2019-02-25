@@ -4338,9 +4338,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         )
 
     @staticmethod
-    def get_occurring_on_date(time):
+    def get_occurring_on_date(datetime):
         # Convert datetime object to date-only for current timezone
-        date = timezone.localtime(time).date()
+        date = timezone.localtime(datetime).date()
 
         # A visit happens on a date if it starts before the
         # end of the day and ends after the beginning of the day
