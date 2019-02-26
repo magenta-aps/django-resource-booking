@@ -35,7 +35,7 @@
         <ul>
             {% for subvisit in visit.real.subvisits_by_time %}
                 {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
-                    <li><a href="{% full_url 'product-view' visit.product.pk %}">{{ visit.product.title }}</a></li>
+                    <li><a href="{% full_url 'product-view' subvisit.product.pk %}">{{ subvisit.product.title }}</a></li>
                 {% endif %}
         {% endfor %}
         </ul>
