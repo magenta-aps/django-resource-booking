@@ -17,8 +17,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Count, Case, When
-from django.db.models import F
+from django.db.models import Case, When
 from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
