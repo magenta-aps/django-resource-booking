@@ -4241,16 +4241,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return Visit.get_occurring_on_date(timezone.now().date())
 
     @staticmethod
-    def get_starting_on_date(date):
-        return Visit.objects.none()
-        return Visit.objects.filter(
-            eventtime__start__year=date.year,
-            eventtime__start__month=date.month,
-            eventtime__start__day=date.day,
-            is_multi_sub=False
-        ).order_by('eventtime__start')
-
-    @staticmethod
     def get_occurring_at_time(time):
         # Return the visits that take place exactly at this time
         # Meaning they begin before the queried time and end after the time
@@ -5121,7 +5111,6 @@ class MultiProductVisitTemp(models.Model):
         return len(
             set([product.locality for product in self.products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
