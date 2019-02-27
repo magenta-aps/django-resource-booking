@@ -1500,8 +1500,8 @@ class ProductGymnasieFag(models.Model):
 
         # Rest of value list is pks for subject levels
         for x in values:
-            l = GymnasieLevel.objects.get(pk=x)
-            f.level.add(l)
+            level = GymnasieLevel.objects.get(pk=x)
+            f.level.add(level)
 
         return f
 
