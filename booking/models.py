@@ -3337,12 +3337,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def is_rejected(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_REJECTED
 
-    @staticmethod
-    def active_qs(qs):
-        return qs.exclude(workflow_status__in=[
-            Visit.WORKFLOW_STATUS_CANCELLED, Visit.WORKFLOW_STATUS_REJECTED
-        ])
-
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
 
@@ -3860,33 +3854,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    @classmethod
-    def needs_teachers_qs(cls):
-        req_type_key = "__".join([
-            "eventtime",
-            "product",
-            "resourcerequirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        assigned_type_key = "__".join([
-            "visitresource",
-            "resource_requirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        return cls.objects.filter(
-            **{req_type_key: ResourceType.RESOURCE_TYPE_TEACHER}
-        ).filter(
-            Q(**{assigned_type_key: ResourceType.RESOURCE_TYPE_TEACHER}) |
-            Q(visitresource__isnull=True)
-        ).annotate(
-            needed=Sum(
-                'eventtime__product__resourcerequirement__required_amount'
-            ),
-            assigned=Count('visitresource')
-        ).filter(needed__gt=F("assigned"))
-
     def __unicode__(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.__unicode__()
@@ -3958,28 +3925,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 result.append(booking.as_searchtext())
 
         return " ".join(result)
-
-    @classmethod
-    def being_planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_BEING_PLANNED,
-                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
-                cls.WORKFLOW_STATUS_REJECTED
-            ],
-            **kwargs
-        )
-
-    @classmethod
-    def planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_PLANNED,
-                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                cls.WORKFLOW_STATUS_CONFIRMED,
-                cls.WORKFLOW_STATUS_REMINDED
-            ],
-        ).filter(**kwargs)
 
     @staticmethod
     def unit_filter(qs, unit_qs):
