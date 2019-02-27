@@ -749,7 +749,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     calendar=self
                 )
 
-    def generate_product_unavailalbe(self, from_dt, to_dt):
+    def generate_product_unavailable(self, from_dt, to_dt):
         if hasattr(self, 'product'):
             for x in self.product.occupied_eventtimes(
                 from_dt, to_dt
@@ -774,7 +774,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             )
         if hasattr(self, 'product'):
             generators.append(
-                self.generate_product_unavailalbe(from_dt, to_dt)
+                self.generate_product_unavailable(from_dt, to_dt)
             )
 
         # Pick the first remaining item from any of the generators and remove
