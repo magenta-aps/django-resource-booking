@@ -1437,6 +1437,8 @@ class KUEmailRecipient(models.Model):
 
 
 class ObjectStatistics(models.Model):
+    class Meta:
+        verbose_name_plural = "object statistics"
 
     created_time = models.DateTimeField(
         blank=False,
