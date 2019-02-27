@@ -26,7 +26,7 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
 from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
-    EditorRequriedMixin
+    EditorRequiredMixin
 from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
@@ -625,7 +625,7 @@ class DeleteUserView(BreadcrumbMixin, DeleteView):
         return breadcrumbs
 
 
-class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
+class UserListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     model = User
     template_name = 'profile/user_list.html'
     context_object_name = "users"
@@ -695,7 +695,7 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         }]
 
 
-class UnitListView(EditorRequriedMixin, ListView):
+class UnitListView(EditorRequiredMixin, ListView):
     model = OrganizationalUnit
 
     def get_context_data(self, **kwargs):
@@ -707,7 +707,7 @@ class UnitListView(EditorRequriedMixin, ListView):
         return user.userprofile.get_unit_queryset()
 
 
-class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
+class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
     organizationalunits = []
@@ -980,7 +980,7 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
+class EditMyProductsView(EditorRequiredMixin, BreadcrumbMixin, UpdateView):
     model = UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
