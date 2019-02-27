@@ -2323,17 +2323,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def future_times(self):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
-    @property
-    def cutoff_filter(self):
-        cutoff_before = self.booking_cutoff_before
-        if cutoff_before is None:
-            cutoff_before = timedelta()
-        filter = {'start__gte': timezone.now() + cutoff_before}
-        cutoff_after = self.booking_cutoff_after
-        if cutoff_after is not None:
-            filter['start__lte'] = timezone.now() + cutoff_after
-        return filter
-
     def future_bookable_times(self, use_cutoff=False):
         filter = {'start__gte': timezone.now()}
         if use_cutoff:
@@ -2347,9 +2336,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
-    # in ressource assignment for this product.
+    # in resource assignment for this product.
     # Finds:
-    #  - All potential ressources that can be assigned to this product
+    #  - All potential resources that can be assigned to this product
     #  - All ResourcePools that make use of these resources
     #  - All EventTimes for products that has requirements that uses these
     #    ResourcePools.
