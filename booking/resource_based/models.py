@@ -617,41 +617,6 @@ class EventTime(models.Model):
                 self.product is not None and
                 self.product.duration_in_minutes == self.duration_in_minutes)
 
-    @classmethod
-    def migrate_from_visits(cls):
-        visit_model = cls.visit.field.related_model
-
-        # Skip if the neccessary date fields are no longer present on the
-        # Visit model
-        try:
-            visit_model._meta.get_field_by_name("deprecated_start_datetime")
-            visit_model._meta.get_field_by_name("deprecated_end_datetime")
-        except:
-            return
-
-        qs = visit_model.objects.filter(
-            eventtime__isnull=True,
-            deprecated_product__isnull=False
-        )
-
-        for x in qs.order_by("deprecated_start_datetime",
-                             "deprecated_end_datetime"):
-            obj = cls(
-                product=x.deprecated_product,
-                visit=x,
-                start=x.deprecated_start_datetime,
-                notes=_(u'Migreret fra Visit')
-            )
-
-            if x.deprecated_end_datetime:
-                obj.end = x.deprecated_end_datetime
-            else:
-                # Try to calculate the end time
-                obj.set_calculated_end_time()
-
-            obj.has_specific_time = obj.calculated_has_specific_time()
-            obj.save()
-
     @property
     def expired(self):
         return self.start and self.start < timezone.now()

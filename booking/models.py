@@ -2880,29 +2880,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 minutes=int(minutes)
             )
 
-    @property
-    def duration_display(self):
-        if not self.duration:
-            return ""
-        (hours, minutes) = self.duration.split(":")
-        try:
-            hours = int(hours)
-            minutes = int(minutes)
-            parts = []
-            if hours == 1:
-                parts.append(_(u"1 time"))
-            elif hours > 1:
-                parts.append(_(u"%s timer") % hours)
-            if minutes == 1:
-                parts.append(_(u"1 minut"))
-            else:
-                parts.append(_(u"%s minutter") % minutes)
-
-            return _(u" og ").join([unicode(x) for x in parts])
-        except Exception as e:
-            print e
-            return ""
-
     @staticmethod
     def get_latest_booked(user=None):
         qs = Product.objects.filter(
@@ -2999,25 +2976,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-    @classmethod
-    # Migrate from old system where guest-suggest-time products was determined
-    # by them not having any visits
-    def migrate_time_mode(cls):
-        for x in cls.objects.filter(time_mode=cls.TIME_MODE_NONE):
-            if x.visit_set.filter(deprecated_bookable=True).count() > 0:
-                x.time_mode = cls.TIME_MODE_SPECIFIC
-            else:
-                x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
-
-            print u"%s => %s" % (x, x.get_time_mode_display())
-            x.save()
-
-        # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
-        EventTime.objects.filter(
-            bookable=True,
-            product__time_mode=cls.TIME_MODE_GUEST_SUGGESTED
-        ).update(bookable=False)
-
     def __unicode__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
@@ -3034,30 +2992,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         fields=('extra_search_text'),
         config='pg_catalog.danish',
         auto_update_search_field=True
-    )
-
-    deprecated_product = models.ForeignKey(
-        Product,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-
-    deprecated_start_datetime = models.DateTimeField(
-        verbose_name=_(u'Starttidspunkt'),
-        null=True,
-        blank=True
-    )
-
-    deprecated_end_datetime = models.DateTimeField(
-        null=True,
-        blank=True,
-    )
-
-    # Whether the visit is publicly bookable
-    deprecated_bookable = models.BooleanField(
-        default=False,
-        verbose_name=_(u'Kan bookes')
     )
 
     desired_time = models.CharField(
@@ -4091,7 +4025,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
     def save(self, *args, **kwargs):
-        self.update_endtime()
         self.update_last_workflow_change()
         super(Visit, self).save(*args, **kwargs)
 
@@ -4256,16 +4189,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
         return [autosend.get_name() for autosend in autosends]
-
-    def update_endtime(self):
-        if self.deprecated_start_datetime is not None:
-            product = self.product
-            if product:
-                duration = product.duration_as_timedelta
-                if duration is not None:
-                    self.deprecated_end_datetime = (
-                        self.deprecated_start_datetime + duration
-                    )
 
     def add_room_by_name(self, name):
         product = self.product

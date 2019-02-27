@@ -62,7 +62,7 @@
                     </div>
                     {% if product.duration_in_minutes %}
                     <div>
-                        {% blocktrans with durationspec=product.duration_display %}
+                        {% blocktrans with durationspec=product.get_duration_display %}
                         Tilbuddets varighed er angivet til {{ durationspec }}.
                         {% endblocktrans %}
                     </div>
