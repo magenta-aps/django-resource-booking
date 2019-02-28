@@ -6,7 +6,6 @@ import sys
 import uuid
 from datetime import timedelta, datetime, date, time
 
-import djorm_pgfulltext.fields
 from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
