@@ -10,11 +10,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models import F
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.forms import HiddenInput
@@ -519,9 +521,10 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
-                qs = self.model.objects.search(
-                    searchexpression, raw=True, rank_field='rank'
-                )
+                query = SearchQuery(searchexpression)
+                qs = self.model.objects.annotate(
+                    rank=SearchRank(F('search_vector'), query)
+                ).filter(search_vector=query).order_by('-rank')
             else:
                 qs = self.model.objects.all()
 
@@ -3216,9 +3219,9 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
 
         q = form.cleaned_data.get("q", "").strip()
-
+        search_query = SearchQuery(q)
         # Filtering by freetext has to be the first thing we do
-        qs = self.model.objects.search(q)
+        qs = self.model.objects.filter(search_vector=search_query)
 
         for filter_method in (
             self.filter_multiproduct_subs_off,

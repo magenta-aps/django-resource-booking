@@ -1,6 +1,4 @@
 from setuptools import setup, find_packages
-import sys
-import os
 
 version = '0.1'
 
@@ -24,7 +22,6 @@ designed for the University of Copenhagen.""",
           'Django==1.11.20',
           'flake8==2.5.0',
           'psycopg2',
-          'djorm-ext-pgfulltext==0.10',
           'django-npm==1.0.0',
           'django-recurrence',
           'django-tinymce==2.8.0',
