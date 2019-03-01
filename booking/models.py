@@ -1366,7 +1366,10 @@ class KUEmailRecipient(models.Model):
 
         if address is not None and address != '':
             if ku_email_recipient.name is not None:
-                ku_email_recipient.formatted_address = u"\"%s\" <%s>" % (ku_email_recipient.name, address)
+                ku_email_recipient.formatted_address = u"\"%s\" <%s>" % (
+                    ku_email_recipient.name,
+                    address
+                )
             else:
                 ku_email_recipient.formatted_address = address
         ku_email_recipient.email = address
@@ -5960,7 +5963,10 @@ class Booking(models.Model):
             not self.cancelled
         ):
             recipients.append(
-                KUEmailRecipient.create(self.booker, KUEmailRecipient.TYPE_GUEST)
+                KUEmailRecipient.create(
+                    self.booker,
+                    KUEmailRecipient.TYPE_GUEST
+                )
             )
         return recipients
 
