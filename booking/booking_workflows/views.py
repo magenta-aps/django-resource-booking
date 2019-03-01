@@ -574,7 +574,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.notify_mail_template_type:
                     self.object.autosend(
                         self.notify_mail_template_type,
-                        [KUEmailRecipient(request.user)],
+                        [KUEmailRecipient.create(request.user)],
                         True
                     )
                 self.object.resource_accepts()

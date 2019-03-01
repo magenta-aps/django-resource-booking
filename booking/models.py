@@ -259,7 +259,7 @@ class OrganizationalUnit(models.Model):
 
     def get_reply_recipients(self, template_type):
         if template_type.reply_to_unit_responsible:
-            return [KUEmailRecipient(
+            return [KUEmailRecipient.create(
                 self.contact,
                 KUEmailRecipient.TYPE_UNIT_RESPONSIBLE
             )]
@@ -1333,26 +1333,27 @@ class KUEmailRecipient(models.Model):
     guest = models.ForeignKey('Guest', blank=True, null=True)
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
 
-    def __init__(self, base=None, recipient_type=None, *args, **kwargs):
-        super(KUEmailRecipient, self).__init__(*args, **kwargs)
+    @classmethod
+    def create(cls, base=None, recipient_type=None):
+        ku_email_recipient = cls()
         address = None
         if isinstance(base, basestring):
             address = base
         elif isinstance(base, User):
-            self.user = base
-            self.name = base.get_full_name()
-            self.type = KUEmailRecipient.type_map.get(
-                self.user.userprofile.get_role(), recipient_type
+            ku_email_recipient.user = base
+            ku_email_recipient.name = base.get_full_name()
+            ku_email_recipient.type = KUEmailRecipient.type_map.get(
+                ku_email_recipient.user.userprofile.get_role(), recipient_type
             )
             address = base.email
         elif isinstance(base, Guest):
-            self.guest = base
-            self.name = base.get_name()
-            self.type = KUEmailRecipient.TYPE_GUEST
+            ku_email_recipient.guest = base
+            ku_email_recipient.name = base.get_name()
+            ku_email_recipient.type = KUEmailRecipient.TYPE_GUEST
             address = base.get_email()
         else:
             try:
-                self.name = base.get_name()
+                ku_email_recipient.name = base.get_name()
             except:
                 pass
             try:
@@ -1361,14 +1362,19 @@ class KUEmailRecipient(models.Model):
                 pass
 
         if recipient_type is not None:
-            self.type = recipient_type
+            ku_email_recipient.type = recipient_type
 
         if address is not None and address != '':
-            if self.name is not None:
-                self.formatted_address = u"\"%s\" <%s>" % (self.name, address)
+            if ku_email_recipient.name is not None:
+                ku_email_recipient.formatted_address = u"\"%s\" <%s>" % (
+                    ku_email_recipient.name,
+                    address
+                )
             else:
-                self.formatted_address = address
-        self.email = address
+                ku_email_recipient.formatted_address = address
+        ku_email_recipient.email = address
+
+        return ku_email_recipient
 
     def get_full_name(self):
         return self.name if self.name is not None else self.formatted_address
@@ -1388,7 +1394,7 @@ class KUEmailRecipient(models.Model):
             bases = [bases]
         return list([
             x for x in [
-                KUEmailRecipient(base, recipient_type) for base in bases
+                KUEmailRecipient.create(base, recipient_type) for base in bases
             ] if x.formatted_address is not None
         ])
 
@@ -2564,7 +2570,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         if template_type.send_to_contactperson:
             if self.inquire_user:
-                recipients.append(KUEmailRecipient(
+                recipients.append(KUEmailRecipient.create(
                     self.inquire_user,
                     KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
                 ))
@@ -4248,7 +4254,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                                     'booking': booking,
                                     'booker': booking.booker
                                 },
-                                KUEmailRecipient(booking.booker),
+                                KUEmailRecipient.create(booking.booker),
                                 self,
                                 unit,
                                 original_from_email=reply_recipients
@@ -5092,7 +5098,7 @@ class MultiProductVisit(Visit):
                             'booking': booking,
                             'booker': booking.booker
                         }),
-                        KUEmailRecipient(booking.booker),
+                        KUEmailRecipient.create(booking.booker),
                         self,
                         unit,
                         original_from_email=self.get_reply_recipients(
@@ -5957,7 +5963,10 @@ class Booking(models.Model):
             not self.cancelled
         ):
             recipients.append(
-                KUEmailRecipient(self.booker, KUEmailRecipient.TYPE_GUEST)
+                KUEmailRecipient.create(
+                    self.booker,
+                    KUEmailRecipient.TYPE_GUEST
+                )
             )
         return recipients
 
