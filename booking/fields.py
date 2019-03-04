@@ -1,56 +1,14 @@
-from collections import defaultdict
-
 from django.core.exceptions import ValidationError
-from django.db import models
 from django.forms.fields import ChoiceField, MultipleChoiceField
 from django.forms.models import ModelMultipleChoiceField
 from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
-from django.utils import six
+from django.forms.models import ModelChoiceField
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import EventTime
 from .widgets import CheckboxSelectMultipleDisable
-from .widgets import DurationWidget
 from .widgets import OrderedMultipleHiddenChooser
 from .widgets import SelectDisable, SelectMultipleDisable
-
-COLUMN_TYPES = defaultdict(lambda: "char(20)")
-COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
-COLUMN_TYPES["django.contrib.gis.db.backends.postgis"] = "interval"
-
-
-class DurationField(six.with_metaclass(models.SubfieldBase, models.Field)):
-    """
-        Store a datetime.timedelta as an INTERVAL in postgres, or a
-        CHAR(20) in other database backends.
-        """
-    _south_introspects = True
-
-    def __init__(self, labels=None, *args, **kwargs):
-        super(DurationField, self).__init__(*args, **kwargs)
-        self.labels = labels
-
-    def formfield(self, **kwargs):
-        labels = self.labels
-        kwargs['widget'] = DurationWidget(day_label=labels.get('day'),
-                                          hour_label=labels.get('hour'),
-                                          minute_label=labels.get('minute'))
-        return super(DurationField, self).formfield(**kwargs)
-
-    def get_prep_value(self, value):
-        if self.null and value == "":
-            return None
-        if (value is None) or isinstance(value, six.string_types):
-            return value
-        return str(value).replace(',', '')
-
-    # Database stuff
-
-    def db_type(self, connection):
-        return COLUMN_TYPES[connection.settings_dict['ENGINE']]
-
-    def get_db_prep_value(self, value, connection=None, prepared=None):
-        return self.get_prep_value(value)
 
 
 class ExtensibleMultipleChoiceField(MultipleChoiceField):
@@ -114,12 +72,31 @@ class DisableFieldMixin(object):
     disabled_values = property(_get_disabled_values, _set_disabled_values)
 
 
+class OptionLabelFieldMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        self.choice_label_transform = \
+            kwargs.pop('choice_label_transform', None)
+        super(OptionLabelFieldMixin, self).__init__(*args, **kwargs)
+
+    def label_from_instance(self, user):
+        if self.choice_label_transform is not None:
+            return self.choice_label_transform(user)
+        return super(OptionLabelFieldMixin, self).label_from_instance(user)
+
+
 class ChoiceDisableField(DisableFieldMixin, ChoiceField):
     widget = SelectDisable
 
 
 class MultipleChoiceDisableField(DisableFieldMixin, MultipleChoiceField):
     widget = SelectMultipleDisable
+
+
+class CustomModelChoiceField(
+    OptionLabelFieldMixin, DisableFieldMixin, ModelChoiceField
+):
+    widget = SelectDisable
 
 
 class OrderedModelMultipleChoiceField(ModelMultipleChoiceField):

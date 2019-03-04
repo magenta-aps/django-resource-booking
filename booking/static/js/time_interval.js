@@ -78,7 +78,7 @@ var KU = KU || {};
             // If we're using full days we want the widgets to use one day
             // earlier.
             if ($time_mode.val() === "full_days") {
-                $specific.val("");
+                $specific.val("False");
                 if (from_txt.substr(0, 10) !== to_txt.substr(0, 10)) {
                     to.setTime(to.getTime() - 24 * 60 * 60 * 1000);
                     to_txt = format_datetime(to);
@@ -204,5 +204,6 @@ var foo = iso_datetime(from);
         $time_mode.on("change", on_timemode_change);
         on_timemode_change();
         update_widgets();
+        update_datetimes();
     };
 })(KU);

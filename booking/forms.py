@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
-from datetime import datetime
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
+from django.contrib.auth.models import User
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
@@ -23,9 +23,10 @@ from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
 from django.utils.translation import ugettext_lazy as _
 
+from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
-from booking.models import ClassBooking, TeacherBooking, \
-    BookingGymnasieSubjectLevel
+from booking.models import BookingGymnasieSubjectLevel
+from booking.models import ClassBooking
 from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
@@ -34,9 +35,11 @@ from booking.models import Product
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
+from booking.models import TeacherBooking
 from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -192,6 +195,39 @@ class VisitSearchForm(forms.Form):
         required=False
     )
 
+    s = forms.ModelChoiceField(
+        label=_(u'Skole/Gymnasium'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=School.objects.all()
+    )
+
+    l = CustomModelChoiceField(
+        label=_(u'Underviser'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=TEACHER),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    h = CustomModelChoiceField(
+        label=_(u'Vært'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=HOST),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    c = CustomModelChoiceField(
+        label=_(u'Koordinator'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(
+            userprofile__user_role__role__in=[COORDINATOR, ADMINISTRATOR]
+        ),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
     WORKFLOW_STATUS_PENDING = -1
     WORKFLOW_STATUS_READY = -2
 
@@ -245,9 +281,6 @@ class VisitSearchForm(forms.Form):
         if not qdict.get("go", False):
             if qdict.get("u", "") == "":
                 qdict["u"] = self.MY_UNITS
-
-            if qdict.get("s", "") == "":
-                qdict["s"] = Product.ACTIVE
 
         super(VisitSearchForm, self).__init__(qdict, *args, **kwargs)
 
@@ -394,13 +427,18 @@ class ProductForm(forms.ModelForm):
             'tilbudsansvarlig': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
+
             'booking_close_days_before': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
             'booking_max_days_in_future': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
-            'inquire_enabled': CheckboxInput()
+            'inquire_enabled': CheckboxInput(),
+            'education_name': TextInput(attrs={
+                'class': 'form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
         }
         labels = {
             'custom_name': _('Navn')
@@ -542,6 +580,7 @@ class StudentForADayForm(ProductForm):
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
                   'booking_max_days_in_future', 'inquire_enabled',
+                  'education_name'
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -729,9 +768,6 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(
-        enable_autosend=True, form_show=True
-    ).count(),
     can_delete=False,
     can_order=False
 )
@@ -956,22 +992,6 @@ class BookingForm(forms.ModelForm):
                     self.fields['subjects'].choices = [
                         (subject.id, subject.name) for subject in qs
                     ]
-
-    def save(self, commit=True, *args, **kwargs):
-        booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit:
-            if 'desired_time' in self.cleaned_data:
-                booking.visit.desired_time = self.cleaned_data['desired_time']
-            if self.cleaned_data.get('desired_datetime_date') is not None \
-                    and self.cleaned_data.get('desired_datetime_time') \
-                    is not None:
-                desired_time = datetime.combine(
-                    self.cleaned_data['desired_datetime_date'],
-                    self.cleaned_data['desired_datetime_time']
-                )
-                booking.visit.desired_time = \
-                    desired_time.strftime("%d.%m.%Y %H:%m")
-        return booking
 
 
 class BookerForm(forms.ModelForm):

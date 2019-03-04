@@ -6,7 +6,7 @@ from booking.models import Booking, ClassBooking, TeacherBooking
 from booking.models import Product
 from booking.models import Visit
 
-MODELS_WITH_SEARCHINDEX = set([
+MODELS_WITH_SEARCHVECTOR = set([
     Product,
     Visit
 ])
@@ -18,42 +18,38 @@ BOOKING_MODELS = set([
 ])
 
 
-def run_searchindex_for_object(obj):
-    t = type(obj)
+def run_searchvector_for_object(obj):
+    model_type = type(obj)
 
-    if t in MODELS_WITH_SEARCHINDEX:
+    if model_type in MODELS_WITH_SEARCHVECTOR:
         # Disconnect signal to avoid recursion
-        post_save.disconnect(update_search_indexes, sender=t)
+        post_save.disconnect(update_search_vectors, sender=model_type)
         # Run the indexing
-        obj.update_searchindex()
+        obj.update_searchvector()
         # Re-enable signal
-        post_save.connect(update_search_indexes, sender=t)
+        post_save.connect(update_search_vectors, sender=model_type)
 
 
-def update_search_indexes(sender, instance, **kwargs):
-    run_searchindex_for_object(instance)
+def update_search_vectors(sender, instance, **kwargs):
+    run_searchvector_for_object(instance)
 
-for x in MODELS_WITH_SEARCHINDEX:
-    post_save.connect(update_search_indexes, sender=x)
+for model in MODELS_WITH_SEARCHVECTOR:
+    post_save.connect(update_search_vectors, sender=model)
 
 
 def on_booking_save(sender, instance, **kwargs):
     vo = getattr(instance, 'visit', None)
     if vo:
-        run_searchindex_for_object(vo)
+        run_searchvector_for_object(vo)
 
-for x in BOOKING_MODELS:
-    post_save.connect(on_booking_save, sender=x)
+for model in BOOKING_MODELS:
+    post_save.connect(on_booking_save, sender=model)
 
 
 def on_booker_save(sender, instance, **kwargs):
-    # for x in instance.booking_set.all():
-    #     vo = getattr(x, 'visit', None)
-    #     if vo:
-    #         run_searchindex_for_object(vo)
     vo = getattr(instance, 'visit', None)
     if vo:
-        run_searchindex_for_object(vo)
+        run_searchvector_for_object(vo)
 
 post_save.connect(on_booker_save, sender=Guest)
 
