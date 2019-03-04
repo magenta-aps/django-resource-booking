@@ -25,6 +25,8 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
 from django.template.context import make_context
@@ -35,7 +37,6 @@ from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
-from djorm_pgfulltext.models import SearchManager
 
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
@@ -60,6 +61,7 @@ BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
 
 
+# TODO: remove this, along with the djorm_pgfulltext dependency.
 class VectorField(djorm_pgfulltext.fields.VectorField):
     """
     Customized version of djorm_pgfulltext.fields.VectorField that does
@@ -1713,6 +1715,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     class Meta:
         verbose_name = _("tilbud")
         verbose_name_plural = _("tilbud")
+        indexes = [
+            GinIndex(fields=['search_vector'])
+        ]
 
     # Product type.
     STUDENT_FOR_A_DAY = 0
@@ -1991,9 +1996,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField(
-        db_index=False,
-    )
+    search_vector = SearchVectorField(null=True)
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(
@@ -2014,18 +2017,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         null=True,
         default=None,
         on_delete=models.SET_NULL,
-    )
-
-    objects = SearchManager(
-        fields=(
-            'title',
-            'teaser',
-            'description',
-            'mouseover_description',
-            'extra_search_text'
-        ),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
     )
 
     applicable_types = [
@@ -2428,8 +2419,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def autosend_enabled(self, template_type):
         return self.get_autosend(template_type) is not None
 
-    # This is used from booking.signals.update_search_indexes
-    def update_searchindex(self):
+    # This is used from booking.signals.update_search_vectors
+    def update_searchvector(self):
         if not self.pk:
             return False
 
@@ -3029,12 +3020,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         verbose_name = _(u"besøg")
         verbose_name_plural = _(u"besøg")
         ordering = ['id']
-
-    objects = SearchManager(
-        fields=('extra_search_text'),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
-    )
+        indexes = [
+            GinIndex(fields=['search_vector'])
+        ]
 
     deprecated_product = models.ForeignKey(
         Product,
@@ -3254,9 +3242,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField(
-        db_index=False
-    )
+    search_vector = SearchVectorField(null=True)
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(
@@ -4075,8 +4061,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             Q(multiproductvisit__in=mpv_qs)
         )
 
-    # This is used from booking.signals.update_search_indexes
-    def update_searchindex(self):
+    # This is used from booking.signals.update_search_vectors
+    def update_searchvector(self):
         if not self.pk:
             return False
 
