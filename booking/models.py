@@ -61,6 +61,7 @@ BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
 
 
+# TODO: remove this, along with the djorm_pgfulltext dependency.
 class VectorField(djorm_pgfulltext.fields.VectorField):
     """
     Customized version of djorm_pgfulltext.fields.VectorField that does
