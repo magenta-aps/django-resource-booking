@@ -303,7 +303,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=KUEmailRecipient(request.user)
+                original_from_email=KUEmailRecipient.create(request.user)
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -2019,14 +2019,14 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             recipients = []
             if self.object.tilbudsansvarlig:
                 recipients.append(
-                    KUEmailRecipient(
+                    KUEmailRecipient.create(
                         self.object.tilbudsansvarlig,
                         KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
                     )
                 )
             elif self.object.created_by:
                 recipients.append(
-                    KUEmailRecipient(
+                    KUEmailRecipient.create(
                         self.object.created_by,
                         KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
                     )
@@ -2038,7 +2038,7 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                         KUEmailRecipient.TYPE_EDITOR
                     )
                 )
-            sender = KUEmailRecipient(full_email(
+            sender = KUEmailRecipient.create(full_email(
                 form.cleaned_data['email'], form.cleaned_data['name']
             ), KUEmailRecipient.TYPE_GUEST)
             KUEmailMessage.send_email(
@@ -3886,7 +3886,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            ctx['recipient'] = KUEmailRecipient(user_obj)
+            ctx['recipient'] = KUEmailRecipient.create(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present

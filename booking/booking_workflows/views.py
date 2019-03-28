@@ -296,7 +296,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
         locality = self.object.product.locality
         unit = self.object.product.organizationalunit
 
-        context['locality_choices'] = [(None, "---------")] + \
+        context['locality_choices'] = [(None, "---------", False)] + \
             [
                 (x.id, x.name_and_address,
                  locality is not None and x.id == locality.id)
@@ -575,7 +575,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.notify_mail_template_type:
                     self.object.autosend(
                         self.notify_mail_template_type,
-                        [KUEmailRecipient(request.user)],
+                        [KUEmailRecipient.create(request.user)],
                         True
                     )
                 self.object.resource_accepts()
