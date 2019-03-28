@@ -1,1 +1,9 @@
-Påmindelse om besøg på KU: {{ visit.display_title }}
+Påmindelse om besøg på KU:
+{% if visit.is_multiproductvisit %}
+{% for subvisit in visit.real.subvisits_unordered_noncancelled %}
+    {{ subvisit.product.title }}
+{% if not forloop.last %}, {% endif %}
+{% endfor %}
+{% else %}
+{{ visit.product.title }}
+{% endif %}

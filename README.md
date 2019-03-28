@@ -38,8 +38,8 @@ python manage.py shell
 ## In the django shell run the following for your newly created user
 ```python
 from booking.models import *
-from profiles.models import *
-from django.contrib.auth import User
+from profile.models import *
+from django.contrib.auth.models import User
 from profile.constants import ADMINISTRATOR
 
 user = User.objects.first()
