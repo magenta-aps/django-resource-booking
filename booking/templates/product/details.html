@@ -236,8 +236,8 @@
                                     {% endif %}
                                 {% elif object.time_mode == view.model.TIME_MODE_NO_BOOKING %}
                                     {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_times %}
-                                {% elif object.future_bookable_times %}
-                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_bookable_times %}
+                                {% elif object.future_bookable_times_with_cutoff %}
+                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_bookable_times_with_cutoff %}
                                 {% else %}
                                     {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
                                 {% endif %}
@@ -261,7 +261,7 @@
                             {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}
-                                {% if object.is_guest_time_suggested or not object.time_mode == view.model.TIME_MODE_NO_BOOKING and not object.future_bookable_times %}
+                                {% if object.is_guest_time_suggested or not object.time_mode == view.model.TIME_MODE_NO_BOOKING and not object.future_bookable_times_with_cutoff %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
                                 {% endif %}
