@@ -2368,14 +2368,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             )
         else:
             potential_resources = Resource.objects.filter(
-                Q(teacherresource__user=self.potentielle_undervisere.all()) |
-                Q(hostresource__user=self.potentielle_vaerter.all())
+                Q(teacherresource__user__in=self.potentielle_undervisere.all()) |
+                Q(hostresource__user__in=self.potentielle_vaerter.all())
             )
         resource_pools = ResourcePool.objects.filter(
-            resources=potential_resources
+            resources__in=potential_resources
         )
         return EventTime.objects.filter(
-            product__resourcerequirement__resource_pool=resource_pools
+            product__resourcerequirement__resource_pool__in=resource_pools
         )
 
     def update_availability(self):
