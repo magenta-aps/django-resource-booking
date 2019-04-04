@@ -325,6 +325,24 @@ class Subject(models.Model):
             ]
         )
 
+    ALL_NAME = u'Alle'
+
+    @classmethod
+    def get_all(cls):
+        try:
+            return Subject.objects.get(name=Subject.ALL_NAME)
+        except Subject.DoesNotExist:
+            subject = Subject(
+                name=Subject.ALL_NAME,
+                subject_type=cls.SUBJECT_TYPE_BOTH,
+                description=u'Placeholder for "alle fag"'
+            )
+            subject.save()
+            return subject
+
+    def is_all(self):
+        return self.name == Subject.ALL_NAME
+
 
 class Link(models.Model):
     """"An URL and relevant metadata."""
@@ -1490,6 +1508,11 @@ class ProductGymnasieFag(models.Model):
         }
     )
 
+    display_value_cached = models.CharField(
+        null=True,
+        max_length=100
+    )
+
     level = models.ManyToManyField('GymnasieLevel')
 
     @classmethod
@@ -1514,11 +1537,12 @@ class ProductGymnasieFag(models.Model):
         return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     def ordered_levels(self):
-        return [x for x in self.level.all().order_by('level')]
+        return self.level.all().order_by('level')
 
     @classmethod
     def display(cls, subject, levels):
-        levels = [unicode(x) for x in levels]
+        levels = [unicode(x) for x in levels.all()]
+        levels_desc = None
 
         nr_levels = len(levels)
         if nr_levels == 1:
@@ -1537,13 +1561,16 @@ class ProductGymnasieFag(models.Model):
             return unicode(subject.name)
 
     def display_value(self):
-        return ProductGymnasieFag.display(
-            self.subject, self.ordered_levels()
-        )
+        if self.display_value_cached is None:
+            self.display_value_cached = ProductGymnasieFag.display(
+                self.subject, self.ordered_levels()
+            )
+            self.save()
+        return self.display_value_cached
 
     def as_submitvalue(self):
         res = unicode(self.subject.pk)
-        levels = ",".join([unicode(x.pk) for x in self.ordered_levels()])
+        levels = ",".join([unicode(x.pk) for x in self.ordered_levels().all()])
 
         if levels:
             res = ",".join([res, levels])
@@ -2502,9 +2529,20 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     def all_subjects(self):
         return (
-            [x for x in self.productgymnasiefag_set.all()] +
-            [x for x in self.productgrundskolefag_set.all()]
+                [x for x in self.productgymnasiefag_set.all()] +
+                [x for x in self.productgrundskolefag_set.all()]
         )
+
+    def all_subjects_except_default(self):
+        return [
+            x for x in self.productgymnasiefag_set.exclude(
+                subject__name=Subject.ALL_NAME
+            )
+        ] + [
+            x for x in self.productgrundskolefag_set.exclude(
+                subject__name=Subject.ALL_NAME
+            )
+        ]
 
     def display_locality(self):
         try:
@@ -4758,7 +4796,6 @@ Visit.add_override_property('locality')
 
 
 class MultiProductVisit(Visit):
-
     date = models.DateField(
         null=True,
         blank=False,

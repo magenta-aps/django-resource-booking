@@ -535,9 +535,9 @@ class EventTime(models.Model):
             )
         )
 
-        with transaction.atomic():
-            for x in qs:
-                x.update_availability()
+        # with transaction.atomic():
+        #     for x in qs:
+        #         x.update_availability()
 
         return qs
 

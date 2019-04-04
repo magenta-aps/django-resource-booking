@@ -68,9 +68,7 @@
                                     <div class="checkbox">
                                         <label class="control-label" for="gymnasie-choice-{{c.value}}">
                                             <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                            {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                            {% endif %}
+                                            <span title="{% blocktrans count hits=c.hits %}{{ hits }} resultat{% plural %}{{ hits }} resultater{% endblocktrans %}{% if c.additional %} + {% blocktrans count additional=c.additional %}{{ additional }} generelt{% plural %}{{ additional }} generelle{% endblocktrans %}{% endif %}" class="type-hits">({{ c.hits }} + {{ c.additional }})</span>
                                         </label>
                                     </div>
                                     {% endfor %}
@@ -88,7 +86,11 @@
                                         <label class="control-label" for="grundskole-choice-{{c.value}}">
                                             <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                             {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                                {% if c.additional %}
+                                                    <span title="{% blocktrans count hits=c.hits %}{{ hits }} resultat{% plural %}{{ hits }} resultater{% endblocktrans %}{% if c.additional %} + {% blocktrans count additional=c.additional %}{{ additional }} generelt{% plural %}{{ additional }} generelle{% endblocktrans %}{% endif %}" class="type-hits">({{ c.hits }} + {{ c.additional }})</span>
+                                                {% else %}
+                                                    <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                                {% endif %}
                                             {% endif %}
                                         </label>
                                     </div>
