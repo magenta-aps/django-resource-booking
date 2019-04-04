@@ -1,7 +1,18 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Der er nu plads på besøg {{ product.title }}
+    {% if visit.is_multiproductvisit %}
+        Der er nu plads på besøgene:
+        <ul>
+            {% for visit in visit.real.subvisits %}
+                {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
+                <li><a href="{% full_url 'product-view' subvisit.product.pk %}">{{ subvisit.product.title }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        Der er nu plads på besøg {{ visit.product.title }}
+    {% endif %}
     {% include 'booking/email/snippets/visit_time.html' %}
     på Københavns Universitet:
     {% include 'booking/email/snippets/product_maplink.html' %}.

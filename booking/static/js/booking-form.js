@@ -4,3 +4,9 @@
         $('#booking-spinner').show();
     });
 })(jQuery);
+
+(function($) {
+    $('input[disablepaste=true]').on('paste', function (e) {
+        e.preventDefault();
+    });
+})(jQuery);

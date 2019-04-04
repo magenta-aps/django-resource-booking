@@ -1,0 +1,26 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% blocktrans with id=object.id %}Aflys tilmelding #{{ id }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Aflys tilmelding #{{ id }}{% endblocktrans %}</h1>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <p>
+        {% trans 'Advarsel: Dette vil aflyse tilmeldingen' %}
+    </p>
+    <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="novalidate" method="POST">
+        {% csrf_token %}
+        {% include 'common/continue_cancel.html' %}
+    </form>
+
+{% endblock %}

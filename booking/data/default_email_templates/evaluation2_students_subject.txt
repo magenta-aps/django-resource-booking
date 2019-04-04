@@ -1,0 +1,10 @@
+Videresendes:
+{% if visit.is_multiproductvisit %}
+Evaluering af besøgene
+{% for subvisit in visit.real.subvisits_unordered_noncancelled %}
+    {{ subvisit.product.title }}
+{% if forloop.last %}:{% else %}, {% endif %}
+{% endfor %}{{ visit.display_title }}
+{% else %}
+Evaluering af besøg {{ visit.product.title }}: {{ visit.display_title }}
+{% endif %}

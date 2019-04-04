@@ -145,6 +145,10 @@ strong, .bold {
   filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 
+.btn-link {
+  padding: 0;
+}
+
 .label {
   font-size: 90%;
   padding: .3em .6em .3em;
@@ -1029,7 +1033,7 @@ hr {
 
 /* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
 
-@-moz-document url-prefix() {
+@media screen and (min--moz-device-pixel-ratio:0) {
   select.form-control:not([multiple]) {
     padding-right: 25px;
     background-image: url("data:image/svg+xml,\
@@ -1103,7 +1107,7 @@ ul.errorlist {
   border: 1px solid #a94442;
   padding: 10px;
   display: inline-block;
-  list-style-position: inside;
+  list-style-type: none;
   max-width: 70%;
 }
 
@@ -1113,7 +1117,7 @@ ul.warninglist {
   border: 1px solid #8a6d3b;
   padding: 10px;
   display: inline-block;
-  list-style-position: inside;
+  list-style-type: none;
   max-width: 70%;
 }
 
@@ -1132,6 +1136,10 @@ ul.warninglist {
 .dl-panel dd {
   padding: 0 0 1em;
   display: block;
+}
+
+dl.emaildisplay {
+  border-top: 1px solid #ddd;
 }
 
 
@@ -1423,6 +1431,19 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
   list-style-type: none;
 }
 
+.listcontainer .list-group-item ul > li > ul {
+  display: inline-block;
+}
+
+.listcontainer .list-group-item ul > li > ul > li {
+    margin-top: 0;
+}
+
+.listcontainer .list-group-item ul > li > label {
+    font-weight: normal;
+    vertical-align: top;
+}
+
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
   font-size: 1em;
   display: inline-block;
@@ -1516,11 +1537,16 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 /* MultiProductVisit BEGIN */
 
-#deselected-product-list li .movebutton, #deselected-product-list li .deselectbutton, #confirm-product-list li .movebutton, #confirm-product-list li .deselectbutton {
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
   display: none;
 }
 
-#deselected-product-list, #selected-product-list, #confirm-product-list {
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
   font-size: 1.5em;
   list-style-type: none;
 }
@@ -1533,7 +1559,12 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
   cursor: move;
 }
 
-#selected-product-list li .selectbutton, #selected-product-list li .teaser, #confirm-product-list li .selectbutton, #confirm-product-list li .teaser {
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#selected-product-list li .readmore,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser,
+#confirm-product-list li .readmore {
   display: none;
 }
 
@@ -1558,6 +1589,25 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 li.subvisit-status-1 a.visit-link, li.subvisit-status-7 a.visit-link, li.subvisit-status-8 a.visit-link {
   text-decoration: line-through;
 }
+
+.initial-text {
+  display: none;
+}
+.initially-selected .initial-text {
+  display: inline;
+  font-size: 0.75em;
+}
+#selected-product-list .initial-text {
+  color: #3c763d;
+}
+#selected-product-list .initial-text .details {
+  display: none;
+}
+#deselected-product-list .initial-text {
+  color: #a94442;
+}
+
+
 
 
 /* MultiProductVisit END */
@@ -2337,6 +2387,13 @@ body.lightbox {
 .ku-filters {
   color: #252525;
   font-weight: 400;
+}
+
+#evaluationform .tooltip,
+#evaluationform .tooltip .tooltip-inner {
+  width: 400px;
+  max-width: 400px;
+  text-align: left;
 }
 
 ul.product-time-list {

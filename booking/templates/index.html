@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
+{% load hijack_tags %}
 {% load macros %}
 {% macro head_block %}
     {% block head %}{% endblock %}
@@ -12,7 +13,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         {% include 'common/google_tag_manager/script.html' %}
-        {% include 'common/google_tag_manager/analytics.html' %}
         <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
         {% if not view.kwargs.embed %}
             <!-- 3rd party stylesheets -->
@@ -32,10 +32,12 @@
             <![endif]-->
             <script type="text/javascript" src="/jsi18n"></script>
             <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
+            <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}" />
         {% endif %}
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
     {% include 'common/google_tag_manager/noscript.html' %}
+    {% hijack_notification %}
     {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
@@ -92,7 +94,7 @@
                 <li class="pull-right">
                     <a href="{% url 'logout' %}">
                         <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-                        </span>{% trans 'Log ud' %}
+                        {% trans 'Log ud' %}
                     </a>
                 </li>
                 <li class="pull-right">
@@ -112,12 +114,12 @@
             <div class="row">
                 <div id="branding-images" class="clearfix">
                     <div id="logo">
-                        <a href="http://www.ku.dk" title="{% trans 'Københavns Universitet' %}">
+                        <a href="{% url 'index' %}" title="{% trans 'Københavns Universitet' %}">
                             <img src="{% static 'img/faelles.gif' %}" height="87" width="65" alt="{% trans 'Københavns Universitet' %}">
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="{% url 'index' %}search" title="{% trans 'Velkommen til Københavns Universitet' %}">
+                        <a href="{% url 'index' %}" title="{% trans 'Velkommen til Københavns Universitet' %}">
                             <h2>{% trans 'FOKUS' %}</h2>
                             <p>{% trans 'Tilbud til gymnasie- og grundskolen' %}</p>
                         </a>

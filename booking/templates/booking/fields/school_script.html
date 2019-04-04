@@ -80,29 +80,6 @@
             }
         });
 
-        schoolField.change(function() {
-            var schoolName = schoolField.val().trim();
-            $.ajax({
-                url: "{% url 'school' %}",
-                data: {
-                    q: schoolField.val(),
-                    t: schoolField.attr("data-institution-level")
-                },
-                dataType: "json",
-                complete: function (response) {
-                    if (response && response.status === 200) {
-                        var schools = response.responseJSON.schools;
-                        for (var i=0; i<schools.length; i++) {
-                            var school = schools[i];
-                            if (school.name.trim().toLowerCase() === schoolName.toLowerCase()) {
-                                updateSchool(school);
-                            }
-                        }
-                    }
-                }.bind(this)
-            });
-        });
-
         if (postcode.length || schoolTypeField.length) {
             updateSchool({
                 postcode: {

@@ -47,10 +47,13 @@ for x in BOOKING_MODELS:
 
 
 def on_booker_save(sender, instance, **kwargs):
-    for x in instance.booking_set.all():
-        vo = getattr(x, 'visit', None)
-        if vo:
-            run_searchindex_for_object(vo)
+    # for x in instance.booking_set.all():
+    #     vo = getattr(x, 'visit', None)
+    #     if vo:
+    #         run_searchindex_for_object(vo)
+    vo = getattr(instance, 'visit', None)
+    if vo:
+        run_searchindex_for_object(vo)
 
 post_save.connect(on_booker_save, sender=Guest)
 
