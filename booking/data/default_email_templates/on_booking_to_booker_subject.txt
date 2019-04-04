@@ -1,1 +1,5 @@
-Tilmelding til {{ product.title }} - Københavns Universitet
+{% if visit.is_multiproductvisit %}
+Tilmelding til besøg på Københavns Universitet
+{% else %}
+Tilmelding til {{ visit.product.title }} - Københavns Universitet
+{% endif %}

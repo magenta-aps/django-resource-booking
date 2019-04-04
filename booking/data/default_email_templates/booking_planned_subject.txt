@@ -1,1 +1,10 @@
-Besøg {{ visit.display_title }} færdigplanlagt
+{% if visit.is_multiproductvisit %}
+Besøgene
+{% for subvisit in visit.real.subvisits_unordered_noncancelled %}
+    {{ subvisit.product.title }}
+{% if not forloop.last %}, {% endif %}
+{% endfor %}
+: {{ visit.display_title }} færdigplanlagt
+{% else %}
+Besøg {{ visit.product.title }}: {{ visit.display_title }} færdigplanlagt
+{% endif %}

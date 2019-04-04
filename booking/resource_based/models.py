@@ -535,9 +535,9 @@ class EventTime(models.Model):
             )
         )
 
-        with transaction.atomic():
-            for x in qs:
-                x.update_availability()
+        # with transaction.atomic():
+        #     for x in qs:
+        #         x.update_availability()
 
         return qs
 
@@ -2051,7 +2051,7 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                 self.visit.autosend(
                     EmailTemplateType.notify_teacher__associated,
                     [
-                        KUEmailRecipient(
+                        KUEmailRecipient.create(
                             self.resource.teacherresource.user,
                             KUEmailRecipient.TYPE_TEACHER
                         )
@@ -2062,7 +2062,7 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                 self.visit.autosend(
                     EmailTemplateType.notify_host__associated,
                     [
-                        KUEmailRecipient(
+                        KUEmailRecipient.create(
                             self.resource.hostresource.user,
                             KUEmailRecipient.TYPE_HOST
                         )

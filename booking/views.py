@@ -301,7 +301,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=KUEmailRecipient(request.user)
+                original_from_email=KUEmailRecipient.create(request.user)
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -435,6 +435,8 @@ class SearchView(BreadcrumbMixin, ListView):
     admin_form = None
     facet_queryset = None
     needs_num_bookings = False
+    sort_grundskole_fag = False
+    sort_gymnasie_fag = False
     t_from = None
     t_to = None
     is_public = True
@@ -643,6 +645,42 @@ class SearchView(BreadcrumbMixin, ListView):
             qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
             self.needs_num_bookings = False
 
+        if self.sort_grundskole_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+            SELECT
+                COUNT(nb_productgrundskolefag.subject_id)
+            FROM
+                booking_product nb_products
+                JOIN booking_productgrundskolefag nb_productgrundskolefag ON (
+                    nb_products.id = nb_productgrundskolefag.product_id
+                )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgrundskolefag.subject_id != %d
+            """ % all_subject_id
+            qs = qs.annotate(
+                num_grundskolefag=RawSQL(sql, tuple())
+            ).order_by('-num_grundskolefag')
+
+        elif self.sort_gymnasie_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+                SELECT
+                    COUNT(nb_productgymnasiefag.subject_id)
+                FROM
+                    booking_product nb_products
+                    JOIN booking_productgymnasiefag nb_productgymnasiefag ON (
+                        nb_products.id = nb_productgymnasiefag.product_id
+                    )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgymnasiefag.subject_id != %d
+            """ % all_subject_id
+            qs = qs.annotate(
+                num_gymnasiefag=RawSQL(sql, tuple())
+            ).order_by('-num_gymnasiefag')
+
         return qs
 
     def annotate(self, qs):
@@ -692,14 +730,16 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["type__in"] = t
 
     def filter_by_gymnasiefag(self):
-        f = set(self.request.GET.getlist("f"))
+        f = self.request.GET.getlist("f")
         if f:
-            self.filters["gymnasiefag__in"] = f
+            self.filters["gymnasiefag__in"] = f + [Subject.get_all().pk]
+            self.sort_gymnasie_fag = True
 
     def filter_by_grundskolefag(self):
         g = self.request.GET.getlist("g")
         if g:
-            self.filters["grundskolefag__in"] = g
+            self.filters["grundskolefag__in"] = g + [Subject.get_all().pk]
+            self.sort_grundskole_fag = True
 
     def filter_for_admin_view(self, form):
         for filter_method in (
@@ -771,7 +811,7 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["organizationalunit__pk"] = u
 
     def get_facet_queryset(self):
-        if not self.facet_queryset:
+        if self.facet_queryset is None:
             self.facet_queryset = Product.objects.filter(
                 pk__in=[x["pk"] for x in self.get_base_queryset().values("pk")]
             )
@@ -784,24 +824,41 @@ class SearchView(BreadcrumbMixin, ListView):
         filters = self.get_filters()
         qs = self.get_base_queryset()
         qs = self.annotate_for_filters(qs)
-        qs = qs.filter(**filters)
+        filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
+        filter_kwargs = {
+            k: v for k, v in filters.iteritems() if not k.startswith('__')
+        }
+        qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
+
+        qs = qs.prefetch_related(
+            'productgymnasiefag_set', 'productgrundskolefag_set'
+        )
+
         return qs
 
     def make_facet(self, facet_field, choice_tuples, selected,
                    selected_value='checked="checked"',
-                   add_to_all=None):
+                   add_to_all=None, unsubjected=None):
 
         hits = {}
 
         # Remove filter for the field we want to facetize
-        new_filters = {}
-        for k, v in self.get_filters().iteritems():
-            if not k.startswith(facet_field):
-                new_filters[k] = v
+        filters = self.get_filters()
+        new_filter_args = [
+            v for k, v in filters.iteritems()
+            if k.startswith('__') and not k.startswith('__' + facet_field)
+        ]
+        new_filter_kwargs = {
+            k: v for k, v in filters.iteritems()
+            if not k.startswith(facet_field) and not k.startswith('__')
+        }
 
         facet_qs = Product.objects.filter(
-            pk__in=self.get_facet_queryset().filter(**new_filters)
+            pk__in=self.get_facet_queryset().filter(
+                *new_filter_args,
+                **new_filter_kwargs
+            )
         )
 
         qs = facet_qs.values(facet_field).annotate(hits=Count("pk"))
@@ -828,10 +885,10 @@ class SearchView(BreadcrumbMixin, ListView):
                 else:
                     hits[v] = to_add
 
-        return self.choices_from_hits(choice_tuples, hits, selected,
-                                      selected_value=selected_value)
+        return self.choices_from_hits(choice_tuples, hits, unsubjected,
+                                      selected, selected_value=selected_value)
 
-    def choices_from_hits(self, choice_tuples, hits, selected,
+    def choices_from_hits(self, choice_tuples, hits, additional, selected,
                           selected_value='checked="checked"'):
         selected = set(selected)
         choices = []
@@ -849,7 +906,8 @@ class SearchView(BreadcrumbMixin, ListView):
                 'label': name,
                 'value': value,
                 'selected': sel,
-                'hits': hits[value]
+                'hits': hits[value],
+                'additional': additional
             })
 
         return choices
@@ -910,7 +968,7 @@ class SearchView(BreadcrumbMixin, ListView):
         gym_subject_choices = []
         gs_subject_choices = []
 
-        for s in Subject.objects.all():
+        for s in Subject.objects.exclude(name=Subject.ALL_NAME):
             val = (s.pk, s.name)
 
             if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
@@ -925,6 +983,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "gymnasiefag",
             gym_subject_choices,
             gym_selected,
+            unsubjected=self.get_facet_queryset().filter(
+                gymnasiefag=Subject.get_all()
+            ).count()
         )
 
         gs_selected = self.request.GET.getlist("g")
@@ -933,6 +994,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "grundskolefag",
             gs_subject_choices,
             gs_selected,
+            unsubjected=self.get_facet_queryset().filter(
+                grundskolefag=Subject.get_all()
+            ).count()
         )
 
         context['from_datetime'] = self.from_datetime
@@ -1217,7 +1281,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgymnasiefag_set.all():
+                for x in obj.productgymnasiefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1243,7 +1309,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgrundskolefag_set.all():
+                for x in obj.productgrundskolefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1280,47 +1348,89 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     pass
 
     def save_subjects(self):
-        existing_gym_fag = {}
-        for x in self.object.productgymnasiefag_set.all():
-            if x.as_submitvalue() in existing_gym_fag:
-                # Remove duplicate
+        all = Subject.get_all()
+
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GYMNASIE:
+
+            existing_gym_fag = {}
+            for x in self.object.productgymnasiefag_set.all():
+                if x.as_submitvalue() in existing_gym_fag:
+                    # Remove duplicate
+                    x.delete()
+                else:
+                    existing_gym_fag[x.as_submitvalue()] = x
+
+            created = set()
+            for gval in self.request.POST.getlist('gymnasiefag', []):
+                if gval in existing_gym_fag:
+                    if existing_gym_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gym_fag[gval]
+                # create submitted
+                elif gval not in created:
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
+
+            if not created:
+                found = False
+                for x in existing_gym_fag.keys():
+                    if existing_gym_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gym_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gym_fag.itervalues():
                 x.delete()
-            else:
-                existing_gym_fag[x.as_submitvalue()] = x
 
-        created = set()
-        for gval in self.request.POST.getlist('gymnasiefag', []):
-            if gval in existing_gym_fag:
-                del existing_gym_fag[gval]
-            elif gval not in created:
-                ProductGymnasieFag.create_from_submitvalue(self.object, gval)
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+            existing_gs_fag = {}
+            for x in self.object.productgrundskolefag_set.all():
+                if x.as_submitvalue() in existing_gs_fag:
+                    # Remove saved duplicate
+                    x.delete()
+                else:
+                    existing_gs_fag[x.as_submitvalue()] = x
 
-            created.add(gval)
+            created = set()
+            for gval in self.request.POST.getlist('grundskolefag', []):
+                if gval in existing_gs_fag:
+                    if existing_gs_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gs_fag[gval]
+                elif gval not in created:
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
 
-        # Delete any remaining values that were not submitted
-        for x in existing_gym_fag.itervalues():
-            x.delete()
+            if not created:
+                found = False
+                for x in existing_gs_fag.keys():
+                    if existing_gs_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gs_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
 
-        existing_gs_fag = {}
-        for x in self.object.productgrundskolefag_set.all():
-            if x.as_submitvalue() in existing_gs_fag:
-                # Remove saved duplicate
+            # Delete any remaining values that were not submitted
+            for x in existing_gs_fag.itervalues():
                 x.delete()
-            else:
-                existing_gs_fag[x.as_submitvalue()] = x
-
-        created = set()
-        for gval in self.request.POST.getlist('grundskolefag', []):
-            if gval in existing_gs_fag:
-                del existing_gs_fag[gval]
-            elif gval not in created:
-                ProductGrundskoleFag.create_from_submitvalue(self.object, gval)
-
-            created.add(gval)
-
-        # Delete any remaining values that were not submitted
-        for x in existing_gs_fag.itervalues():
-            x.delete()
 
     def add_to_my_resources(self):
         # Newly created objects should be added to the users list of
@@ -1530,8 +1640,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
-        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
         context['gymnasie_level_choices'] = \
             GymnasieLevel.objects.all().order_by('level')
 
@@ -1831,7 +1943,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
-                    self.object.future_bookable_times()
+                    self.object.future_bookable_times(use_cutoff=True)
                 )
                 context['nr_unbookable'] = len(
                     self.object.eventtime_set.all()
@@ -1903,14 +2015,14 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             recipients = []
             if self.object.tilbudsansvarlig:
                 recipients.append(
-                    KUEmailRecipient(
+                    KUEmailRecipient.create(
                         self.object.tilbudsansvarlig,
                         KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
                     )
                 )
             elif self.object.created_by:
                 recipients.append(
-                    KUEmailRecipient(
+                    KUEmailRecipient.create(
                         self.object.created_by,
                         KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
                     )
@@ -1923,9 +2035,10 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                     )
                 )
 
-            sender = KUEmailRecipient(full_email(
+            sender = KUEmailRecipient.create(full_email(
                 form.cleaned_data['email'], form.cleaned_data['name']
             ), KUEmailRecipient.TYPE_GUEST)
+
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
                 original_from_email=sender
@@ -3769,7 +3882,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            ctx['recipient'] = KUEmailRecipient(user_obj)
+            ctx['recipient'] = KUEmailRecipient.create(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
