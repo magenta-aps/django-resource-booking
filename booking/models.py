@@ -4322,7 +4322,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def get_todays_visits():
-        return Visit.get_occurring_on_date(timezone.now().date())
+        return Visit.get_occurring_on_date(timezone.now())
 
     @staticmethod
     def get_starting_on_date(date):
@@ -4345,24 +4345,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         )
 
     @staticmethod
-    def get_occurring_on_date(date):
-        # Convert date object to date-only for current timezone
-        date = timezone.datetime(
-            year=date.year,
-            month=date.month,
-            day=date.day,
-            tzinfo=timezone.get_current_timezone()
-        )
+    def get_occurring_on_date(datetime):
+        # Convert datetime object to date-only for current timezone
+        date = timezone.localtime(datetime).date()
 
         # A visit happens on a date if it starts before the
         # end of the day and ends after the beginning of the day
+        min_date = datetime.combine(date, time.min)
+        max_date = datetime.combine(date, time.max)
+
         return Visit.objects.filter(
-            eventtime__start__lte=date + timedelta(days=1),
+            eventtime__start__lte=max_date,
             is_multi_sub=False
         ).filter(
-            Q(eventtime__end__gt=date) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__gt=date)
+            Q(eventtime__end__gte=min_date) | (
+                Q(eventtime__end__isnull=True) &
+                Q(eventtime__start__gt=min_date)
             )
         )
 
