@@ -1926,6 +1926,7 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             sender = KUEmailRecipient.create(full_email(
                 form.cleaned_data['email'], form.cleaned_data['name']
             ), KUEmailRecipient.TYPE_GUEST)
+
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
                 original_from_email=sender

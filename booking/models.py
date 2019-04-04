@@ -5818,6 +5818,11 @@ class Guest(models.Model):
         verbose_name=u'Heraf lærere'
     )
 
+    consent = models.BooleanField(
+        verbose_name=_(u'Samtykke'),
+        default=False,
+    )
+
     @property
     def student_count(self):
         try:
