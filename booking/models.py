@@ -2367,9 +2367,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 resourcepool__resourcerequirement__product=self
             )
         else:
+            potential_teachers = self.potentielle_undervisere.all()
+            potential_hosts = self.potentielle_vaerter.all()
             potential_resources = Resource.objects.filter(
-                Q(teacherresource__user__in=self.potentielle_undervisere.all()) |
-                Q(hostresource__user__in=self.potentielle_vaerter.all())
+                Q(teacherresource__user__in=potential_teachers) |
+                Q(hostresource__user__in=potential_hosts)
             )
         resource_pools = ResourcePool.objects.filter(
             resources__in=potential_resources
