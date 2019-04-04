@@ -1,1 +1,1 @@
-Tilknytning som vært til besøg {{ visit.display_title }}
+Tilknytning som vært til besøg {{ visit.product.title }}

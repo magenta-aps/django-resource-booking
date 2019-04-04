@@ -33,7 +33,11 @@ designed for the University of Copenhagen.""",
           'django-cron==0.4.6',
           'django-ckeditor==5.1.1',
           'django-macros==0.4.0',
-          'requests==2.20.0'
+          'requests==2.20.0',
+          'django-debug-toolbar==1.9',
+          'django-hijack',
+          'django-extensions==2.1.5',
+          'ipython==5.8.0'
       ],
       entry_points="""
       # -*- Entry points: -*-

@@ -45,10 +45,12 @@ window.modal = {
 
 
 $(function(){
-    if (window.modal.parent) {
-        setTimeout(modal.updateHeight.bind(modal), 0);
-        $("*[data-dismiss='modal']").click(modal.close.bind(modal));
-    }
+    $(window).load(function(){
+        if (window.modal.parent) {
+            setTimeout(modal.updateHeight.bind(modal), 50);
+            $("*[data-dismiss='modal']").click(modal.close.bind(modal));
+        }
+    });
 });
 
 $(function(){

@@ -443,6 +443,42 @@
         </div>
     </div>
 
+
+    {% if not object.is_multiproductvisit or object.student_evaluation or object.teacher_evaluation or object.common_evaluation %}
+    <div class="row evaluation">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>
+                        {% trans 'Evaluering' %}
+                    </h2>
+                    {% if object.type == object.GROUP_VISIT %}
+                        {% if object.student_evaluation %}
+                            <a href="{% url 'evaluation-view' object.student_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                        {% endif %}
+                        {% if object.teacher_evaluation %}
+                            <a href="{% url 'evaluation-view' object.teacher_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                        {% endif %}
+                    {% else %}
+                        {% if object.common_evaluation %}
+                            <a href="{% url 'evaluation-view' object.common_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+
+
     {% if not object.is_multi_sub %}
     <div class="row attendees">
         <div class="col-sm-12 col-md-10 col-md-offset-2">

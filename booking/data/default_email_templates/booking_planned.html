@@ -7,7 +7,7 @@
             Vi glæder os til at se dig til:
             <ul>
             {% for subvisit in visit.real.subvisits_by_time %}
-                {% if not subvisit.is_cancelled %}
+                {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
                 <li>
                     {{ subvisit.product.title }},
                     {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
@@ -20,7 +20,7 @@
         </p>
     {% else %}
         <p>
-            Vi glæder os til at se dig til {{ product.title }}
+            Vi glæder os til at se dig til {{ visit.product.title }}
             {% include 'booking/email/snippets/visit_time.html' %}
             på Københavns Universitet:
             {% include 'booking/email/snippets/product_maplink.html' %}.
