@@ -2385,6 +2385,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 filter['start__lte'] = timezone.now() + cutoff_after
         return self.bookable_times.filter(**filter)
 
+    def future_bookable_times_with_cutoff(self):
+        return self.future_bookable_times(use_cutoff=True)
+
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
     # in ressource assignment for this product.
