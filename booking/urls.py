@@ -89,10 +89,6 @@ from booking.views import VisitDetailView
 from booking.views import VisitSearchView
 from profile.views import ListAjaxView
 
-js_info_dict = {
-    'packages': ('recurrence', ),
-}
-
 calendarevent_kwargs = {
     'related_kwargs_name': 'res'
 }
@@ -112,8 +108,7 @@ resourcepool_calendarevent_kwargs['related_kwargs_name'] = 'pool'
 
 
 urlpatterns = [
-    url('jsi18n/',
-        JavaScriptCatalog.as_view(packages=['recurrence']),
+    url(r'^jsi18n/$', JavaScriptCatalog.as_view(packages=["recurrence"]),
         name='javascript-catalog'),
     url(r'^$', MainPageView.as_view(), name='index'),
 
