@@ -1895,7 +1895,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
         if self.pk:
             res = self.resources.all()
             return EventTime.objects.filter(
-                product__resourcerequirement__resource_pool__resources=res
+                product__resourcerequirement__resource_pool__resources__in=res
             )
         else:
             return EventTime.objects.none()
@@ -2000,7 +2000,7 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         if self.pk and self.resource_pool:
             res = self.resource_pool.resources.all()
             return EventTime.objects.filter(
-                product__resourcerequirement__resource_pool__resources=res
+                product__resourcerequirement__resource_pool__resources__in=res
             )
         else:
             return EventTime.objects.none()
