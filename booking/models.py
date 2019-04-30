@@ -3617,6 +3617,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def display_title(self):
         try:
+            if self.product.type == Product.STUDENT_FOR_A_DAY:
+                return self.bookings.first().booker.get_full_name()
             return self.bookings.first().booker.school.name
         except:
             return self.product.title if self.product \
