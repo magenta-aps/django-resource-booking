@@ -1351,7 +1351,6 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     pass
 
     def save_subjects(self):
-
         all = Subject.get_all()
 
         if self.object.institution_level & Subject.SUBJECT_TYPE_GYMNASIE:
@@ -2038,9 +2037,17 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                         KUEmailRecipient.TYPE_EDITOR
                     )
                 )
+<<<<<<< HEAD
             sender = KUEmailRecipient.create(full_email(
                 form.cleaned_data['email'], form.cleaned_data['name']
             ), KUEmailRecipient.TYPE_GUEST)
+=======
+
+            sender = KUEmailRecipient.create(full_email(
+                form.cleaned_data['email'], form.cleaned_data['name']
+            ), KUEmailRecipient.TYPE_GUEST)
+
+>>>>>>> feature/28424_student_for_a_day_display_title_change
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
                 original_from_email=sender
