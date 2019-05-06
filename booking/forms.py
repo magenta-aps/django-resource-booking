@@ -22,7 +22,8 @@ from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse_lazy
 from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import BookingGymnasieSubjectLevel
@@ -1849,6 +1850,10 @@ class EmailComposeForm(BaseEmailComposeForm):
 
 
 class GuestEmailComposeForm(BaseEmailComposeForm):
+    def __init__(self, **kwargs):
+        super(GuestEmailComposeForm, self).__init__(**kwargs)
+        consent_url = reverse_lazy("consent")
+        self.fields["consent"].label = mark_safe("<a href={} target='_blank'>Jeg giver samtykke til brug af mine persondata</a>".format(consent_url))
 
     name = forms.CharField(
         max_length=100,
