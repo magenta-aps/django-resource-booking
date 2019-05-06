@@ -63,7 +63,7 @@
   Validator.INPUT_SELECTOR = ':input:not([type="submit"], button):enabled:visible'
 
   Validator.DEFAULTS = {
-    delay: 1500,
+    delay: 2500,
     html: false,
     disable: true,
     custom: {},
