@@ -1182,7 +1182,7 @@ class BookerForm(forms.ModelForm):
         if not consent:
             raise forms.ValidationError(
                 _(u'Du skal give samtykke til at vi bruger og opbevarer dine'
-                    ' personoplysninger før vi kan modtage dine data.')
+                    u' personoplysninger før vi kan modtage dine data.')
             )
         return True
 
