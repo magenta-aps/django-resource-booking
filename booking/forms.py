@@ -1853,7 +1853,10 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
     def __init__(self, **kwargs):
         super(GuestEmailComposeForm, self).__init__(**kwargs)
         consent_url = reverse_lazy("consent")
-        self.fields["consent"].label = mark_safe("<a href={} target='_blank'>Jeg giver samtykke til brug af mine persondata</a>".format(consent_url))
+        self.fields["consent"].label = mark_safe(
+            "<a href={} target='_blank'>Jeg giver samtykke "
+            "til brug af mine persondata</a>".format(consent_url)
+        )
 
     name = forms.CharField(
         max_length=100,
