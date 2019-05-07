@@ -4556,7 +4556,7 @@ class EvaluationStatisticsView(
 
         unit = data.get("unit")
         if unit is not None:
-            queryset = Visit.unit_filter(queryset, unit)
+            queryset = Visit.unit_filter(queryset, [unit])
             has_filter = True
 
         from_date = data.get('from_date')
