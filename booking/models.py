@@ -4765,7 +4765,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             SurveyXactEvaluationGuest.status_choices
         ]
         output = []
-        if self.product.student_evaluation is not None:
+        if (hasattr(self.product, "student_evaluation") and
+                self.product.student_evaluation is not None):
             student_status = {status: 0 for status in statuslist}
             for student in self.student_evaluation_guests.all():
                 student_status[student.status] += 1
@@ -4774,7 +4775,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 self.product.student_evaluation,
                 [student_status[key] for key in statuslist]
             ))
-        if self.product.teacher_evaluation is not None:
+        if (hasattr(self.product, "teacher_evaluation") and
+                self.product.teacher_evaluation is not None):
             teacher_status = {status: 0 for status in statuslist}
             for teacher in self.teacher_evaluation_guests.all():
                 teacher_status[teacher.status] += 1
