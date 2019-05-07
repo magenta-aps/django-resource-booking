@@ -4549,7 +4549,7 @@ class EvaluationStatisticsView(
         data = form.clean()
         has_filter = False
         queryset = Visit.objects.filter(
-            bookings=Booking.objects.filter(
+            bookings__in=Booking.objects.filter(
                 booker__surveyxactevaluationguest__isnull=False
             )
         ).order_by("-eventtime__start")
