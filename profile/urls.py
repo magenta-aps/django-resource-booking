@@ -1,15 +1,13 @@
 import django.contrib.auth.views as auth_views
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import DeleteUserView, UserListView, StatisticsView
 from profile.views import EmailLoginView
 from profile.views import EditMyProductsView
 from profile.views import AvailabilityView
 
-urlpatterns = patterns(
-
-    '',
+urlpatterns = [
     url(r'^$', ProfileView.as_view(
         template_name='profile/profile.html'),
         name='user_profile'),
@@ -53,4 +51,4 @@ urlpatterns = patterns(
     url(r'^availability/(?P<user_pk>[0-9]+)/?$',
         AvailabilityView.as_view(),
         name='availability'),
-)
+]

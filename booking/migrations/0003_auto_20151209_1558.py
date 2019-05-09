@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='visit',
             name='duration',
-            field=booking.fields.DurationField(null=True, verbose_name='Varighed', blank=True),
+            field=models.DurationField(null=True, verbose_name='Varighed', blank=True),
         ),
     ]

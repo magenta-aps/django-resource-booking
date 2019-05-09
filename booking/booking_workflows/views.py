@@ -295,7 +295,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
         locality = self.object.product.locality
         unit = self.object.product.organizationalunit
 
-        context['locality_choices'] = [(None, "---------")] + \
+        context['locality_choices'] = [(None, "---------", False)] + \
             [
                 (x.id, x.name_and_address,
                  locality is not None and x.id == locality.id)
