@@ -4565,7 +4565,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def with_product_types(visit_qs, product_types=None):
         if product_types is None:
             return visit_qs
-        return visit_qs.filter(
+        return (visit_qs.filter(
             multiproductvisit__isnull=True,
             eventtime__product__type__in=product_types
         ) | visit_qs.filter(
@@ -4574,7 +4574,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 eventtime__product__type__in=product_types,
                 is_multi_sub=True
             )
-        )
+        )).distinct()
 
     @property
     def products_unique_address(self):
