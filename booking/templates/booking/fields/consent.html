@@ -6,7 +6,7 @@
     </div>
     <div class="col-sm-6">
         <label class="control-label label-unstyled {{ bookerform.consent.css_classes }}" for="{{ bookerform.consent.id_for_label }}">
-            {% trans "Samtykke" %}
+            <a href="{% url 'consent' %}" target="_blank">Jeg giver samtykke til brug af mine persondata</a>
         </label>
     </div>
     <div class="col-sm-4 help-block with-errors">

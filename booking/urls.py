@@ -121,6 +121,10 @@ urlpatterns = [
     url(r'^iframe$', TemplateView.as_view(
         template_name='iframe-index.html'),
         name='iframe_search'),
+    # consent page
+    url(r'^consent$', TemplateView.as_view(
+        template_name='consent.html'),
+        name='consent'),
 
     url(r'^product/create/?$',
         EditProductInitialView.as_view(),
