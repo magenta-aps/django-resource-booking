@@ -87,6 +87,16 @@ class UserRole(models.Model):
     name = models.CharField(max_length=256, blank=True)
     description = models.TextField(blank=True)
 
+    @staticmethod
+    def create_defaults():
+        from booking.data import userroles
+        data = userroles.userroles
+        for entry in data:
+            UserRole.objects.get_or_create(
+                role=entry["role"],
+                name=entry["name"]
+            )
+
     def __unicode__(self):
         return self.name
 
