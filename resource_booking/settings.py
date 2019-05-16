@@ -42,17 +42,18 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'booking',
     'profile',
     'recurrence',
-    'timedelta',
     'tinymce',
     'django_cron',
     'macros',
     'ckeditor',
     'ckeditor_uploader',
     'hijack',
-    'compat'
+    'compat',
+    'django_extensions'
 )
 # INSTALLED_APPS might be extended with the debug toolbar
 

@@ -2,7 +2,7 @@
 
 <p>
     En eller flere gæster har tilmeldt sig besøg
-    <a href="{% full_url 'visit-view' visit.pk 'teacher' token_user=recipient %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    <a href="{% full_url 'visit-view' visit.pk 'teacher' token_user=recipient %}">{{ visit.product.title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     Besøget afholdes på
     <a href="{% full_url 'product-view' product.pk token_user=recipient %}#mapinfo">{{ product.locality.full_address }}</a>.
     Der er brug for en eller flere undervisere til afviklingen af tilbuddet.

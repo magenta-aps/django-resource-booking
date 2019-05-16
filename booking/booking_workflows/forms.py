@@ -260,7 +260,6 @@ VisitAutosendFormSetBase = inlineformset_factory(
     VisitAutosend,
     form=VisitAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )

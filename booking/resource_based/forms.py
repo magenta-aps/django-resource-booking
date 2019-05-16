@@ -47,13 +47,10 @@ class ResourceTypeForm(forms.Form):
         ResourceType.RESOURCE_TYPE_ROOM
     ]
 
-    type = forms.ChoiceField(
+    type = forms.ModelChoiceField(
         label=_(u'Type'),
-        choices=[
-            (x.id, x.name)
-            for x in ResourceType.objects.all()
-            if x.id not in EXCEPT_TYPES
-        ],
+        queryset=ResourceType.objects.exclude(id__in=EXCEPT_TYPES),
+        to_field_name="name",
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -179,11 +176,10 @@ class EditVehicleResourceForm(EditResourceForm):
 
 
 class ResourcePoolTypeForm(forms.Form):
-    type = forms.ChoiceField(
+    type = forms.ModelChoiceField(
         label=_(u'Type'),
-        choices=[
-            (x.id, x.name) for x in ResourceType.objects.all()
-        ],
+        queryset=ResourceType.objects.all(),
+        to_field_name="name",
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )

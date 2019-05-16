@@ -13,7 +13,7 @@
     </p>
 {% else %}
     <p>
-        Du har tilmeldt dig besøg {{ visit.display_title }}
+        Du har tilmeldt dig besøg {{ visit.product.title }}
         {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet{% if visit.locality %}:
         {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.

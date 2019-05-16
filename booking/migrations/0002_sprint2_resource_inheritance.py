@@ -5,7 +5,6 @@ from django.db import migrations, models
 import datetime
 import djorm_pgfulltext.fields
 from django.utils.timezone import utc
-import timedelta.fields
 
 
 class Migration(migrations.Migration):
@@ -180,7 +179,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='visit',
             name='duration',
-            field=timedelta.fields.TimedeltaField(null=True, verbose_name='Varighed', blank=True),
+            field=models.DurationField(null=True, verbose_name='Varighed', blank=True),
         ),
         migrations.AddField(
             model_name='visit',

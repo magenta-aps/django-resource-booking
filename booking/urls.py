@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.core.urlresolvers import RegexURLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
-
+from django.views.i18n import JavaScriptCatalog
 from booking.models import Product, ResourcePool
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceDeleteView
@@ -89,10 +89,6 @@ from booking.views import VisitDetailView
 from booking.views import VisitSearchView
 from profile.views import ListAjaxView
 
-js_info_dict = {
-    'packages': ('recurrence', ),
-}
-
 calendarevent_kwargs = {
     'related_kwargs_name': 'res'
 }
@@ -111,10 +107,9 @@ resourcepool_calendarevent_kwargs = resourcepool_calendar_kwargs.copy()
 resourcepool_calendarevent_kwargs['related_kwargs_name'] = 'pool'
 
 
-urlpatterns = patterns(
-
-    '',
-    (r'^jsi18n/?$', 'django.views.i18n.javascript_catalog', js_info_dict),
+urlpatterns = [
+    url(r'^jsi18n/$', JavaScriptCatalog.as_view(packages=["recurrence"]),
+        name='javascript-catalog'),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     url('^(?:da|en)/.*', LocaleRedirectView.as_view()),
@@ -485,7 +480,7 @@ urlpatterns = patterns(
         ListAjaxView.as_view(),
         name='ajax-list')
 
-) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 embed_views = [
     'index',
@@ -504,7 +499,7 @@ for x in urlpatterns:
             embedpatterns.append(
                 url(
                     '^(?P<embed>embed/)' + x.regex.pattern[1:],
-                    xframe_options_exempt(x._callback),
+                    xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )
             )
