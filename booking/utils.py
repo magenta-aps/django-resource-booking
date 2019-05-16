@@ -6,9 +6,9 @@ import os
 import re
 import sys
 from itertools import chain
-from subprocess import Popen, PIPE
 
 import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.contenttypes.models import ContentType
@@ -60,7 +60,12 @@ def get_related_content_types(model):
 
         types = [ContentType.objects.get_for_model(model)]
 
-        for rel in model._meta.get_all_related_objects():
+        related_objects = [
+            f for f in model._meta.get_fields() if
+            (f.one_to_many or f.one_to_one) and
+            f.auto_created and not f.concrete
+        ]
+        for rel in related_objects:
             if not rel.one_to_one:
                 continue
 
@@ -135,17 +140,10 @@ class CustomStorage(FileSystemStorage):
 
 def html2text(value):
     """
-    Pipes given HTML string into the text browser W3M, which renders it.
-    Rendered text is grabbed from STDOUT and returned.
+    Use BeautifulSoup to parse the HTML and retrieve the text.
     """
-    try:
-        cmd = "w3m -dump -T text/html -O utf-8"
-        proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
-        enc_str = unicode(value).encode('ascii', 'xmlcharrefreplace')
-        return proc.communicate(enc_str)[0]
-    except OSError:
-        # something bad happened, so just return the input
-        return value
+    soup = BeautifulSoup(value, "html.parser")
+    return soup.get_text()
 
 
 def get_model_field_map(model, visited_models=None):
@@ -239,6 +237,15 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+def force_list(item):
+    t = type(item)
+    if t == list:
+        return item
+    if t == set or t == tuple:
+        return list(item)
+    return [item]
 
 
 def merge_dicts(*dicts):

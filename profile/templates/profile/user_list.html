@@ -92,6 +92,12 @@
                         <div class="col-sm-4 edit-user-links">
                             <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
                             <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
+                            {% if user.userprofile.is_administrator and not otheruser.userprofile.is_administrator %}
+                            <form action="/hijack/{{ otheruser.id }}/" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link">{% trans 'Log ind som' %}</button>
+                            </form>
+                            {% endif %}
                           </div>
                         {% endif %}
                     </div>

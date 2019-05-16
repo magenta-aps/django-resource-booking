@@ -230,7 +230,7 @@ class UserProfile(models.Model):
             return OrganizationalUnit.objects.none()
 
         if role == ADMINISTRATOR:
-            return OrganizationalUnit.objects.all()
+            return OrganizationalUnit.objects.all().select_related('type')
 
         unit = self.organizationalunit
 
@@ -240,11 +240,13 @@ class UserProfile(models.Model):
         # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
-            return OrganizationalUnit.objects.filter(Q(parent=unit) |
-                                                     Q(pk=unit.pk))
+            return OrganizationalUnit.objects\
+                .filter(Q(parent=unit) | Q(pk=unit.pk))\
+                .select_related('type')
 
         # Everyone else just get access to their own group
-        return OrganizationalUnit.objects.filter(pk=unit.pk)
+        return OrganizationalUnit.objects.filter(pk=unit.pk)\
+            .select_related('type')
 
     def get_faculty(self):
         unit = self.organizationalunit
@@ -464,7 +466,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
@@ -482,7 +484,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'
@@ -494,7 +496,10 @@ class UserProfile(models.Model):
         else:
             qs2 = booking.models.Visit.objects.none()
 
-        return qs1 | qs2
+        # Return new queryset with objects from either
+        return booking.models.Visit.objects.filter(
+            Q(pk__in=qs1) | Q(pk__in=qs2)
+        )
 
     @property
     def potentially_assigned_visits(self):
