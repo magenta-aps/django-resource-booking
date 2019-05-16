@@ -1,7 +1,10 @@
 # encoding: utf-8
+import django
+django.setup()
+
 from booking.models import EmailTemplate, EmailTemplateType
 from django.utils.translation import ugettext as _
-import django
+
 import os
 
 
@@ -70,8 +73,6 @@ def import_one(key):
 
 
 def import_all():
-    django.setup()
-
     for key in IMPORT_MAP:
         import_one(key)
 
@@ -110,7 +111,5 @@ def export_one(key):
 
 
 def export_all():
-    django.setup()
-
     for key in IMPORT_MAP:
         export_one(key)

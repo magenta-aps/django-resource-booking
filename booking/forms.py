@@ -22,7 +22,8 @@ from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse_lazy
 from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import BookingGymnasieSubjectLevel
@@ -768,9 +769,6 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(
-        enable_autosend=True, form_show=True
-    ).count(),
     can_delete=False,
     can_order=False
 )
@@ -1002,7 +1000,7 @@ class BookerForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count', 'teacher_count')
+                  'level', 'attendee_count', 'teacher_count', 'consent')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -1175,6 +1173,15 @@ class BookerForm(forms.ModelForm):
                   u'for at få hjælp til tilmelding.')
             )
         return school
+
+    def clean_consent(self):
+        consent = self.cleaned_data.get('consent', False)
+        if not consent:
+            raise forms.ValidationError(
+                _(u'Du skal give samtykke til at vi bruger og opbevarer dine'
+                    u' personoplysninger før vi kan modtage dine data.')
+            )
+        return True
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
@@ -1843,6 +1850,13 @@ class EmailComposeForm(BaseEmailComposeForm):
 
 
 class GuestEmailComposeForm(BaseEmailComposeForm):
+    def __init__(self, **kwargs):
+        super(GuestEmailComposeForm, self).__init__(**kwargs)
+        consent_url = reverse_lazy("consent")
+        self.fields["consent"].label = mark_safe(
+            "<a href={} target='_blank'>Jeg giver samtykke "
+            "til brug af mine persondata</a>".format(consent_url)
+        )
 
     name = forms.CharField(
         max_length=100,
@@ -1875,6 +1889,12 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
             },
         ),
         required=False
+    )
+
+    consent = forms.BooleanField(
+        label=_(u'Samtykke'),
+        widget=CheckboxInput(),
+        required=True
     )
 
 

@@ -301,7 +301,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits,
+                    eventtime__visit__in=profile.potentially_assigned_visits,
                     type__in=product_types
                 ).distinct().order_by("title"),
                 'limit': limit
@@ -356,7 +356,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=profile.potentially_assigned_visits
+                    eventtime__visit__in=profile.potentially_assigned_visits
                 ).distinct().order_by("title"),
                 'limit': limit
             },
@@ -991,7 +991,7 @@ class EditMyProductsView(EditorRequiredMixin, BreadcrumbMixin, UpdateView):
         userprofile = self.request.user.userprofile
 
         form.fields['my_resources'].queryset = Product.objects.filter(
-            organizationalunit=userprofile.get_unit_queryset()
+            organizationalunit__in=userprofile.get_unit_queryset()
         ).order_by('title')
 
         return form

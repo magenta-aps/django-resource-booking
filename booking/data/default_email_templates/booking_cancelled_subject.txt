@@ -1,1 +1,10 @@
-Aflysning af besøg {{ visit.display_title }}{% include 'booking/email/snippets/visit_time.html' %}
+{% if visit.is_multiproductvisit %}
+Aflysning af besøgene
+{% for subvisit in visit.real.subvisits_unordered_noncancelled %}
+    {{ subvisit.product.title }}
+{% if not forloop.last %}, {% endif %}
+{% endfor %}: {{ visit.display_title }}
+{% else %}
+Aflysning af besøg {{ visit.product.title }}: {{ visit.display_title }}
+{% endif %}
+{% include 'booking/email/snippets/visit_time.html' %}
