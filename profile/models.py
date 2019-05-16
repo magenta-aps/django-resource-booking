@@ -466,7 +466,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
@@ -484,7 +484,7 @@ class UserProfile(models.Model):
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
                 eventtime__start__gt=timezone.now(),
-                eventtime__product__organizationalunit=unit_qs,
+                eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'
@@ -496,7 +496,10 @@ class UserProfile(models.Model):
         else:
             qs2 = booking.models.Visit.objects.none()
 
-        return qs1 | qs2
+        # Return new queryset with objects from either
+        return booking.models.Visit.objects.filter(
+            Q(pk__in=qs1) | Q(pk__in=qs2)
+        )
 
     @property
     def potentially_assigned_visits(self):

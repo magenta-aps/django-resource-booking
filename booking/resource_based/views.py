@@ -499,22 +499,22 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         return chain(
             RoomResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('room__name'),
             ItemResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('name'),
             VehicleResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('name'),
             TeacherResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('user__first_name', 'user__last_name'),
             HostResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('user__first_name', 'user__last_name'),
             CustomResource.objects.filter(
-                organizationalunit=unit_qs
+                organizationalunit__in=unit_qs
             ).order_by('name')
         )
 
@@ -655,7 +655,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'])
+            typeId = int(form.cleaned_data['type'].id)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(
@@ -700,7 +700,7 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     def get_queryset(self):
         qs = super(ResourcePoolListView, self).get_queryset()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        return qs.filter(organizationalunit=unit_qs).order_by(
+        return qs.filter(organizationalunit__in=unit_qs).order_by(
             'resource_type__name', 'name'
         )
 

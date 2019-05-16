@@ -769,9 +769,6 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(
-        enable_autosend=True, form_show=True
-    ).count(),
     can_delete=False,
     can_order=False
 )
