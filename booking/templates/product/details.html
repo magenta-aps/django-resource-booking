@@ -1,5 +1,4 @@
 {% extends 'index.html' %}
-{% load timedelta %}
 {% load i18n %}
 {% load booking_tags %}
 
@@ -56,7 +55,7 @@
                     {% if object.common_evaluation %}
                         <a href="{% url 'evaluation-view' object.common_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
                     {% else %}
-                        <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                        <a href="{% url 'evaluation-create' object.pk %}?s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
                     {% endif %}
                 {% endif %}
             {% endif %}

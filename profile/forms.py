@@ -24,9 +24,9 @@ class UserCreateForm(UserCreationForm):
     )
     additional_information = forms.CharField(
         required=False,
-        label=UserProfile._meta.get_field_by_name(
+        label=UserProfile._meta.get_field(
             'additional_information'
-        )[0].verbose_name,
+        ).verbose_name,
         widget=forms.Textarea(attrs={'class': 'form-control'})
     )
 
