@@ -26,7 +26,7 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
@@ -2460,14 +2460,22 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
 
-        old_value = self.extra_search_text or ""
-        new_value = self.generate_extra_search_text() or ""
+        extra_search_old = self.extra_search_text or ""
+        extra_search_new = self.generate_extra_search_text() or ""
+        search_vector = SearchVector(
+            "title",
+            "teaser",
+            "description",
+            "mouseover_description",
+            "extra_search_text"
+        )
 
-        if old_value != new_value:
-            self.extra_search_text = new_value
+        if (extra_search_old != extra_search_new) or (
+            self.search_vector != search_vector
+        ):
+            self.extra_search_text = extra_search_new
+            self.search_vector = search_vector
             self.save()
             return True
         else:
@@ -4118,14 +4126,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
-
         old_value = self.extra_search_text or ""
         new_value = self.as_searchtext() or ""
 
         if old_value != new_value:
             self.extra_search_text = new_value
+            self.search_vector = SearchVector("extra_search_text")
             self.save()
             return True
         else:
