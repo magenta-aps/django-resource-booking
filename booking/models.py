@@ -4129,7 +4129,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         old_value = self.extra_search_text or ""
         new_value = self.as_searchtext() or ""
 
-        if old_value != new_value:
+        if (old_value != new_value) or (
+            self.search_vector is None
+        ):
             self.extra_search_text = new_value
             self.search_vector = SearchVector("extra_search_text")
             self.save()
