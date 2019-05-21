@@ -3219,9 +3219,12 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
 
         q = form.cleaned_data.get("q", "").strip()
-        search_query = SearchQuery(q)
-        # Filtering by freetext has to be the first thing we do
-        qs = self.model.objects.filter(search_vector=search_query)
+        if q:
+            search_query = SearchQuery(q)
+            # Filtering by freetext has to be the first thing we do
+            qs = self.model.objects.filter(search_vector=search_query)
+        else:
+            qs = self.model.objects.all()
 
         for filter_method in (
             self.filter_multiproduct_subs_off,
