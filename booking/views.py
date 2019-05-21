@@ -2473,7 +2473,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     def get(self, request, *args, **kwargs):
         self.set_product(kwargs.get("product"))
         if self.product is None:
-            return bad_request(request)
+            raise Http404("Product not found")
 
         self.object = Booking()
         return self.render_to_response(
