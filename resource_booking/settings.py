@@ -302,7 +302,8 @@ CRON_CLASSES = [
     "booking.cron.IdleHostroleJob",
     "booking.cron.RemoveOldMvpJob",
     "booking.cron.NotifyEventTimeJob",
-    "booking.cron.EvaluationReminderJob"
+    "booking.cron.EvaluationReminderJob",
+    "booking.cron.AnonymizeInquirersJob"
 ]
 
 HIJACK_USE_BOOTSTRAP = True
