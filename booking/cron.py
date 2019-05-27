@@ -1,6 +1,8 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
+from booking.models import Guest
+from booking.models import VisitAutosend, Visit
+from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
@@ -325,3 +327,18 @@ class AnonymizeGuests(KuCronJob):
             print "Anonymizing guest #%d on visit %d (starttime %s)" % \
                   (guest.id, visit.id, time)
             guest.anonymize()
+
+
+class AnonymizeInquirers(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.inquirers'
+    description = "Anonymizes inquirers that asked about products"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        messages = KUEmailMessage.objects.filter(
+            template_type__key=EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
+            created__lt=limit
+        )
+        messages.delete()
