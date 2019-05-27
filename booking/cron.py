@@ -304,7 +304,7 @@ class EvaluationReminderJob(KuCronJob):
                 autosend.refresh_from_db()
 
 
-class AnonymizeGuests(KuCronJob):
+class AnonymizeGuestsJob(KuCronJob):
     RUN_AT_TIMES = ['00:00']
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.anonymize.guests'
