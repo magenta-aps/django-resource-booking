@@ -291,7 +291,8 @@ CRON_CLASSES = [
     "booking.cron.IdleHostroleJob",
     "booking.cron.RemoveOldMvpJob",
     "booking.cron.NotifyEventTimeJob",
-    "booking.cron.EvaluationReminderJob"
+    "booking.cron.EvaluationReminderJob",
+    "booking.cron.AnonymizeGuestsJob"
 ]
 
 if ENABLE_DEBUG_TOOLBAR:
