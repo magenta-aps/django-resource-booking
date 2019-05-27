@@ -1,11 +1,7 @@
 from datetime import timedelta, date
 
-<<<<<<< Updated upstream
-from booking.models import VisitAutosend, EmailTemplateType, Visit
-=======
-from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest, \
-    KUEmailMessage
->>>>>>> Stashed changes
+from booking.models import VisitAutosend, Visit
+from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
