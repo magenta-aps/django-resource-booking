@@ -1,6 +1,11 @@
 from datetime import timedelta, date
 
+<<<<<<< Updated upstream
 from booking.models import VisitAutosend, EmailTemplateType, Visit
+=======
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest, \
+    KUEmailMessage
+>>>>>>> Stashed changes
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
@@ -300,3 +305,18 @@ class EvaluationReminderJob(KuCronJob):
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
+
+
+class AnonymizeInquirers(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.inquirers'
+    description = "Anonymizes inquirers that asked about products"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        messages = KUEmailMessage.objects.filter(
+            template_type__key=EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
+            created__lt=limit
+        )
+        messages.delete()
