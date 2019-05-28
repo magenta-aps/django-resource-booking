@@ -92,7 +92,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
 
         if unit_filter_match is not None:
             unit_qs = request.user.userprofile.get_unit_queryset()
-            match1 = {unit_filter_match: unit_qs}
+            match1 = {"%s__in" % unit_filter_match: unit_qs}
             if getattr(self.model, 'allow_null_unit_editing', False):
                 match2 = {unit_filter_match: None}
                 qs = qs.filter(Q(**match1) | Q(**match2))
