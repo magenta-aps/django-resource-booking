@@ -1860,7 +1860,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
         if self.pk:
             res = self.resources.all()
             return EventTime.objects.filter(
-                product__resourcerequirement__resource_pool__resources=res
+                product__resourcerequirement__resource_pool__resources__in=res
             )
         else:
             return EventTime.objects.none()
@@ -1965,7 +1965,7 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         if self.pk and self.resource_pool:
             res = self.resource_pool.resources.all()
             return EventTime.objects.filter(
-                product__resourcerequirement__resource_pool__resources=res
+                product__resourcerequirement__resource_pool__resources__in=res
             )
         else:
             return EventTime.objects.none()
@@ -2016,7 +2016,7 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                 self.visit.autosend(
                     EmailTemplateType.notify_teacher__associated,
                     [
-                        KUEmailRecipient(
+                        KUEmailRecipient.create(
                             self.resource.teacherresource.user,
                             KUEmailRecipient.TYPE_TEACHER
                         )
@@ -2027,7 +2027,7 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                 self.visit.autosend(
                     EmailTemplateType.notify_host__associated,
                     [
-                        KUEmailRecipient(
+                        KUEmailRecipient.create(
                             self.resource.hostresource.user,
                             KUEmailRecipient.TYPE_HOST
                         )

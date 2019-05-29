@@ -8,8 +8,8 @@ from django.template.defaultfilters import register
 from django.templatetags.static import StaticNode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.utils import six
 
-from timedelta.helpers import parse, nice_repr
 from booking.models import Guest, BookerResponseNonce
 from booking.constants import LOGACTION_DISPLAY_MAP
 from profile.models import EmailLoginURL, UserProfile
@@ -30,13 +30,51 @@ def highlight(text, filter):
     return mark_safe(re.sub(pattern, r"<mark>\g<filter></mark>", text))
 
 
+def timedelta_parse(string):
+    # from https://bitbucket.org/schinckel/django-timedelta-field
+    string = string.strip()
+
+    if string == "":
+        raise TypeError("'%s' is not a valid time interval" % string)
+    # This is the format we get from sometimes Postgres, sqlite,
+    # and from serialization
+    d = re.match(
+        r'^((?P<days>[-+]?\d+) days?,? )?(?P<sign>[-+]?)(?P<hours>\d+):'
+        r'(?P<minutes>\d+)(:(?P<seconds>\d+(\.\d+)?))?$',
+        six.text_type(string))
+
+    if d:
+        d = d.groupdict(0)
+        if d['sign'] == '-':
+            for k in 'hours', 'minutes', 'seconds':
+                d[k] = '-' + d[k]
+        d.pop('sign', None)
+    else:
+        # This is the more flexible format
+        d = re.match(
+            r'^((?P<weeks>-?((\d*\.\d+)|\d+))\W*w((ee)?(k(s)?)?)(,)?\W*)?'
+            r'((?P<days>-?((\d*\.\d+)|\d+))\W*d(ay(s)?)?(,)?\W*)?'
+            r'((?P<hours>-?((\d*\.\d+)|\d+))\W*h(ou)?(r(s)?)?(,)?\W*)?'
+            r'((?P<minutes>-?((\d*\.\d+)|\d+))\W*m(in(ute)?(s)?)?(,)?\W*)?'
+            r'((?P<seconds>-?((\d*\.\d+)|\d+))\W*s(ec(ond)?(s)?)?)?\W*$',
+            six.text_type(string))
+        if not d:
+            raise TypeError("'%s' is not a valid time interval" % string)
+        d = d.groupdict(0)
+
+    return datetime.timedelta(**dict(((k, float(v)) for k, v in d.items())))
+
+
 @register.filter(name='timedelta_i18n')
 def timedelta_i18n(value, display="long", sep=", "):
     if value is None:
         return value
     if isinstance(value, basestring):
         try:
-            value = parse(value)
+            # This should probably use django.utils.dateparse.parse_duration
+            # which takes HH:MM:SS but i think that would require changes to
+            # Product.duration as that is HH:MM
+            value = timedelta_parse(value)
         except TypeError:
             return value
 
@@ -77,7 +115,24 @@ def timedelta_i18n(value, display="long", sep=", "):
         words_plural = [_(u"%i weeks"), _(u"%i days"),
                         _(u"%i hours"), _(u"%i minutes"), _(u"%i seconds")]
     else:
-        return nice_repr(value, display)
+        # Use django template-style formatting.
+        # Valid values are:
+        # d,g,G,h,H,i,s
+
+        STRFDATETIME = re.compile('([dgGhHis])')
+
+        def repl(x):
+            return '%%(%s)s' % x.group()
+
+        return STRFDATETIME.sub(repl, display) % {
+            'd': days,
+            'g': hours,
+            'G': hours if hours > 9 else '0%s' % hours,
+            'h': hours,
+            'H': hours if hours > 9 else '0%s' % hours,
+            'i': minutes if minutes > 9 else '0%s' % minutes,
+            's': seconds if seconds > 9 else '0%s' % seconds
+        }
 
     values = [weeks, days, hours, minutes, seconds]
 
