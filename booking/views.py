@@ -2041,7 +2041,6 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             sender = KUEmailRecipient.create(full_email(
                 form.cleaned_data['email'], form.cleaned_data['name']
             ), KUEmailRecipient.TYPE_GUEST)
-
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
                 original_from_email=sender
@@ -2474,7 +2473,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     def get(self, request, *args, **kwargs):
         self.set_product(kwargs.get("product"))
         if self.product is None:
-            return bad_request(request)
+            raise Http404("Product not found")
 
         self.object = Booking()
         return self.render_to_response(
@@ -3220,9 +3219,12 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
 
         q = form.cleaned_data.get("q", "").strip()
-        search_query = SearchQuery(q)
-        # Filtering by freetext has to be the first thing we do
-        qs = self.model.objects.filter(search_vector=search_query)
+        if q:
+            search_query = SearchQuery(q)
+            # Filtering by freetext has to be the first thing we do
+            qs = self.model.objects.filter(search_vector=search_query)
+        else:
+            qs = self.model.objects.all()
 
         for filter_method in (
             self.filter_multiproduct_subs_off,
@@ -3285,13 +3287,15 @@ class VisitSearchView(VisitListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            unit_qs = profile.organizationalunit
+            unit_qs = OrganizationalUnit.objects.filter(
+                pk=profile.organizationalunit.pk
+            )
         elif u == form.MY_FACULTY:
             unit_qs = profile.organizationalunit.get_faculty_queryset()
         elif u == form.MY_UNITS:
             unit_qs = profile.get_unit_queryset()
         else:
-            unit_qs = u
+            unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
         return Visit.unit_filter(qs, unit_qs)
 

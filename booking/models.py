@@ -26,7 +26,7 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
@@ -2460,14 +2460,22 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
 
-        old_value = self.extra_search_text or ""
-        new_value = self.generate_extra_search_text() or ""
+        extra_search_old = self.extra_search_text or ""
+        extra_search_new = self.generate_extra_search_text() or ""
+        search_vector = SearchVector(
+            "title",
+            "teaser",
+            "description",
+            "mouseover_description",
+            "extra_search_text"
+        )
 
-        if old_value != new_value:
-            self.extra_search_text = new_value
+        if (extra_search_old != extra_search_new) or (
+            self.search_vector != search_vector
+        ):
+            self.extra_search_text = extra_search_new
+            self.search_vector = search_vector
             self.save()
             return True
         else:
@@ -3572,7 +3580,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
             # Send out planned notification if we switched to planned
             if self.workflow_status == self.WORKFLOW_STATUS_PLANNED:
-                self.autosend(EmailTemplateType.notify_all__booking_complete)
+                if not self.is_multi_sub:
+                    self.autosend(
+                        EmailTemplateType.notify_all__booking_complete
+                    )
         if self.is_multi_sub:
             self.multi_master.resources_updated()
 
@@ -4115,14 +4126,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
-
         old_value = self.extra_search_text or ""
         new_value = self.as_searchtext() or ""
 
-        if old_value != new_value:
+        if (old_value != new_value) or (
+            self.search_vector is None
+        ):
             self.extra_search_text = new_value
+            self.search_vector = SearchVector("extra_search_text")
             self.save()
             return True
         else:
@@ -4242,7 +4253,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
         if self.is_multiproductvisit:
@@ -4256,6 +4269,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
 
             # People who will receive any replies to the mail
             reply_recipients = self.get_reply_recipients(template_type)
@@ -5093,14 +5110,42 @@ class MultiProductVisit(Visit):
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
         unit = None  # TODO: What should the unit be?
         params = {'visit': self, 'products': self.products}
+
+        # If template specifies to send to teachers or hosts,
+        # send to those recipients by the subvisits
+        if template_type.send_to_visit_teachers \
+                or template_type.send_to_visit_hosts:
+            filter = set([])
+            if template_type.send_to_visit_teachers:
+                filter.add(KUEmailRecipient.TYPE_TEACHER)
+            if template_type.send_to_visit_hosts:
+                filter.add(KUEmailRecipient.TYPE_HOST)
+            filter = filter.intersection(only_these_types)
+            for subvisit in self.subvisits:
+                subvisit.autosend(
+                    template_type,
+                    recipients,
+                    only_these_recipients,
+                    filter
+                )
+            only_these_types -= set(filter)
+
         if self.autosend_enabled(template_type):
+
+            # Gather recipients
             if recipients is None:
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
 
             KUEmailMessage.send_email(
                 template_type,
@@ -5821,6 +5866,8 @@ class Guest(models.Model):
         f10: GrundskoleLevel.f10
     }
 
+    anonymized = "[anonymiseret]"
+
     @staticmethod
     def grundskole_level_map():
         return {
@@ -5902,6 +5949,8 @@ class Guest(models.Model):
         return self.email
 
     def get_name(self):
+        if self.firstname == Guest.anonymized:
+            return Guest.anonymized
         return "%s %s" % (self.firstname, self.lastname)
 
     def get_full_name(self):
@@ -5909,6 +5958,20 @@ class Guest(models.Model):
 
     def get_full_email(self):
         return full_email(self.email, self.get_name())
+
+    def anonymize(self):
+        self.firstname = self.lastname = self.email = self.phone = \
+            Guest.anonymized
+        self.save()
+
+    @staticmethod
+    def filter_anonymized():
+        return Q(
+            firstname=Guest.anonymized,
+            lastname=Guest.anonymized,
+            email=Guest.anonymized,
+            phone=Guest.anonymized
+        )
 
 
 class Booking(models.Model):
@@ -6008,15 +6071,12 @@ class Booking(models.Model):
         return self.visit.get_reply_recipients(template_type)
 
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
 
         visit = self.visit.real
         enabled = visit.autosend_enabled(template_type)
-        # print "Template type %s is %senabled for visit %d" % (
-        #     template_type,
-        #     "" if visit.autosend_enabled(template_type) else "not ",
-        #     visit.id
-        # )
 
         if visit.is_multiproductvisit and template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
@@ -6038,6 +6098,10 @@ class Booking(models.Model):
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
             KUEmailMessage.send_email(
                 template_type,
                 {

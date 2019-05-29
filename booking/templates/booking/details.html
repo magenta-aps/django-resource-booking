@@ -108,7 +108,7 @@
                 {% endif %}
 
                 <dt>{% trans 'Navn:' %}</dt>
-                <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
+                <dd>{{ object.booker.get_name }}</dd>
 
                 <dt>{% trans 'E-mail:' %}</dt>
                 <dd>{{ object.booker.email }}</dd>
