@@ -38,22 +38,25 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
+from booking.managers import VisitQuerySet
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty
-from booking.utils import CustomStorage
-from booking.utils import bool2int
-from booking.utils import getattr_long
-from booking.utils import prune_list
-from booking.utils import surveyxact_upload
-from booking.utils import flatten
-from booking.utils import full_email
-from booking.utils import get_related_content_types
-from booking.utils import html2text
-from booking.utils import INFINITY
-from booking.utils import merge_dicts
-from booking.utils import prose_list_join
+from booking.utils import (
+    ClassProperty,
+    CustomStorage,
+    bool2int,
+    getattr_long,
+    prune_list,
+    surveyxact_upload,
+    flatten,
+    full_email,
+    get_related_content_types,
+    html2text,
+    INFINITY,
+    merge_dicts,
+    prose_list_join
+)
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 
@@ -3022,6 +3025,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
+    objects = VisitQuerySet.as_manager()
+
     desired_time = models.CharField(
         null=True,
         blank=True,
@@ -3974,17 +3979,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return " ".join(result)
 
-    @staticmethod
-    def unit_filter(qs, unit_qs):
-        mpv_qs = MultiProductVisit.objects.filter(
-            subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit__in=unit_qs
-        )
-        return qs.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs) |
-            Q(multiproductvisit__in=mpv_qs)
-        )
-
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
         old_value = self.extra_search_text or ""
@@ -4195,81 +4189,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return room
 
-    @staticmethod
-    def get_latest_created():
-        return Visit.objects.\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Visit.objects.\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Visit.objects.\
-            order_by('-statistics__visited_time')
-
-    @staticmethod
-    def get_latest_booked():
-        return Visit.objects.filter(
-            bookings__isnull=False
-        ).order_by(
-            '-bookings__statistics__created_time'
-        )
-
-    @staticmethod
-    def get_todays_visits():
-        return Visit.get_occurring_on_date(timezone.now())
-
-    @staticmethod
-    def get_occurring_at_time(time):
-        # Return the visits that take place exactly at this time
-        # Meaning they begin before the queried time and end after the time
-        return Visit.objects.filter(
-            eventtime__start__lte=time,
-            eventtime__end__gt=time,
-            is_multi_sub=False
-        )
-
-    @staticmethod
-    def get_occurring_on_date(datetime):
-        # Convert datetime object to date-only for current timezone
-        date = timezone.localtime(datetime).date()
-
-        # A visit happens on a date if it starts before the
-        # end of the day and ends after the beginning of the day
-        min_date = datetime.combine(date, time.min)
-        max_date = datetime.combine(date, time.max)
-
-        return Visit.objects.filter(
-            eventtime__start__lte=max_date,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) &
-                Q(eventtime__start__gt=min_date)
-            )
-        )
-
-    @staticmethod
-    def get_recently_held(time=None):
-        if not time:
-            time = timezone.now()
-
-        return Visit.objects.filter(
-            workflow_status__in=[
-                Visit.WORKFLOW_STATUS_EXECUTED,
-                Visit.WORKFLOW_STATUS_EVALUATED],
-            eventtime__start__isnull=False,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
-            )
-        ).order_by('-eventtime__end')
-
     def ensure_statistics(self):
         if self.statistics is None:
             statistics = ObjectStatistics()
@@ -4413,25 +4332,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.products
         return [self.product]
-
-    @property
-    def product_qs(self):
-        return Product.objects.filter(id__in=[x.id for x in self.products])
-
-    @staticmethod
-    def with_product_types(visit_qs, product_types=None):
-        if product_types is None:
-            return visit_qs
-        return (visit_qs.filter(
-            multiproductvisit__isnull=True,
-            eventtime__product__type__in=product_types
-        ) | visit_qs.filter(
-            multiproductvisit__isnull=False,
-            multiproductvisit__subvisit__in=Visit.objects.filter(
-                eventtime__product__type__in=product_types,
-                is_multi_sub=True
-            )
-        )).distinct()
 
     @property
     def products_unique_address(self):
@@ -4695,7 +4595,7 @@ class MultiProductVisit(Visit):
 
     @property
     def subvisits_unordered_noncancelled(self):
-        return Visit.active_qs(self.subvisits_unordered)
+        return self.subvisits_unordered.active_qs()
 
     @property
     def subvisits(self):

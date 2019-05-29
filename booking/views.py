@@ -3171,13 +3171,13 @@ class VisitCustomListView(VisitListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_COMPLETED:
-                return Visit.get_recently_held()
+                return Visit.objects.get_recently_held()
             elif listtype == self.TYPE_LATEST_BOOKED:
-                return Visit.get_latest_booked()
+                return Visit.objects.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Visit.get_latest_updated()
+                return Visit.objects.get_latest_updated()
             elif listtype == self.TYPE_TODAY:
-                return Visit.get_todays_visits()
+                return Visit.objects.get_todays_visits()
         except:
             pass
         raise Http404
@@ -3284,7 +3284,7 @@ class VisitSearchView(VisitListView):
         else:
             unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
-        return Visit.unit_filter(qs, unit_qs)
+        return qs.unit_filter(unit_qs)
 
     def filter_by_school(self, qs):
         form = self.get_form()
@@ -4650,7 +4650,7 @@ class EvaluationStatisticsView(
 
         unit = data.get("unit")
         if unit is not None:
-            queryset = Visit.unit_filter(queryset, [unit])
+            queryset = queryset.unit_filter([unit])
             has_filter = True
 
         from_date = data.get('from_date')
