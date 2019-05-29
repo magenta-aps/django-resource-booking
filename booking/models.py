@@ -5866,6 +5866,8 @@ class Guest(models.Model):
         f10: GrundskoleLevel.f10
     }
 
+    anonymized = "[anonymiseret]"
+
     @staticmethod
     def grundskole_level_map():
         return {
@@ -5947,6 +5949,8 @@ class Guest(models.Model):
         return self.email
 
     def get_name(self):
+        if self.firstname == Guest.anonymized:
+            return Guest.anonymized
         return "%s %s" % (self.firstname, self.lastname)
 
     def get_full_name(self):
@@ -5954,6 +5958,20 @@ class Guest(models.Model):
 
     def get_full_email(self):
         return full_email(self.email, self.get_name())
+
+    def anonymize(self):
+        self.firstname = self.lastname = self.email = self.phone = \
+            Guest.anonymized
+        self.save()
+
+    @staticmethod
+    def filter_anonymized():
+        return Q(
+            firstname=Guest.anonymized,
+            lastname=Guest.anonymized,
+            email=Guest.anonymized,
+            phone=Guest.anonymized
+        )
 
 
 class Booking(models.Model):
