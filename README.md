@@ -61,5 +61,6 @@ Locality.create_defaults()
 ResourceType.create_defaults()
 Guide.create_defaults()
 ExercisePresentation.create_defaults()
+UserRole.create_defaults()
 EmailTemplateType.set_defaults()
 ```

@@ -3287,13 +3287,15 @@ class VisitSearchView(VisitListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            unit_qs = profile.organizationalunit
+            unit_qs = OrganizationalUnit.objects.filter(
+                pk=profile.organizationalunit.pk
+            )
         elif u == form.MY_FACULTY:
             unit_qs = profile.organizationalunit.get_faculty_queryset()
         elif u == form.MY_UNITS:
             unit_qs = profile.get_unit_queryset()
         else:
-            unit_qs = u
+            unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
         return Visit.unit_filter(qs, unit_qs)
 
