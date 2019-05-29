@@ -36,42 +36,43 @@ class VisitQuerySet(models.QuerySet):
 
     def unit_filter(self, unit_qs, **kwargs):
         return self.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs)
-            | Q(
-                multiproductvisit__subvisit__is_multi_sub=True,
-                multiproductvisit__subvisit__eventtime__product__organizationalunit__in=unit_qs,
-            ),
+            Q(eventtime__product__organizationalunit__in=unit_qs) | Q(**{
+                "multiproductvisit__subvisit__is_multi_sub": True,
+                "multiproductvisit__subvisit__eventtime__"
+                "product__organizationalunit__in": unit_qs,
+            }),
             **kwargs
         )
 
     def with_product_types(self, product_types=None, **kwargs):
         if product_types is None:
             return self
-        return (self.filter(
-            multiproductvisit__isnull=True,
-            eventtime__product__type__in=product_types
-        ) | self.filter(
-            multiproductvisit__isnull=False,
-            multiproductvisit__subvisit__in=self.objects.filter(
+        return (
+            self.filter(
+                multiproductvisit__isnull=True,
                 eventtime__product__type__in=product_types,
-                is_multi_sub=True
-            ), **kwargs)).distinct()
+            ) | self.filter(
+                multiproductvisit__isnull=False,
+                multiproductvisit__subvisit__in=self.objects.filter(
+                    eventtime__product__type__in=product_types,
+                    is_multi_sub=True,
+                ),
+                **kwargs
+            )
+        ).distinct()
 
     def get_latest_created(self):
-        return self.order_by('-statistics__created_time')
+        return self.order_by("-statistics__created_time")
 
     def get_latest_updated(self):
-        return self.order_by('-statistics__updated_time')
+        return self.order_by("-statistics__updated_time")
 
     def get_latest_displayed(self):
-        return self.order_by('-statistics__visited_time')
+        return self.order_by("-statistics__visited_time")
 
     def get_latest_booked(self, **kwargs):
-        return self.objects.filter(
-            bookings__isnull=False,
-            **kwargs
-        ).order_by(
-            '-bookings__statistics__created_time'
+        return self.objects.filter(bookings__isnull=False, **kwargs).order_by(
+            "-bookings__statistics__created_time"
         )
 
     def get_todays_visits(self):
@@ -97,12 +98,12 @@ class VisitQuerySet(models.QuerySet):
         max_date = datetime.combine(date, time.max)
 
         return self.objects.filter(
-            eventtime__start__lte=max_date,
-            is_multi_sub=False
+            eventtime__start__lte=max_date, is_multi_sub=False
         ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) &
-                Q(eventtime__start__gt=min_date)
+            Q(eventtime__end__gte=min_date)
+            | (
+                Q(eventtime__end__isnull=True)
+                & Q(eventtime__start__gt=min_date)
             )
         )
 
@@ -110,16 +111,22 @@ class VisitQuerySet(models.QuerySet):
         if not time:
             time = timezone.now()
 
-        return self.objects.filter(
-            workflow_status__in=[
-                self.model.WORKFLOW_STATUS_EXECUTED,
-                self.model.WORKFLOW_STATUS_EVALUATED],
-            eventtime__start__isnull=False,
-            is_multi_sub=False,
-            **kwargs
-        ).filter(
-            Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
+        return (
+            self.objects.filter(
+                workflow_status__in=[
+                    self.model.WORKFLOW_STATUS_EXECUTED,
+                    self.model.WORKFLOW_STATUS_EVALUATED,
+                ],
+                eventtime__start__isnull=False,
+                is_multi_sub=False,
+                **kwargs
             )
-        ).order_by('-eventtime__end')
+            .filter(
+                Q(eventtime__end__lt=time)
+                | (
+                    Q(eventtime__end__isnull=True)
+                    & Q(eventtime__start__lt=time + timedelta(hours=12))
+                )
+            )
+            .order_by("-eventtime__end")
+        )
