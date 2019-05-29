@@ -100,10 +100,9 @@ class VisitQuerySet(models.QuerySet):
         return self.objects.filter(
             eventtime__start__lte=max_date, is_multi_sub=False
         ).filter(
-            Q(eventtime__end__gte=min_date)
-            | (
-                Q(eventtime__end__isnull=True)
-                & Q(eventtime__start__gt=min_date)
+            Q(eventtime__end__gte=min_date) | (
+                Q(eventtime__end__isnull=True) & Q(
+                    eventtime__start__gt=min_date)
             )
         )
 
@@ -122,10 +121,9 @@ class VisitQuerySet(models.QuerySet):
                 **kwargs
             )
             .filter(
-                Q(eventtime__end__lt=time)
-                | (
-                    Q(eventtime__end__isnull=True)
-                    & Q(eventtime__start__lt=time + timedelta(hours=12))
+                Q(eventtime__end__lt=time) | (
+                    Q(eventtime__end__isnull=True) & Q(
+                        eventtime__start__lt=time + timedelta(hours=12))
                 )
             )
             .order_by("-eventtime__end")
