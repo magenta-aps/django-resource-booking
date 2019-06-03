@@ -341,7 +341,7 @@ textarea.form-control {
 
 .navbar-default {
   border-radius: 0;
-  background-color: #777;
+  background-color: #757575;
   min-height: 28px;
   height: 28px;
 }
@@ -399,7 +399,7 @@ textarea.form-control {
 }
 
 .breadcrumb {
-  color: #999;
+  color: #808080;
   font-size: 12px;
   padding: 0 15px 0 1px;
   margin: 15px 0;
@@ -1655,7 +1655,7 @@ body.lightbox {
     z-index: 3;
   }
   .navbar-default .navbar-toggle .icon-bar {
-    background-color: #eee;
+    background-color: #fff;
   }
   .navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover {
     background-color: transparent;
@@ -1729,11 +1729,11 @@ body.lightbox {
     margin-bottom: 0;
   }
   .navbar-default .navbar-nav>li>a, .navbar-default .navbar-nav>li>button {
-    color: #eee;
+    color: #fff;
     padding: 3px 5px 0 9px;
   }
   .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>button:hover, .navbar-default .navbar-nav>li>a:active, .navbar-default .navbar-nav>li>button:active, .navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>button:focus {
-    color: #eee;
+    color: #fff;
     text-decoration: underline;
   }
   #navbar ul.navbar-nav li:not(:first-child):before {
