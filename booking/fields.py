@@ -60,6 +60,11 @@ class DisableFieldMixin(object):
         self.disabled_values = disabled_values
 
     def valid_value(self, value):
+        try:
+            if int(value) in self.disabled_values:
+                return False
+        except ValueError:
+            pass
         if value in self.disabled_values:
             return False
         return super(DisableFieldMixin, self).valid_value(value)
@@ -69,7 +74,7 @@ class DisableFieldMixin(object):
 
     def _set_disabled_values(self, values):
         if type(values) == list and hasattr(self.widget, 'disabled_values'):
-            self.widget.disabled_values = [unicode(value) for value in values]
+            self._disabled_values = self.widget.disabled_values = values
 
     disabled_values = property(_get_disabled_values, _set_disabled_values)
 
