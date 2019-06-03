@@ -182,10 +182,11 @@ class DisabledChoiceMixin(object):
                       value, label,
                       selected, index,
                       subindex=None, attrs=None):
-        disabled = False
         if isinstance(label, dict):
             label, disabled = (label['label'],
                                label['label'] in self.disabled_values)
+        else:
+            disabled = value in self.disabled_values
         option_dict = super(DisabledChoiceMixin, self).create_option(
             name, value,
             label, selected,
