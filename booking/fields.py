@@ -1,3 +1,5 @@
+from inspect import isclass
+
 from django.core.exceptions import ValidationError
 from django.forms.fields import ChoiceField, MultipleChoiceField
 from django.forms.models import ModelChoiceField
@@ -47,13 +49,17 @@ class DisableFieldMixin(object):
 
         if 'widget' in kwargs:
             widget = kwargs['widget']
-            if isinstance(widget, Select) or issubclass(widget, Select):
+            if isinstance(widget, Select) or \
+                    (isclass(widget) and issubclass(widget, Select)):
                 self.widget = SelectDisable()
             if isinstance(widget, SelectMultiple) or \
-                    issubclass(widget, SelectMultiple):
+                    (isclass(widget) and issubclass(widget, SelectMultiple)):
                 self.widget = SelectMultipleDisable()
             if isinstance(widget, CheckboxSelectMultiple) or \
-                    issubclass(widget, CheckboxSelectMultiple):
+                    (
+                            isclass(widget) and
+                            issubclass(widget, CheckboxSelectMultiple)
+                    ):
                 self.widget = CheckboxSelectMultipleDisable()
 
         super(DisableFieldMixin, self).__init__(*args, **kwargs)
@@ -104,6 +110,10 @@ class CustomModelChoiceField(
     OptionLabelFieldMixin, DisableFieldMixin, ModelChoiceField
 ):
     widget = SelectDisable
+
+
+class MultipleChoiceDisableModelField(DisableFieldMixin, ModelMultipleChoiceField):
+    widget = SelectMultipleDisable
 
 
 class OrderedModelMultipleChoiceField(ModelMultipleChoiceField):
