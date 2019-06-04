@@ -97,7 +97,7 @@ class ChangeVisitHostsForm(forms.ModelForm):
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
         widgets = {
-            'hosts': forms.CheckboxSelectMultipleDisable(),
+            'hosts': CheckboxSelectMultipleDisable(),
             'override_needed_hosts': forms.Select(
                 attrs={'class': 'form-control'}
             )
