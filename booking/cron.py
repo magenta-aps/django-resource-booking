@@ -1,6 +1,7 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest, \
+    SurveyXactEvaluation
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
@@ -8,6 +9,8 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 import traceback
+
+from booking.utils import surveyxact_anonymize
 
 
 class KuCronJob(CronJobBase):
@@ -325,3 +328,19 @@ class AnonymizeGuestsJob(KuCronJob):
             print "Anonymizing guest #%d on visit %d (starttime %s)" % \
                   (guest.id, visit.id, time)
             guest.anonymize()
+
+
+class AnonymizeEvaluationsJob(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.evaluations'
+    description = "Anonymizes evaluations that were filled out in the past"
+
+    def run(self):
+        survey_ids = set([
+            evaluation.surveyId
+            for evaluation in SurveyXactEvaluation.objects.distinct('surveyId')
+        ])
+        limit = timezone.now() - timedelta(days=90)
+        for survey_id in survey_ids:
+            surveyxact_anonymize(survey_id, limit, fields=[u'gæst', u'email'])

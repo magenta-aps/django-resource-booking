@@ -548,7 +548,7 @@ def surveyxact_upload(survey_id, data):
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
 
     response = requests.post(
-        config['url'],
+        config['url']['upload'],
         headers={
             'Expect': '100-continue'
         },
@@ -573,6 +573,25 @@ def surveyxact_upload(survey_id, data):
             return m.group(1)
         else:
             print "Didn't find collecturl in %s" % response.text
+
+
+def surveyxact_anonymize(survey_id, before_datetime, fields=['email']):
+    config = settings.SURVEYXACT
+    data = {
+        'filter': "[respondent/created] < datetime(\"%s\")" %
+                  before_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+        'variables': ','.join(
+            ["[respondent/%s]" % field for field in set(fields)]
+        )
+    }
+    response = requests.post(
+        config['url']['anonymize'],
+        data=data,
+        auth=(config['username'], config['password'])
+    )
+    print response.status_code
+    print response.body
+
 
 
 def bool2int(bool):
