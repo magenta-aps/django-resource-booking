@@ -6506,6 +6506,14 @@ class KUEmailMessage(models.Model):
             .order_by('-created')
 
 
+    anonymized = "[anonymiseret]"
+    anonymized_filter = {'recipients': anonymized}
+
+    def anonymize(self):
+        self.recipients = KUEmailMessage.anonymized
+        self.save()
+
+
 class BookerResponseNonce(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
     booker = models.ForeignKey(Guest)
