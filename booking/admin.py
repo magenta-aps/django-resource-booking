@@ -21,10 +21,6 @@ EXCLUDE_MODELS = set([
 # for userprofile in UserProfile.objects.all():
 #     userprofile.update_user_permissions()
 
-from profile.models import UserProfile
-for userprofile in UserProfile.objects.all():
-    userprofile.update_user_permissions()
-
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
