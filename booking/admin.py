@@ -21,6 +21,10 @@ EXCLUDE_MODELS = set([
 # for userprofile in UserProfile.objects.all():
 #     userprofile.update_user_permissions()
 
+from profile.models import UserProfile
+for userprofile in UserProfile.objects.all():
+    userprofile.update_user_permissions()
+
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
@@ -48,7 +52,8 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.SurveyXactEvaluation,
     booking_models.SurveyXactEvaluationGuest,
     booking_models.VisitComment,
-    booking_models.ResourceRequirement
+    booking_models.ResourceRequirement,
+    booking_models.VisitResource
 ])
 
 # Faculty editors will always have access to the same things as
