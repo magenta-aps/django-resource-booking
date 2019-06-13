@@ -46,7 +46,9 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.ProductGymnasieFag,
     booking_models.ProductGrundskoleFag,
     booking_models.SurveyXactEvaluation,
-    booking_models.SurveyXactEvaluationGuest
+    booking_models.SurveyXactEvaluationGuest,
+    booking_models.VisitComment,
+    booking_models.ResourceRequirement
 ])
 
 # Faculty editors will always have access to the same things as
