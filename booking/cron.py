@@ -1,3 +1,4 @@
+# coding=utf-8
 from datetime import timedelta, date
 
 from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest, \
@@ -343,4 +344,10 @@ class AnonymizeEvaluationsJob(KuCronJob):
         ])
         limit = timezone.now() - timedelta(days=90)
         for survey_id in survey_ids:
-            surveyxact_anonymize(survey_id, limit, fields=[u'gæst', u'email'])
+            success = surveyxact_anonymize(
+                survey_id,
+                limit,
+                fields=[u'gæst', u'email']
+            )
+            if not success:
+                print "Failed anonymizing survey %d" % survey_id

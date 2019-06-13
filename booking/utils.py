@@ -576,22 +576,29 @@ def surveyxact_upload(survey_id, data):
 
 
 def surveyxact_anonymize(survey_id, before_datetime, fields=['email']):
+    """
+
+    :rtype: object
+    """
     config = settings.SURVEYXACT
+    url = config['url']['anonymize'] % survey_id
     data = {
-        'filter': "[respondent/created] < datetime(\"%s\")" %
+        'filter': "[respondent/created]<datetime(\"%s\")" %
                   before_datetime.strftime('%Y-%m-%d %H:%M:%S'),
         'variables': ','.join(
             ["[respondent/%s]" % field for field in set(fields)]
         )
     }
     response = requests.post(
-        config['url']['anonymize'],
+        url,
         data=data,
         auth=(config['username'], config['password'])
     )
-    print response.status_code
-    print response.body
-
+    if response.status_code == 200:
+        return True
+    else:
+        print "Failed to anonymize SurveyXact data: %s" % response.text
+        return False
 
 
 def bool2int(bool):
