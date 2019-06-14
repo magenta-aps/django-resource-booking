@@ -593,7 +593,7 @@ def surveyxact_anonymize(survey_id, before_datetime):
         data=data,
         auth=(config['username'], config['password'])
     )
-    if response.status_code == 200:
+    if response.status_code == 202:
         return True
     else:
         print "Failed to anonymize SurveyXact data: %s" % response.text
