@@ -27,10 +27,10 @@ class VisitQuerySet(models.QuerySet):
     def planned_queryset(self, **kwargs):
         return self.filter(
             workflow_status__in=[
-                self.WORKFLOW_STATUS_PLANNED,
-                self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                self.WORKFLOW_STATUS_CONFIRMED,
-                self.WORKFLOW_STATUS_REMINDED,
+                self.model.WORKFLOW_STATUS_PLANNED,
+                self.model.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+                self.model.WORKFLOW_STATUS_CONFIRMED,
+                self.model.WORKFLOW_STATUS_REMINDED,
             ]
         ).filter(**kwargs)
 
