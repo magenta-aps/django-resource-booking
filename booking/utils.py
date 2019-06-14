@@ -582,7 +582,7 @@ def surveyxact_anonymize(survey_id, before_datetime):
     # REST API, so "intrinsic form" can be used instead. The following
     # represents the "email" and "gæst" variables. For further fields
     # containing non-ascii, contact the people at Rambøll.
-    fields = {'[background/email]', '{*1/1/534070579*}'}
+    fields = {'[background/email]', '{*1/1/534070579*}', '{*1/1/528597497*}'}
     data = {
         'filter': "[respondent/created]<datetime(\"%s\")" %
                   before_datetime.strftime('%Y-%m-%d %H:%M:%S'),
