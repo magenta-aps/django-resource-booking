@@ -23,7 +23,7 @@ from booking.booking_workflows.forms import VisitAutosendFormSet
 from booking.constants import LOGACTION_MANUAL_ENTRY
 from booking.logging import log_action
 from booking.mixins import AutologgerMixin
-from booking.mixins import EditorRequriedMixin
+from booking.mixins import EditorRequiredMixin
 from booking.mixins import RoleRequiredMixin
 from booking.models import EmailTemplateType, KUEmailRecipient
 from booking.models import EventTime
@@ -59,7 +59,7 @@ class VisitBreadcrumbMixin(ContextMixin):
             get_context_data(**context)
 
 
-class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequriedMixin,
+class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequiredMixin,
                            UpdateView):
     def post(self, request, *args, **kwargs):
         if "cancel" in request.POST:

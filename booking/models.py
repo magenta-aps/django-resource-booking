@@ -18,8 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Count, Case, When
-from django.db.models import F
+from django.db.models import Case, When
 from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
@@ -39,22 +38,25 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
+from booking.managers import VisitQuerySet
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty
-from booking.utils import CustomStorage
-from booking.utils import bool2int
-from booking.utils import flatten
-from booking.utils import full_email
-from booking.utils import getattr_long
-from booking.utils import get_related_content_types
-from booking.utils import html2text
-from booking.utils import INFINITY
-from booking.utils import merge_dicts
-from booking.utils import prose_list_join
-from booking.utils import prune_list
-from booking.utils import surveyxact_upload
+from booking.utils import (
+    ClassProperty,
+    CustomStorage,
+    bool2int,
+    getattr_long,
+    prune_list,
+    surveyxact_upload,
+    flatten,
+    full_email,
+    get_related_content_types,
+    html2text,
+    INFINITY,
+    merge_dicts,
+    prose_list_join
+)
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 
@@ -1454,16 +1456,10 @@ class KUEmailRecipient(models.Model):
     def is_unit_responsible(self):
         return self.type == KUEmailRecipient.TYPE_UNIT_RESPONSIBLE
 
-    @staticmethod
-    def filter_list(recp_list, types=all_types):
-        return [x for x in recp_list if x.type in types]
-
-    @staticmethod
-    def exclude_list(recp_list, types=all_types):
-        return [x for x in recp_list if x.type not in types]
-
 
 class ObjectStatistics(models.Model):
+    class Meta:
+        verbose_name_plural = "object statistics"
 
     created_time = models.DateTimeField(
         blank=False,
@@ -1530,8 +1526,8 @@ class ProductGymnasieFag(models.Model):
 
         # Rest of value list is pks for subject levels
         for x in values:
-            l = GymnasieLevel.objects.get(pk=x)
-            f.level.add(l)
+            level = GymnasieLevel.objects.get(pk=x)
+            f.level.add(level)
 
         return f
 
@@ -2354,17 +2350,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def future_times(self):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
-    @property
-    def cutoff_filter(self):
-        cutoff_before = self.booking_cutoff_before
-        if cutoff_before is None:
-            cutoff_before = timedelta()
-        filter = {'start__gte': timezone.now() + cutoff_before}
-        cutoff_after = self.booking_cutoff_after
-        if cutoff_after is not None:
-            filter['start__lte'] = timezone.now() + cutoff_after
-        return filter
-
     def future_bookable_times(self, use_cutoff=False):
         filter = {'start__gte': timezone.now()}
         if use_cutoff:
@@ -2381,9 +2366,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
-    # in ressource assignment for this product.
+    # in resource assignment for this product.
     # Finds:
-    #  - All potential ressources that can be assigned to this product
+    #  - All potential resources that can be assigned to this product
     #  - All ResourcePools that make use of these resources
     #  - All EventTimes for products that has requirements that uses these
     #    ResourcePools.
@@ -2929,29 +2914,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 minutes=int(minutes)
             )
 
-    @property
-    def duration_display(self):
-        if not self.duration:
-            return ""
-        (hours, minutes) = self.duration.split(":")
-        try:
-            hours = int(hours)
-            minutes = int(minutes)
-            parts = []
-            if hours == 1:
-                parts.append(_(u"1 time"))
-            elif hours > 1:
-                parts.append(_(u"%s timer") % hours)
-            if minutes == 1:
-                parts.append(_(u"1 minut"))
-            else:
-                parts.append(_(u"%s minutter") % minutes)
-
-            return _(u" og ").join([unicode(x) for x in parts])
-        except Exception as e:
-            print e
-            return ""
-
     @staticmethod
     def get_latest_booked(user=None):
         qs = Product.objects.filter(
@@ -3048,25 +3010,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-    @classmethod
-    # Migrate from old system where guest-suggest-time products was determined
-    # by them not having any visits
-    def migrate_time_mode(cls):
-        for x in cls.objects.filter(time_mode=cls.TIME_MODE_NONE):
-            if x.visit_set.filter(deprecated_bookable=True).count() > 0:
-                x.time_mode = cls.TIME_MODE_SPECIFIC
-            else:
-                x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
-
-            print u"%s => %s" % (x, x.get_time_mode_display())
-            x.save()
-
-        # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
-        EventTime.objects.filter(
-            bookable=True,
-            product__time_mode=cls.TIME_MODE_GUEST_SUGGESTED
-        ).update(bookable=False)
-
     def __unicode__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
@@ -3082,29 +3025,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
-    deprecated_product = models.ForeignKey(
-        Product,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-
-    deprecated_start_datetime = models.DateTimeField(
-        verbose_name=_(u'Starttidspunkt'),
-        null=True,
-        blank=True
-    )
-
-    deprecated_end_datetime = models.DateTimeField(
-        null=True,
-        blank=True,
-    )
-
-    # Whether the visit is publicly bookable
-    deprecated_bookable = models.BooleanField(
-        default=False,
-        verbose_name=_(u'Kan bookes')
-    )
+    objects = VisitQuerySet.as_manager()
 
     desired_time = models.CharField(
         null=True,
@@ -3463,12 +3384,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_rejected(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_REJECTED
-
-    @staticmethod
-    def active_qs(qs):
-        return qs.exclude(workflow_status__in=[
-            Visit.WORKFLOW_STATUS_CANCELLED, Visit.WORKFLOW_STATUS_REJECTED
-        ])
 
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
@@ -3992,33 +3907,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    @classmethod
-    def needs_teachers_qs(cls):
-        req_type_key = "__".join([
-            "eventtime",
-            "product",
-            "resourcerequirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        assigned_type_key = "__".join([
-            "visitresource",
-            "resource_requirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        return cls.objects.filter(
-            **{req_type_key: ResourceType.RESOURCE_TYPE_TEACHER}
-        ).filter(
-            Q(**{assigned_type_key: ResourceType.RESOURCE_TYPE_TEACHER}) |
-            Q(visitresource__isnull=True)
-        ).annotate(
-            needed=Sum(
-                'eventtime__product__resourcerequirement__required_amount'
-            ),
-            assigned=Count('visitresource')
-        ).filter(needed__gt=F("assigned"))
-
     def __unicode__(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.__unicode__()
@@ -4091,39 +3979,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return " ".join(result)
 
-    @classmethod
-    def being_planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_BEING_PLANNED,
-                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
-                cls.WORKFLOW_STATUS_REJECTED
-            ],
-            **kwargs
-        )
-
-    @classmethod
-    def planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_PLANNED,
-                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                cls.WORKFLOW_STATUS_CONFIRMED,
-                cls.WORKFLOW_STATUS_REMINDED
-            ],
-        ).filter(**kwargs)
-
-    @staticmethod
-    def unit_filter(qs, unit_qs):
-        mpv_qs = MultiProductVisit.objects.filter(
-            subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit__in=unit_qs
-        )
-        return qs.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs) |
-            Q(multiproductvisit__in=mpv_qs)
-        )
-
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
         old_value = self.extra_search_text or ""
@@ -4140,7 +3995,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
     def save(self, *args, **kwargs):
-        self.update_endtime()
         self.update_last_workflow_change()
         super(Visit, self).save(*args, **kwargs)
 
@@ -4312,16 +4166,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         autosends = self.get_autosends(True, False, False)
         return [autosend.get_name() for autosend in autosends]
 
-    def update_endtime(self):
-        if self.deprecated_start_datetime is not None:
-            product = self.product
-            if product:
-                duration = product.duration_as_timedelta
-                if duration is not None:
-                    self.deprecated_end_datetime = (
-                        self.deprecated_start_datetime + duration
-                    )
-
     def add_room_by_name(self, name):
         product = self.product
         locality = None
@@ -4344,91 +4188,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         self.rooms.add(room)
 
         return room
-
-    @staticmethod
-    def get_latest_created():
-        return Visit.objects.\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Visit.objects.\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Visit.objects.\
-            order_by('-statistics__visited_time')
-
-    @staticmethod
-    def get_latest_booked():
-        return Visit.objects.filter(
-            bookings__isnull=False
-        ).order_by(
-            '-bookings__statistics__created_time'
-        )
-
-    @staticmethod
-    def get_todays_visits():
-        return Visit.get_occurring_on_date(timezone.now())
-
-    @staticmethod
-    def get_starting_on_date(date):
-        return Visit.objects.none()
-        return Visit.objects.filter(
-            eventtime__start__year=date.year,
-            eventtime__start__month=date.month,
-            eventtime__start__day=date.day,
-            is_multi_sub=False
-        ).order_by('eventtime__start')
-
-    @staticmethod
-    def get_occurring_at_time(time):
-        # Return the visits that take place exactly at this time
-        # Meaning they begin before the queried time and end after the time
-        return Visit.objects.filter(
-            eventtime__start__lte=time,
-            eventtime__end__gt=time,
-            is_multi_sub=False
-        )
-
-    @staticmethod
-    def get_occurring_on_date(datetime):
-        # Convert datetime object to date-only for current timezone
-        date = timezone.localtime(datetime).date()
-
-        # A visit happens on a date if it starts before the
-        # end of the day and ends after the beginning of the day
-        min_date = datetime.combine(date, time.min)
-        max_date = datetime.combine(date, time.max)
-
-        return Visit.objects.filter(
-            eventtime__start__lte=max_date,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) &
-                Q(eventtime__start__gt=min_date)
-            )
-        )
-
-    @staticmethod
-    def get_recently_held(time=None):
-        if not time:
-            time = timezone.now()
-
-        return Visit.objects.filter(
-            workflow_status__in=[
-                Visit.WORKFLOW_STATUS_EXECUTED,
-                Visit.WORKFLOW_STATUS_EVALUATED],
-            eventtime__start__isnull=False,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
-            )
-        ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -4573,25 +4332,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.products
         return [self.product]
-
-    @property
-    def product_qs(self):
-        return Product.objects.filter(id__in=[x.id for x in self.products])
-
-    @staticmethod
-    def with_product_types(visit_qs, product_types=None):
-        if product_types is None:
-            return visit_qs
-        return (visit_qs.filter(
-            multiproductvisit__isnull=True,
-            eventtime__product__type__in=product_types
-        ) | visit_qs.filter(
-            multiproductvisit__isnull=False,
-            multiproductvisit__subvisit__in=Visit.objects.filter(
-                eventtime__product__type__in=product_types,
-                is_multi_sub=True
-            )
-        )).distinct()
 
     @property
     def products_unique_address(self):
@@ -4855,7 +4595,7 @@ class MultiProductVisit(Visit):
 
     @property
     def subvisits_unordered_noncancelled(self):
-        return Visit.active_qs(self.subvisits_unordered)
+        return self.subvisits_unordered.active_qs()
 
     @property
     def subvisits(self):
@@ -5279,7 +5019,6 @@ class MultiProductVisitTemp(models.Model):
         return len(
             set([product.locality for product in self.products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
