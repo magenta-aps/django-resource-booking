@@ -112,7 +112,10 @@ class CustomModelChoiceField(
     widget = SelectDisable
 
 
-class MultipleChoiceDisableModelField(DisableFieldMixin, ModelMultipleChoiceField):
+class MultipleChoiceDisableModelField(
+    DisableFieldMixin,
+    ModelMultipleChoiceField
+):
     widget = SelectMultipleDisable
 
 
