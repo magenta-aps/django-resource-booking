@@ -575,19 +575,18 @@ def surveyxact_upload(survey_id, data):
             print "Didn't find collecturl in %s" % response.text
 
 
-def surveyxact_anonymize(survey_id, before_datetime, fields=['email']):
-    """
-
-    :rtype: object
-    """
+def surveyxact_anonymize(survey_id, before_datetime):
     config = settings.SURVEYXACT
     url = config['url']['anonymize'] % survey_id
+    # SurveyXact cannot currently handle non-ascii variable names in their
+    # REST API, so "intrinsic form" can be used instead. The following
+    # represents the "email" and "gæst" variables. For further fields
+    # containing non-ascii, contact the people at Rambøll.
+    fields = {'[background/email]', '{*1/1/534070579*}'}
     data = {
         'filter': "[respondent/created]<datetime(\"%s\")" %
                   before_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-        'variables': ','.join(
-            ["[respondent/%s]" % field for field in set(fields)]
-        )
+        'variables': ','.join([field for field in set(fields)])
     }
     response = requests.post(
         url,
