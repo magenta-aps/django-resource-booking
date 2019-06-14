@@ -53,7 +53,7 @@ class VisitQuerySet(models.QuerySet):
                 eventtime__product__type__in=product_types,
             ) | self.filter(
                 multiproductvisit__isnull=False,
-                multiproductvisit__subvisit__in=self.objects.filter(
+                multiproductvisit__subvisit__in=self.filter(
                     eventtime__product__type__in=product_types,
                     is_multi_sub=True,
                 ),
@@ -71,7 +71,7 @@ class VisitQuerySet(models.QuerySet):
         return self.order_by("-statistics__visited_time")
 
     def get_latest_booked(self, **kwargs):
-        return self.objects.filter(bookings__isnull=False, **kwargs).order_by(
+        return self.filter(bookings__isnull=False, **kwargs).order_by(
             "-bookings__statistics__created_time"
         )
 
@@ -81,7 +81,7 @@ class VisitQuerySet(models.QuerySet):
     def get_occurring_at_time(self, time, **kwargs):
         # Return the visits that take place exactly at this time
         # Meaning they begin before the queried time and end after the time
-        return self.objects.filter(
+        return self.filter(
             eventtime__start__lte=time,
             eventtime__end__gt=time,
             is_multi_sub=False,
@@ -97,7 +97,7 @@ class VisitQuerySet(models.QuerySet):
         min_date = datetime.combine(date, time.min)
         max_date = datetime.combine(date, time.max)
 
-        return self.objects.filter(
+        return self.filter(
             eventtime__start__lte=max_date, is_multi_sub=False
         ).filter(
             Q(eventtime__end__gte=min_date) | (
@@ -111,7 +111,7 @@ class VisitQuerySet(models.QuerySet):
             time = timezone.now()
 
         return (
-            self.objects.filter(
+            self.filter(
                 workflow_status__in=[
                     self.model.WORKFLOW_STATUS_EXECUTED,
                     self.model.WORKFLOW_STATUS_EVALUATED,
