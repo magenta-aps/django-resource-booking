@@ -548,7 +548,7 @@ def surveyxact_upload(survey_id, data):
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
 
     response = requests.post(
-        config['url'],
+        config['url']['upload'],
         headers={
             'Expect': '100-continue'
         },
@@ -573,6 +573,31 @@ def surveyxact_upload(survey_id, data):
             return m.group(1)
         else:
             print "Didn't find collecturl in %s" % response.text
+
+
+def surveyxact_anonymize(survey_id, before_datetime):
+    config = settings.SURVEYXACT
+    url = config['url']['anonymize'] % survey_id
+    # SurveyXact cannot currently handle non-ascii variable names in their
+    # REST API, so "intrinsic form" can be used instead. The following
+    # represents the "email" and "gæst" variables. For further fields
+    # containing non-ascii, contact the people at Rambøll.
+    fields = {'[background/email]', '{*1/1/534070579*}'}
+    data = {
+        'filter': "[respondent/created]<datetime(\"%s\")" %
+                  before_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+        'variables': ','.join([field for field in set(fields)])
+    }
+    response = requests.post(
+        url,
+        data=data,
+        auth=(config['username'], config['password'])
+    )
+    if response.status_code == 200:
+        return True
+    else:
+        print "Failed to anonymize SurveyXact data: %s" % response.text
+        return False
 
 
 def bool2int(bool):
