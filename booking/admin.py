@@ -14,6 +14,13 @@ EXCLUDE_MODELS = set([
     booking_models.GymnasieLevel,
 ])
 
+# Important: when changing this, be sure to run the
+# following in a shell on the server:
+#
+# from profile.models import UserProfile
+# for userprofile in UserProfile.objects.all():
+#     userprofile.update_user_permissions()
+
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
@@ -37,7 +44,9 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.BookingGrundskoleSubjectLevel,
     booking_models.BookingGymnasieSubjectLevel,
     booking_models.ProductGymnasieFag,
-    booking_models.ProductGrundskoleFag
+    booking_models.ProductGrundskoleFag,
+    booking_models.SurveyXactEvaluation,
+    booking_models.SurveyXactEvaluationGuest
 ])
 
 # Faculty editors will always have access to the same things as
