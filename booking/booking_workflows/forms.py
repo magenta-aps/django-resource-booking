@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth.models import User
-
-from booking.models import Visit, VisitAutosend, MultiProductVisit
-from booking.models import EmailTemplateType
 from django import forms
+from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 import booking.models
+from booking.fields import MultipleChoiceDisableModelField
+from booking.models import EmailTemplateType
+from booking.models import Visit, VisitAutosend, MultiProductVisit
+from booking.widgets import CheckboxSelectMultipleDisable
 
 
 class ChangeVisitStatusForm(forms.ModelForm):
@@ -55,11 +56,19 @@ class ChangeVisitTeachersForm(forms.ModelForm):
         model = Visit
         fields = ['teachers', 'override_needed_teachers']
         widgets = {
-            'teachers': forms.CheckboxSelectMultiple(),
+            'teachers': CheckboxSelectMultipleDisable(),
             'override_needed_teachers': forms.Select(
                 attrs={'class': 'form-control'}
             )
         }
+
+    # Will be called by the superclass to create form fields
+    def formfield_callback(modelfield, **kwargs):
+        if modelfield.name == 'teachers':
+            return modelfield.formfield(
+                form_class=MultipleChoiceDisableModelField, **kwargs
+            )
+        return modelfield.formfield(**kwargs)
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
@@ -69,10 +78,18 @@ class ChangeVisitTeachersForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitTeachersForm, self).__init__(*args, **kwargs)
+        visit = kwargs['instance']
+        teachers = visit.product.potentielle_undervisere.all()
         teacherfield = self.fields['teachers']
         teacherfield.label_from_instance = User.get_full_name
-        teacherfield.queryset = \
-            kwargs['instance'].product.potentielle_undervisere.all()
+        teacherfield.queryset = teachers
+        disabled_values = [
+            teacher.pk
+            for teacher in teachers
+            if not teacher.userprofile
+                .get_resource().available_for_visit(visit)
+        ]
+        teacherfield.disabled_values = disabled_values
 
 
 class ChangeVisitHostsForm(forms.ModelForm):
@@ -80,11 +97,19 @@ class ChangeVisitHostsForm(forms.ModelForm):
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
         widgets = {
-            'hosts': forms.CheckboxSelectMultiple(),
+            'hosts': CheckboxSelectMultipleDisable(),
             'override_needed_hosts': forms.Select(
                 attrs={'class': 'form-control'}
             )
         }
+
+    # Will be called by the superclass to create form fields
+    def formfield_callback(modelfield, **kwargs):
+        if modelfield.name == 'hosts':
+            return modelfield.formfield(
+                form_class=MultipleChoiceDisableModelField, **kwargs
+            )
+        return modelfield.formfield(**kwargs)
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye værter der tilknyttes"),
@@ -94,10 +119,17 @@ class ChangeVisitHostsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitHostsForm, self).__init__(*args, **kwargs)
+        visit = kwargs['instance']
+        hosts = visit.product.potentielle_vaerter.all()
         hostfield = self.fields['hosts']
         hostfield.label_from_instance = User.get_full_name
-        hostfield.queryset = \
-            kwargs['instance'].product.potentielle_vaerter.all()
+        hostfield.queryset = hosts
+        disabled_values = [
+            host.pk
+            for host in hosts
+            if not host.userprofile.get_resource().available_for_visit(visit)
+        ]
+        hostfield.disabled_values = disabled_values
 
 
 class ChangeVisitRoomsForm(forms.ModelForm):
