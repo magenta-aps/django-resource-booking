@@ -22,7 +22,7 @@
                 {% for pk, label in field.field.choices %}
                 <div class="checkbox">
                     <label for="id_{{ form.teachers.name }}_{{ forloop.counter0 }}">
-                        <input {% if pk in field.value %}checked="checked"{% endif %} id="id_{{ field.name }}_{{ forloop.counter0 }}" name="{{ field.name }}" type="checkbox" value="{{ pk }}"/>
+                        <input {% if pk in field.value %}checked="checked"{% endif %} id="id_{{ field.name }}_{{ forloop.counter0 }}" name="{{ field.name }}" type="checkbox" value="{{ pk }}" {% if pk in field.field.disabled_values %}disabled="disabled"{% endif %}/>
                         {{ label }}
                         <a href="{% url 'availability' pk %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
                             {% trans 'Se detaljer' %}

@@ -91,12 +91,6 @@
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcegrupper som tilbud kan behøve.' %}"></span>
                         </h4>
                     </a>
-                    <a class="list-group-item" href="{% url 'evaluations' %}">
-                        <h4 class="list-group-item-heading">
-                            {% trans 'Overblik over evalueringer' %}
-                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se et overblik over besøg med tilknyttede evalueringer.' %}"></span>
-                        </h4>
-                    </a>
                     <a class="list-group-item" href="{% url 'statistics' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Statistik' %}
@@ -111,7 +105,7 @@
                             </h4>
                         </a>
                     {% endif %}
-                    <a class="list-group-item" href="{% url 'visit-evaluation-statistics' %}">
+                    <a class="list-group-item" href="{% url 'evaluation-statistics' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Evalueringer' %}
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se statistik over evalueringer' %}"></span>
@@ -159,6 +153,7 @@
             {% endif %}
         </div>
     </div>
+
     <div class="row">
         <div class="col-xs-12 col-sm-4">
                 {% if request.user.userprofile.can_create %}
@@ -172,7 +167,7 @@
                     </a>
                 {% endif %}
         </div>
-        <div class="col-xs-12 col-sm-8">
+        <div class="col-xs-12 col-sm-4">
             {% if autoassign_failed.visits.count > 0 %}
                 <a href="{% url 'visit-search' %}?w={{ autoassign_failed.status_id }}" class="text-danger" target="_blank">
                     {% if autoassign_failed.products.count == 1 %}
@@ -186,6 +181,16 @@
                     {% endif %}
                 </a>
             {% endif %}
+        </div>
+        <div class="col-xs-12 col-sm-4">
+            <form method="GET" action="">
+                <select name="product_type" class="form-control" onchange="this.form.submit()">
+                    <option value="">{% trans 'Alle tilbudstyper' %}</option>
+                    {% for id,name in types %}
+                        <option value="{{ id }}" {% if id == type %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
         </div>
     </div>
 <div class="divider"></div>

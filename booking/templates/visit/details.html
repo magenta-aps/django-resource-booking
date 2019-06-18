@@ -1,9 +1,8 @@
 {% extends 'index.html' %}
-{% load timedelta %}
 {% load i18n %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {{ object.product.title }} - {{ object.date_display }}{% endblock %}
+{% block htmltitle %} - {{ object.display_title }} - {{ object.date_display }}{% endblock %}
 
 {% block content %}
 
@@ -91,6 +90,9 @@
                         </ul>
                     </div>
                 {% endif %}
+                {% if object.is_multiproductvisit and object.is_being_planned %}
+                    <a class="btn btn-primary" href="{% url 'visit-mpv-edit' object.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Tilføj besøg' %}</a>
+                {% endif %}
             </div>
           </div>
         </div>
@@ -163,7 +165,7 @@
 
     <div class="row status">
         <div class="col-sm-12 col-md-10 col-md-offset-2">
-            {% with left_class="col-sm-3" center_class="col-sm-6" right_class="col-sm-3" %}
+            {% with left_class="col-sm-3" center_class="col-sm-7" right_class="col-sm-2" %}
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Statusoverblik' %}</h2>
@@ -373,24 +375,6 @@
 
                     <div class="row row-border">
                         <strong class="{{ left_class }}">
-                            {% trans 'Link til evaluering' %}
-                        </strong>
-                        <div class="{{ center_class }}">
-                            {% if object.evaluation_link %}
-                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
-                            {% else %}
-                                {% trans 'Ikke angivet' %}
-                            {% endif %}
-                        </div>
-                        {% if can_edit %}
-                            <div class="{{ right_class }}">
-                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row row-border">
-                        <strong class="{{ left_class }}">
                             {% trans 'Vigtig bemærkning' %}
                         </strong>
                         <div class="{{ center_class }}">
@@ -451,52 +435,48 @@
                             </div>
                         </div>
                     {% endif %}
-
-                    {% if can_edit %}
-                        <div class="row row-border">
-                            <strong class="{{ left_class }}">
-                                {% trans 'Evaluering' %}
-                            </strong>
-                            <div class="{{ center_class }}">
-                                {% if object.evaluation %}
-                                    {{ object.evaluation.url }}
-                                {% else %}
-                                    {% trans 'Ingen evaluering oprettet' %}
-                                {% endif %}
-                            </div>
-                            <div class="{{ right_class }}">
-                                {% if object.evaluation %}
-                                    <a href="{% url 'visit-evaluation-view' object.pk object.evaluation.id %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Vis evaluering' %}</a>
-                                {% else %}
-                                    <a href="{% url 'visit-evaluation-create' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Opret evaluering' %}</a>
-                                {% endif %}
-                            </div>
-                        </div>
-
-
-                    {% endif %}
-
-{#                    Deaktiveret jf. #20680 #}
-{#                    {% if can_edit and object.has_changes_after_planned %} #}
-{#                        <div class="row row-border"> #}
-{#                            <strong class="{{ left_class }}"> #}
-{#                                {% trans 'Nylige ændringer' %} #}
-{#                            </strong> #}
-{#                            <div class="{{ center_class }}"> #}
-{#                                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> #}
-{#                                {% trans 'Dette besøg er markeret som havende nylige ændringer' %}. #}
-{#                            </div> #}
-{#                            <div class="{{ right_class }}"> #}
-{#                                <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a> #}
-{#                            </div> #}
-{#                        </div> #}
-{#                    {% endif %} #}
-
+                
                 </div>
             </div>
             {% endwith %}
         </div>
     </div>
+
+
+    {% if not object.is_multiproductvisit or object.student_evaluation or object.teacher_evaluation or object.common_evaluation %}
+    <div class="row evaluation">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>
+                        {% trans 'Evaluering' %}
+                    </h2>
+                    {% if object.type == object.GROUP_VISIT %}
+                        {% if object.student_evaluation %}
+                            <a href="{% url 'evaluation-view' object.student_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                        {% endif %}
+                        {% if object.teacher_evaluation %}
+                            <a href="{% url 'evaluation-view' object.teacher_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                        {% endif %}
+                    {% else %}
+                        {% if object.common_evaluation %}
+                            <a href="{% url 'evaluation-view' object.common_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
+                        {% else %}
+                            <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+
 
     {% if not object.is_multi_sub %}
     <div class="row attendees">
@@ -542,6 +522,22 @@
     </div>
     {% endif %}
 
+    {% if not object.is_multi_sub %}
+        <div class="row cancelled-attendees">
+            <div class="col-sm-12 col-md-10 col-md-offset-2">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h2>
+                            {% trans 'Aflyste' %}
+                            ({{ object.nr_cancelled_attendees }})
+                        </h2>
+                        {% include "booking/snippets/list.html" with list=object.cancelled_list form=cancelledlistform listname='cancelled' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row activitylog">
         <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
@@ -566,6 +562,23 @@
                                     <dt>{% trans 'Besked:' %}</dt>
                                     <dd><pre>{{ entry.change_message }}</pre></dd>
                                 </dl>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mails">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>{% trans 'Emails' %}</h2>
+                    <ul class="list-unstyled scroll-400">
+                        {% for email in emails %}
+                            <li>
+                                {% include 'email/display.html' with email=email %}
                             </li>
                         {% endfor %}
                     </ul>

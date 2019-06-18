@@ -1,41 +1,42 @@
 # -*- coding: utf-8 -*-
-
-from django.db.models.expressions import OrderBy
-from django.db.models import Q
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.db.models.expressions import OrderBy
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView
-from booking.booking_workflows.forms import ChangeVisitStatusForm, \
-    BecomeSomethingForm
-from booking.booking_workflows.forms import VisitAutosendFormSet
-from booking.booking_workflows.forms import ChangeVisitResponsibleForm
-from booking.booking_workflows.forms import ChangeVisitTeachersForm
-from booking.booking_workflows.forms import ChangeVisitHostsForm
-from booking.booking_workflows.forms import ChangeVisitRoomsForm
+from django.views.generic.base import ContextMixin
+
+from booking.booking_workflows.forms import BecomeSomethingForm
 from booking.booking_workflows.forms import ChangeVisitCommentsForm
-from booking.booking_workflows.forms import ChangeVisitEvalForm
-from booking.booking_workflows.forms import VisitAddLogEntryForm
-from booking.booking_workflows.forms import VisitAddCommentForm
+from booking.booking_workflows.forms import ChangeVisitHostsForm
+from booking.booking_workflows.forms import ChangeVisitResponsibleForm
+from booking.booking_workflows.forms import ChangeVisitRoomsForm
+from booking.booking_workflows.forms import ChangeVisitStatusForm
+from booking.booking_workflows.forms import ChangeVisitTeachersForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
-from booking.models import TeacherResource, HostResource
-from booking.models import Visit
-from booking.models import EmailTemplateType
-from booking.models import EventTime
-from booking.models import Locality
+from booking.booking_workflows.forms import VisitAddCommentForm
+from booking.booking_workflows.forms import VisitAddLogEntryForm
+from booking.booking_workflows.forms import VisitAutosendFormSet
 from booking.constants import LOGACTION_MANUAL_ENTRY
 from booking.logging import log_action
-from booking.models import Room
+from booking.mixins import AutologgerMixin
+from booking.mixins import EditorRequriedMixin
+from booking.mixins import RoleRequiredMixin
+from booking.models import EmailTemplateType, KUEmailRecipient
+from booking.models import EventTime
+from booking.models import HostResource
+from booking.models import Locality
 from booking.models import MultiProductVisit
-from booking.mixins import RoleRequiredMixin, EditorRequriedMixin, \
-    AutologgerMixin
+from booking.models import ResourceRequirement
+from booking.models import Room
+from booking.models import TeacherResource
+from booking.models import Visit
+from booking.models import VisitResource
 from booking.views import VisitDetailView
-from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
-
-import booking.models
 
 
 class VisitBreadcrumbMixin(ContextMixin):
@@ -69,8 +70,7 @@ class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequriedMixin,
             )
 
 
-class ChangeVisitStartTimeView(AutologgerMixin,
-                               UpdateWithCancelView):
+class ChangeVisitStartTimeView(AutologgerMixin, UpdateWithCancelView):
     model = EventTime
     template_name = "booking/workflow/change_starttime.html"
     view_title = _(u'Redigér tidspunkt')
@@ -96,10 +96,16 @@ class ChangeVisitStartTimeView(AutologgerMixin,
         else:
             time_mode = "time_and_date"
 
+        try:
+            desired_time = self.object.visit.desired_time
+        except:
+            desired_time = None
+
         return super(ChangeVisitStartTimeView, self).get_context_data(
             product=self.object.product,
             use_product_duration=self.object.duration_matches_product,
             time_mode_value=time_mode,
+            desired_time=desired_time,
             **kwargs
         )
 
@@ -190,11 +196,11 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 teacher
                 for teacher in new_teachers
                 if teacher not in old_teachers
-            ]
+            ]), KUEmailRecipient.TYPE_TEACHER)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -249,11 +255,11 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 host
                 for host in new_hosts
                 if host not in old_hosts
-            ]
+            ]), KUEmailRecipient.TYPE_HOST)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -289,7 +295,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
         locality = self.object.product.locality
         unit = self.object.product.organizationalunit
 
-        context['locality_choices'] = [(None, "---------")] + \
+        context['locality_choices'] = [(None, "---------", False)] + \
             [
                 (x.id, x.name_and_address,
                  locality is not None and x.id == locality.id)
@@ -352,13 +358,6 @@ class ChangeVisitCommentsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitCommentsForm
     template_name = "booking/workflow/change_comments.html"
     view_title = _(u'Redigér kommentarer')
-
-
-class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
-    model = Visit
-    form_class = ChangeVisitEvalForm
-    template_name = "booking/workflow/change_eval_link.html"
-    view_title = _(u'Redigér evalueringslink')
 
 
 class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
@@ -464,7 +463,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
             if self.request.method == "GET":
                 rr.initial = [x[0] for x in rr.choices]
         else:
-            rr.queryset = booking.models.ResourceRequirement.objects.none()
+            rr.queryset = ResourceRequirement.objects.none()
         return form
 
     def needs_more(self):
@@ -487,7 +486,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
         resource = user.userprofile.get_resource()
         if resource:
             visit = self.get_object()
-            return booking.models.ResourceRequirement.objects.filter(
+            return ResourceRequirement.objects.filter(
                 product__eventtime__visit=visit,
                 resource_pool__resources=resource,
             ).exclude(
@@ -495,7 +494,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 visitresource__visit=visit
             )
         else:
-            return booking.models.ResourceRequirements.objects.none()
+            return ResourceRequirement.objects.none()
 
     def get_context_data(self, **kwargs):
         obj = self.get_object()
@@ -561,7 +560,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.object.product.is_resource_controlled:
                     resource = self.request.user.userprofile.get_resource()
                     for x in form.cleaned_data['resourcerequirements']:
-                        vr = booking.models.VisitResource(
+                        vr = VisitResource(
                             visit=self.object,
                             resource=resource,
                             resource_requirement=x
@@ -575,7 +574,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.notify_mail_template_type:
                     self.object.autosend(
                         self.notify_mail_template_type,
-                        [request.user],
+                        [KUEmailRecipient.create(request.user)],
                         True
                     )
                 self.object.resource_accepts()

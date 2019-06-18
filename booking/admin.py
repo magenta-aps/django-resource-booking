@@ -3,8 +3,8 @@
 from django.contrib import admin
 from django.db import models as django_models
 from django.db.models import Q
-from django.db.models.fields.related import \
-    ReverseSingleRelatedObjectDescriptor
+from django.db.models.fields.related_descriptors import \
+    ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
@@ -13,6 +13,13 @@ from . import models as booking_models
 EXCLUDE_MODELS = set([
     booking_models.GymnasieLevel,
 ])
+
+# Important: when changing this, be sure to run the
+# following in a shell on the server:
+#
+# from profile.models import UserProfile
+# for userprofile in UserProfile.objects.all():
+#     userprofile.update_user_permissions()
 
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
@@ -37,7 +44,12 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.BookingGrundskoleSubjectLevel,
     booking_models.BookingGymnasieSubjectLevel,
     booking_models.ProductGymnasieFag,
-    booking_models.ProductGrundskoleFag
+    booking_models.ProductGrundskoleFag,
+    booking_models.SurveyXactEvaluation,
+    booking_models.SurveyXactEvaluationGuest,
+    booking_models.VisitComment,
+    booking_models.ResourceRequirement,
+    booking_models.VisitResource
 ])
 
 # Faculty editors will always have access to the same things as
@@ -84,7 +96,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         unit_filter_match = None
         if hasattr(self.model, 'organizationalunit') and isinstance(
                 self.model.organizationalunit,
-                ReverseSingleRelatedObjectDescriptor
+                ForwardManyToOneDescriptor
         ):
             unit_filter_match = 'organizationalunit'
         elif model_name in MODEL_UNIT_FILTER_MAP:
@@ -92,7 +104,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
 
         if unit_filter_match is not None:
             unit_qs = request.user.userprofile.get_unit_queryset()
-            match1 = {unit_filter_match: unit_qs}
+            match1 = {"%s__in" % unit_filter_match: unit_qs}
             if getattr(self.model, 'allow_null_unit_editing', False):
                 match2 = {unit_filter_match: None}
                 qs = qs.filter(Q(**match1) | Q(**match2))

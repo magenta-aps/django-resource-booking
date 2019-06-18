@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth.models import User
-
-from booking.models import Visit, VisitAutosend, MultiProductVisit
-from booking.models import EmailTemplateType
 from django import forms
+from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 import booking.models
+from booking.fields import MultipleChoiceDisableModelField
+from booking.models import EmailTemplateType
+from booking.models import Visit, VisitAutosend, MultiProductVisit
+from booking.widgets import CheckboxSelectMultipleDisable
 
 
 class ChangeVisitStatusForm(forms.ModelForm):
-
     class Meta:
         model = Visit
         fields = ['workflow_status']
+        widgets = {
+            'workflow_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitStatusForm, self).__init__(*args, **kwargs)
@@ -34,6 +39,11 @@ class ChangeVisitResponsibleForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisit
         fields = ['responsible']
+        widgets = {
+            'responsible': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitResponsibleForm, self).__init__(*args, **kwargs)
@@ -46,11 +56,19 @@ class ChangeVisitTeachersForm(forms.ModelForm):
         model = Visit
         fields = ['teachers', 'override_needed_teachers']
         widgets = {
-            'teachers': forms.CheckboxSelectMultiple(),
+            'teachers': CheckboxSelectMultipleDisable(),
             'override_needed_teachers': forms.Select(
                 attrs={'class': 'form-control'}
             )
         }
+
+    # Will be called by the superclass to create form fields
+    def formfield_callback(modelfield, **kwargs):
+        if modelfield.name == 'teachers':
+            return modelfield.formfield(
+                form_class=MultipleChoiceDisableModelField, **kwargs
+            )
+        return modelfield.formfield(**kwargs)
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
@@ -60,10 +78,18 @@ class ChangeVisitTeachersForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitTeachersForm, self).__init__(*args, **kwargs)
+        visit = kwargs['instance']
+        teachers = visit.product.potentielle_undervisere.all()
         teacherfield = self.fields['teachers']
         teacherfield.label_from_instance = User.get_full_name
-        teacherfield.queryset = \
-            kwargs['instance'].product.potentielle_undervisere.all()
+        teacherfield.queryset = teachers
+        disabled_values = [
+            teacher.pk
+            for teacher in teachers
+            if not teacher.userprofile
+                .get_resource().available_for_visit(visit)
+        ]
+        teacherfield.disabled_values = disabled_values
 
 
 class ChangeVisitHostsForm(forms.ModelForm):
@@ -71,11 +97,19 @@ class ChangeVisitHostsForm(forms.ModelForm):
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
         widgets = {
-            'hosts': forms.CheckboxSelectMultiple(),
+            'hosts': CheckboxSelectMultipleDisable(),
             'override_needed_hosts': forms.Select(
                 attrs={'class': 'form-control'}
             )
         }
+
+    # Will be called by the superclass to create form fields
+    def formfield_callback(modelfield, **kwargs):
+        if modelfield.name == 'hosts':
+            return modelfield.formfield(
+                form_class=MultipleChoiceDisableModelField, **kwargs
+            )
+        return modelfield.formfield(**kwargs)
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye værter der tilknyttes"),
@@ -85,28 +119,34 @@ class ChangeVisitHostsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitHostsForm, self).__init__(*args, **kwargs)
+        visit = kwargs['instance']
+        hosts = visit.product.potentielle_vaerter.all()
         hostfield = self.fields['hosts']
         hostfield.label_from_instance = User.get_full_name
-        hostfield.queryset = \
-            kwargs['instance'].product.potentielle_vaerter.all()
+        hostfield.queryset = hosts
+        disabled_values = [
+            host.pk
+            for host in hosts
+            if not host.userprofile.get_resource().available_for_visit(visit)
+        ]
+        hostfield.disabled_values = disabled_values
 
 
 class ChangeVisitRoomsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['room_status']
+        widgets = {
+            'room_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
 
 class ChangeVisitCommentsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['comments']
-
-
-class ChangeVisitEvalForm(forms.ModelForm):
-    class Meta:
-        model = Visit
-        fields = ['evaluation_link']
 
 
 class VisitAddLogEntryForm(forms.Form):
@@ -239,7 +279,12 @@ class VisitAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def inherit_from(self):
-        return self.associated_visit.product.get_autosend(self.template_type)
+        visit = self.associated_visit
+        for product in visit.products:
+            autosend = product.get_autosend(self.template_type)
+            if autosend is not None:
+                return autosend
+        # return self.associated_visit.product.get_autosend(self.template_type)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
@@ -247,7 +292,6 @@ VisitAutosendFormSetBase = inlineformset_factory(
     VisitAutosend,
     form=VisitAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )
@@ -271,7 +315,9 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                     autosend.template_type for autosend in visit_autosends
                 ]
                 for type in all_types:
-                    if type.key not in existing_types:
+                    if type.key not in existing_types and \
+                            instance.product.type not in \
+                            type.disabled_product_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,

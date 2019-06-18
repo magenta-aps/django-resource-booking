@@ -2,7 +2,8 @@
 
 <p>
     Du er nu sat på som underviser til besøg
-    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.product.title }}</a>
+    {% include 'booking/email/snippets/visit_time.html' %}.
     Besøget afholdes på
     {% include 'booking/email/snippets/product_maplink.html' %}.
 </p>
