@@ -4874,15 +4874,12 @@ class MultiProductVisit(Visit):
         return self.products
 
     def potential_responsible(self):
-<<<<<<< HEAD
         subvisits = self.subvisits_unordered_noncancelled
         units = OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=subvisits
+            product__eventtime__visit__in=subvisits
         )
-=======
->>>>>>> develop
         return User.objects.filter(
-            userprofile__organizationalunit__in=self.unit_qs
+            userprofile__organizationalunit__in=units
         )
 
     @property
