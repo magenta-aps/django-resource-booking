@@ -6,9 +6,9 @@ import os
 import re
 import sys
 from itertools import chain
-from subprocess import Popen, PIPE
 
 import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.contenttypes.models import ContentType
@@ -60,7 +60,12 @@ def get_related_content_types(model):
 
         types = [ContentType.objects.get_for_model(model)]
 
-        for rel in model._meta.get_all_related_objects():
+        related_objects = [
+            f for f in model._meta.get_fields() if
+            (f.one_to_many or f.one_to_one) and
+            f.auto_created and not f.concrete
+        ]
+        for rel in related_objects:
             if not rel.one_to_one:
                 continue
 
@@ -135,17 +140,10 @@ class CustomStorage(FileSystemStorage):
 
 def html2text(value):
     """
-    Pipes given HTML string into the text browser W3M, which renders it.
-    Rendered text is grabbed from STDOUT and returned.
+    Use BeautifulSoup to parse the HTML and retrieve the text.
     """
-    try:
-        cmd = "w3m -dump -T text/html -O utf-8"
-        proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
-        enc_str = unicode(value).encode('ascii', 'xmlcharrefreplace')
-        return proc.communicate(enc_str)[0]
-    except OSError:
-        # something bad happened, so just return the input
-        return value
+    soup = BeautifulSoup(value, "html.parser")
+    return soup.get_text()
 
 
 def get_model_field_map(model, visited_models=None):
@@ -239,6 +237,15 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+def force_list(item):
+    t = type(item)
+    if t == list:
+        return item
+    if t == set or t == tuple:
+        return list(item)
+    return [item]
 
 
 def merge_dicts(*dicts):
@@ -383,6 +390,38 @@ class TemplateSplit(object):
                 if subblock.t_start == self.t_else:
                     return subblock
 
+        def get_if(self, include_start=False, include_end=False):
+            start = self.t_if[0 if include_start else 1]
+            if len(self.l_elif) > 0:
+                end = self.l_elif[0][1 if include_end else 0]
+            elif self.t_else is not None:
+                end = self.t_else[1 if include_end else 0]
+            else:
+                end = self.t_endif[1 if include_end else 0]
+            return self.templatesplit.text[start:end]
+
+        def get_elifs(self, include_start=False, include_end=False):
+            elifs = []
+            if self.t_else is not None:
+                end = self.t_else[1 if include_end else 0]
+            else:
+                end = self.t_endif[1 if include_end else 0]
+            last_index = len(self.l_elif) - 1
+            for index, el in enumerate(self.l_elif):
+                elifs.append(self.templatesplit.text[
+                                 el[0 if include_start else 1],
+                                 self.l_elif[index+1][1 if include_end else 0]
+                                 if index < last_index
+                                 else end
+                             ])
+            return elifs
+
+        def get_else(self, include_start=False, include_end=False):
+            if self.t_else is not None:
+                start = self.t_else[0 if include_start else 1]
+                end = self.t_endif[1 if include_end else 0]
+                return self.templatesplit.text[start:end]
+
         @property
         def text(self, inclusive=False):
             start = self.t_if[0 if inclusive else 1]
@@ -414,46 +453,42 @@ class TemplateSplit(object):
             match.span(0) for match in re.finditer(self.endif_re, text)
         ])
 
-        self.blocks = []
-        while True:
-            len_ifs = len(if_locations)
-            found_complete_blocks = []
-            for index, found_if in enumerate(if_locations):
-                next_if = if_locations[index+1] if index < len_ifs-1 else None
-                found_endif = self.find_next(
-                    endif_locations,
-                    found_if[1],
-                    next_if[0] if next_if else None
-                )
-                found_else = self.find_next(
-                    else_locations,
-                    found_if[1],
-                    found_endif[0] if found_endif else None
-                )
-                found_elif = self.find_all_next(
-                    elif_locations,
-                    found_if[1],
-                    found_else[1] if found_else else (
-                        found_endif[0] if found_endif else None
-                    )
-                )
-                if found_endif:
-                    found_complete_blocks.append(
-                        TemplateSplit.Block(
-                            self, found_if, found_endif,
-                            found_else, found_elif
-                        )
-                    )
+        all_locations = [
+            (i[0], i[1], 'if') for i in if_locations
+        ] + [
+            (i[0], i[1], 'elif') for i in elif_locations
+        ] + [
+            (i[0], i[1], 'else') for i in else_locations
+        ] + [
+            (i[0], i[1], 'endif') for i in endif_locations
+        ]
+        all_locations.sort(key=lambda item: item[0])
 
-            if len(found_complete_blocks) > 0:
-                self.blocks.extend(found_complete_blocks)
-                for block in found_complete_blocks:
-                    if_locations.remove(block.t_if)
-                    endif_locations.remove(block.t_endif)
-                    for t_elif in block.l_elif:
-                        elif_locations.remove(t_elif)
-            else:
-                break
+        self.blocks = []
+        stack = []
+        current = None
+        for location in all_locations:
+            start = location[0]
+            end = location[1]
+            kind = location[2]
+            tup = (start, end)
+            if kind == 'if':
+                current = {'if': tup, 'elif': [], 'else': None, 'endif': None}
+                stack.append(current)
+            elif kind == 'elif':
+                current['elif'].append(tup)
+            elif kind == 'else':
+                current['else'] = tup
+            elif kind == 'endif':
+                current['endif'] = tup
+                self.blocks.append(
+                    TemplateSplit.Block(
+                        self, current['if'], current['endif'],
+                        current['else'], current['elif']
+                    )
+                )
+                stack.pop()
+                current = stack[-1] if len(stack) > 0 else None
 
     def get_subblock_containing(self, c):
         candidates = []

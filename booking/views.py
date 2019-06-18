@@ -10,14 +10,17 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models import F
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.forms import HiddenInput
+from django.http import Http404, HttpResponseBadRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -37,7 +40,7 @@ from django.views.generic.edit import FormView, ProcessFormView
 import booking.models as booking_models
 import urls
 from booking.constants import LOGACTION_CREATE
-from booking.forms import AcceptBookingForm
+from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
 from booking.forms import AssignmentHelpForm
 from booking.forms import BookerForm
@@ -48,6 +51,7 @@ from booking.forms import BookingListForm
 from booking.forms import ClassBookingBaseForm
 from booking.forms import ClassBookingForm
 from booking.forms import ClassProductForm
+from booking.forms import ConfirmForm
 from booking.forms import EditBookerForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
@@ -94,8 +98,10 @@ from booking.models import Booking, Guest
 from booking.models import CalendarEvent
 from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
+from booking.models import EventTime
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 from booking.models import MultiProductVisitTempProduct
@@ -116,6 +122,7 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
+from profile.constants import FACULTY_EDITOR, ADMINISTRATOR
 from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -296,7 +303,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=request.user.userprofile.get_full_email()
+                original_from_email=KUEmailRecipient.create(request.user)
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -393,11 +400,15 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             elif recipient_type == EmailComposeView.RECIPIENT_ROOMRESPONSIBLE:
                 roomresponsible_ids.append(id)
 
-        return list(Guest.objects.filter(id__in=booker_ids)) + \
-            list(User.objects.filter(username__in=user_ids)) + \
-            list(RoomResponsible.objects.filter(
-                id__in=roomresponsible_ids)
-            ) + customs
+        return KUEmailRecipient.multiple(
+            Guest.objects.filter(id__in=booker_ids),
+            KUEmailRecipient.TYPE_GUEST
+        ) + KUEmailRecipient.multiple(
+            User.objects.filter(username__in=user_ids)
+        ) + KUEmailRecipient.multiple(
+            RoomResponsible.objects.filter(id__in=roomresponsible_ids),
+            KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
+        ) + KUEmailRecipient.multiple(customs)
 
     def get_unit(self):
         return self.request.user.userprofile.organizationalunit
@@ -426,6 +437,8 @@ class SearchView(BreadcrumbMixin, ListView):
     admin_form = None
     facet_queryset = None
     needs_num_bookings = False
+    sort_grundskole_fag = False
+    sort_gymnasie_fag = False
     t_from = None
     t_to = None
     is_public = True
@@ -508,7 +521,10 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
-                qs = self.model.objects.search(searchexpression, raw=True)
+                query = SearchQuery(searchexpression)
+                qs = self.model.objects.annotate(
+                    rank=SearchRank(F('search_vector'), query)
+                ).filter(search_vector=query).order_by('-rank')
             else:
                 qs = self.model.objects.all()
 
@@ -531,6 +547,15 @@ class SearchView(BreadcrumbMixin, ListView):
                 )
 
             if self.is_public:
+
+                # Accept the product if it has bookable eventtimes in our range
+                eventtimes = EventTime.objects.filter(bookable=True)
+                if self.t_to is not None:
+                    eventtimes = eventtimes.filter(start__lte=self.t_to)
+                if self.t_from is not None:
+                    eventtimes = eventtimes.filter(end__gte=self.t_from)
+                # A product can have a calendar as well as
+                # a set of bookable eventtimes
                 date_cond &= Q(
                     Q(calendar__isnull=True) |
                     Q(
@@ -540,7 +565,8 @@ class SearchView(BreadcrumbMixin, ListView):
                         Q(calendar__calendarevent__in=CalendarEvent.get_events(
                             CalendarEvent.NOT_AVAILABLE, self.t_from, self.t_to
                         ))
-                    )
+                    ) |
+                    Q(eventtime__in=eventtimes)
                 )
 
                 # Public users only want to search within bookable dates
@@ -622,6 +648,42 @@ class SearchView(BreadcrumbMixin, ListView):
             qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
             self.needs_num_bookings = False
 
+        if self.sort_grundskole_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+            SELECT
+                COUNT(nb_productgrundskolefag.subject_id)
+            FROM
+                booking_product nb_products
+                JOIN booking_productgrundskolefag nb_productgrundskolefag ON (
+                    nb_products.id = nb_productgrundskolefag.product_id
+                )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgrundskolefag.subject_id != %d
+            """ % all_subject_id
+            qs = qs.annotate(
+                num_grundskolefag=RawSQL(sql, tuple())
+            ).order_by('-num_grundskolefag')
+
+        elif self.sort_gymnasie_fag:
+            all_subject_id = int(Subject.get_all().id)
+            sql = """
+                SELECT
+                    COUNT(nb_productgymnasiefag.subject_id)
+                FROM
+                    booking_product nb_products
+                    JOIN booking_productgymnasiefag nb_productgymnasiefag ON (
+                        nb_products.id = nb_productgymnasiefag.product_id
+                    )
+                WHERE
+                    nb_products.id = booking_product.id
+                AND nb_productgymnasiefag.subject_id != %d
+            """ % all_subject_id
+            qs = qs.annotate(
+                num_gymnasiefag=RawSQL(sql, tuple())
+            ).order_by('-num_gymnasiefag')
+
         return qs
 
     def annotate(self, qs):
@@ -671,14 +733,16 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["type__in"] = t
 
     def filter_by_gymnasiefag(self):
-        f = set(self.request.GET.getlist("f"))
+        f = self.request.GET.getlist("f")
         if f:
-            self.filters["gymnasiefag__in"] = f
+            self.filters["gymnasiefag__in"] = f + [Subject.get_all().pk]
+            self.sort_gymnasie_fag = True
 
     def filter_by_grundskolefag(self):
         g = self.request.GET.getlist("g")
         if g:
-            self.filters["grundskolefag__in"] = g
+            self.filters["grundskolefag__in"] = g + [Subject.get_all().pk]
+            self.sort_grundskole_fag = True
 
     def filter_for_admin_view(self, form):
         for filter_method in (
@@ -750,7 +814,7 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["organizationalunit__pk"] = u
 
     def get_facet_queryset(self):
-        if not self.facet_queryset:
+        if self.facet_queryset is None:
             self.facet_queryset = Product.objects.filter(
                 pk__in=[x["pk"] for x in self.get_base_queryset().values("pk")]
             )
@@ -761,26 +825,43 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def get_queryset(self):
         filters = self.get_filters()
-        qs = self.get_facet_queryset()
+        qs = self.get_base_queryset()
         qs = self.annotate_for_filters(qs)
-        qs = qs.filter(**filters)
+        filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
+        filter_kwargs = {
+            k: v for k, v in filters.iteritems() if not k.startswith('__')
+        }
+        qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
+
+        qs = qs.prefetch_related(
+            'productgymnasiefag_set', 'productgrundskolefag_set'
+        )
+
         return qs
 
     def make_facet(self, facet_field, choice_tuples, selected,
                    selected_value='checked="checked"',
-                   add_to_all=None):
+                   add_to_all=None, unsubjected=None):
 
         hits = {}
 
         # Remove filter for the field we want to facetize
-        new_filters = {}
-        for k, v in self.get_filters().iteritems():
-            if not k.startswith(facet_field):
-                new_filters[k] = v
+        filters = self.get_filters()
+        new_filter_args = [
+            v for k, v in filters.iteritems()
+            if k.startswith('__') and not k.startswith('__' + facet_field)
+        ]
+        new_filter_kwargs = {
+            k: v for k, v in filters.iteritems()
+            if not k.startswith(facet_field) and not k.startswith('__')
+        }
 
         facet_qs = Product.objects.filter(
-            pk__in=self.get_facet_queryset().filter(**new_filters)
+            pk__in=self.get_facet_queryset().filter(
+                *new_filter_args,
+                **new_filter_kwargs
+            )
         )
 
         qs = facet_qs.values(facet_field).annotate(hits=Count("pk"))
@@ -807,10 +888,10 @@ class SearchView(BreadcrumbMixin, ListView):
                 else:
                     hits[v] = to_add
 
-        return self.choices_from_hits(choice_tuples, hits, selected,
-                                      selected_value=selected_value)
+        return self.choices_from_hits(choice_tuples, hits, unsubjected,
+                                      selected, selected_value=selected_value)
 
-    def choices_from_hits(self, choice_tuples, hits, selected,
+    def choices_from_hits(self, choice_tuples, hits, additional, selected,
                           selected_value='checked="checked"'):
         selected = set(selected)
         choices = []
@@ -828,7 +909,8 @@ class SearchView(BreadcrumbMixin, ListView):
                 'label': name,
                 'value': value,
                 'selected': sel,
-                'hits': hits[value]
+                'hits': hits[value],
+                'additional': additional
             })
 
         return choices
@@ -889,7 +971,7 @@ class SearchView(BreadcrumbMixin, ListView):
         gym_subject_choices = []
         gs_subject_choices = []
 
-        for s in Subject.objects.all():
+        for s in Subject.objects.exclude(name=Subject.ALL_NAME):
             val = (s.pk, s.name)
 
             if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
@@ -904,6 +986,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "gymnasiefag",
             gym_subject_choices,
             gym_selected,
+            unsubjected=self.get_facet_queryset().filter(
+                gymnasiefag=Subject.get_all()
+            ).count()
         )
 
         gs_selected = self.request.GET.getlist("g")
@@ -912,6 +997,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "grundskolefag",
             gs_subject_choices,
             gs_selected,
+            unsubjected=self.get_facet_queryset().filter(
+                grundskolefag=Subject.get_all()
+            ).count()
         )
 
         context['from_datetime'] = self.from_datetime
@@ -1196,7 +1284,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgymnasiefag_set.all():
+                for x in obj.productgymnasiefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1222,7 +1312,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgrundskolefag_set.all():
+                for x in obj.productgrundskolefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1259,35 +1351,89 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     pass
 
     def save_subjects(self):
-        existing_gym_fag = {}
-        for x in self.object.productgymnasiefag_set.all():
-            existing_gym_fag[x.as_submitvalue()] = x
+        all = Subject.get_all()
 
-        for gval in self.request.POST.getlist('gymnasiefag', []):
-            if gval in existing_gym_fag:
-                del existing_gym_fag[gval]
-            else:
-                ProductGymnasieFag.create_from_submitvalue(self.object, gval)
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GYMNASIE:
 
-        # Delete any remaining values that were not submitted
-        for x in existing_gym_fag.itervalues():
-            x.delete()
+            existing_gym_fag = {}
+            for x in self.object.productgymnasiefag_set.all():
+                if x.as_submitvalue() in existing_gym_fag:
+                    # Remove duplicate
+                    x.delete()
+                else:
+                    existing_gym_fag[x.as_submitvalue()] = x
 
-        existing_gs_fag = {}
-        for x in self.object.productgrundskolefag_set.all():
-            existing_gs_fag[x.as_submitvalue()] = x
+            created = set()
+            for gval in self.request.POST.getlist('gymnasiefag', []):
+                if gval in existing_gym_fag:
+                    if existing_gym_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gym_fag[gval]
+                # create submitted
+                elif gval not in created:
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
 
-        for gval in self.request.POST.getlist('grundskolefag', []):
-            if gval in existing_gs_fag:
-                del existing_gs_fag[gval]
-            else:
-                ProductGrundskoleFag.create_from_submitvalue(
-                    self.object, gval
-                )
+            if not created:
+                found = False
+                for x in existing_gym_fag.keys():
+                    if existing_gym_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gym_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
 
-        # Delete any remaining values that were not submitted
-        for x in existing_gs_fag.itervalues():
-            x.delete()
+            # Delete any remaining values that were not submitted
+            for x in existing_gym_fag.itervalues():
+                x.delete()
+
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+            existing_gs_fag = {}
+            for x in self.object.productgrundskolefag_set.all():
+                if x.as_submitvalue() in existing_gs_fag:
+                    # Remove saved duplicate
+                    x.delete()
+                else:
+                    existing_gs_fag[x.as_submitvalue()] = x
+
+            created = set()
+            for gval in self.request.POST.getlist('grundskolefag', []):
+                if gval in existing_gs_fag:
+                    if existing_gs_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gs_fag[gval]
+                elif gval not in created:
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
+
+            if not created:
+                found = False
+                for x in existing_gs_fag.keys():
+                    if existing_gs_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gs_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gs_fag.itervalues():
+                x.delete()
 
     def add_to_my_resources(self):
         # Newly created objects should be added to the users list of
@@ -1401,11 +1547,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 )
 
         if self.request.method == 'POST':
-            forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST,
-                instance=self.object,
-                initial=self.get_initial_autosends()
-            )
+            if self.object.is_type_bookable:
+                forms['autosendformset'] = ProductAutosendFormSet(
+                    self.request.POST,
+                    instance=self.object,
+                    initial=self.get_initial_autosends()
+                )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1496,8 +1643,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
-        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
         context['gymnasie_level_choices'] = \
             GymnasieLevel.objects.all().order_by('level')
 
@@ -1653,14 +1802,15 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
 
     def get_form(self, form_class=None):
         form = super(SimpleRessourcesView, self).get_form(form_class)
+        unit = self.object.organizationalunit
+        user_sorting = ['first_name', 'last_name', 'email']
 
         if 'potentielle_vaerter' in form.fields:
             qs = form.fields['potentielle_vaerter']._get_queryset()
             form.fields['potentielle_vaerter']._set_queryset(
                 qs.filter(
-                    userprofile__organizationalunit=self.object
-                    .organizationalunit
-                )
+                    userprofile__organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['potentielle_vaerter'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1672,8 +1822,9 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         if 'potentielle_undervisere' in form.fields:
             qs = form.fields['potentielle_undervisere']._get_queryset()
             form.fields['potentielle_undervisere']._set_queryset(
-                qs.filter(userprofile__organizationalunit=self.object
-                          .organizationalunit)
+                qs.filter(
+                    userprofile__organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['potentielle_undervisere'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1685,7 +1836,9 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         if 'roomresponsible' in form.fields:
             qs = form.fields['roomresponsible']._get_queryset()
             form.fields['roomresponsible']._set_queryset(
-                qs.filter(organizationalunit=self.object.organizationalunit)
+                qs.filter(
+                    organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['roomresponsible'].label_from_instance = \
                 lambda obj: "%s <%s>" % (
@@ -1793,7 +1946,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
-                    self.object.future_bookable_times
+                    self.object.future_bookable_times(use_cutoff=True)
                 )
                 context['nr_unbookable'] = len(
                     self.object.eventtime_set.all()
@@ -1864,16 +2017,33 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             context.update(form.cleaned_data)
             recipients = []
             if self.object.tilbudsansvarlig:
-                recipients.append(self.object.tilbudsansvarlig)
+                recipients.append(
+                    KUEmailRecipient.create(
+                        self.object.tilbudsansvarlig,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             elif self.object.created_by:
-                recipients.append(self.object.created_by)
+                recipients.append(
+                    KUEmailRecipient.create(
+                        self.object.created_by,
+                        KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE
+                    )
+                )
             else:
-                recipients.extend(self.object.organizationalunit.get_editors())
+                recipients.extend(
+                    KUEmailRecipient.multiple(
+                        self.object.organizationalunit.get_editors(),
+                        KUEmailRecipient.TYPE_EDITOR
+                    )
+                )
+
+            sender = KUEmailRecipient.create(full_email(
+                form.cleaned_data['email'], form.cleaned_data['name']
+            ), KUEmailRecipient.TYPE_GUEST)
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=full_email(
-                    form.cleaned_data['email'], form.cleaned_data['name']
-                )
+                original_from_email=sender
             )
             return super(ProductInquireView, self).form_valid(form)
 
@@ -2258,6 +2428,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     product = None
     modal = True
     back = None
+    fields = '__all__'
 
     def set_product(self, product_id):
         if product_id is not None:
@@ -2302,7 +2473,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     def get(self, request, *args, **kwargs):
         self.set_product(kwargs.get("product"))
         if self.product is None:
-            return bad_request(request)
+            raise Http404("Product not found")
 
         self.object = Booking()
         return self.render_to_response(
@@ -2386,6 +2557,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             put_in_waitinglist = False
 
             attendee_count = booking.booker.attendee_count
+
             if booking.visit.product.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
@@ -2412,7 +2584,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
                 booking.waitinglist_spot = \
                     booking.visit.next_waiting_list_spot
-
             booking.save()
 
             for formname in ['gymnasiesubjectform', 'grundskolesubjectform']:
@@ -2472,7 +2643,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             ] and not booking.is_waiting:
                 booking.autosend(
                     EmailTemplateType.notify_all__booking_complete,
-                    [booking.booker],
+                    KUEmailRecipient.multiple(
+                        booking.booker, KUEmailRecipient.TYPE_GUEST
+                    ),
                     True
                 )
 
@@ -2513,9 +2686,19 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 lang = self.request.LANGUAGE_CODE
             else:
                 lang = 'da'
-            forms['bookerform'] = \
-                BookerForm(data, products=[self.product],
-                           language=lang)
+            forms['bookerform'] = BookerForm(
+                data,
+                products=[self.product],
+                language=lang
+            )
+            try:
+                user_role = self.request.user.userprofile.get_role()
+                if user_role in [FACULTY_EDITOR, ADMINISTRATOR]:
+                    repeatemail = forms['bookerform'].fields['repeatemail']
+                    repeatemail.widget.attrs['autocomplete'] = 'on'
+                    repeatemail.widget.attrs['disablepaste'] = 'false'
+            except:
+                pass
 
             type = self.product.type
             if type == Product.GROUP_VISIT:
@@ -2618,12 +2801,13 @@ class BookingSuccessView(DetailView):
             return ["booking/success.html"]
 
 
-class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
+class VisitBookingCreateView(AutologgerMixin, CreateView):
     model = Booking
     visit = None
     object = None
     template_name = 'booking/form.html'
     modal = False
+    fields = '__all__'
 
     def dispatch(self, request, *args, **kwargs):
         self.visit = Visit.objects.get(id=kwargs['visit'])
@@ -2653,33 +2837,52 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             return self.form_invalid(forms)
 
     def form_valid(self, forms):
-        object = self.object = forms['bookingform'].save(commit=False)
-        object.visit = self.visit
-        if 'bookerform' in forms:
-            object.booker = forms['bookerform'].save()
-        object.save()
+        bookingform = forms['bookingform']
+        booking = self.object = bookingform.save(commit=False)
+        visit = booking.visit = self.visit
 
-        for product in self.visit.products:
+        if visit:
+            cleaned_data = bookingform.cleaned_data
+            if 'desired_time' in cleaned_data:
+                visit.desired_time = cleaned_data['desired_time']
+            desired_date = cleaned_data.get('desired_datetime_date')
+            desired_time = cleaned_data.get('desired_datetime_time')
+            if desired_date is not None and desired_time is not None:
+                desired_datetime = datetime.combine(desired_date, desired_time)
+                visit.desired_time = \
+                    desired_datetime.strftime("%d.%m.%Y %H:%M")
+                visit.save()
+                # if visit.is_multiproductvisit \
+                #       and hasattr(visit, 'eventtime'):
+                #     print "form save: %s" % str(visit.eventtime.start)
+                #     visit.eventtime.start = desired_time
+                #     print "form save: %s" % str(visit.eventtime.start)
+                #     visit.eventtime.save()
+        if 'bookerform' in forms:
+            booking.booker = forms['bookerform'].save()
+        booking.save()
+
+        for product in visit.products:
             for evaluation in product.evaluations:
                 if evaluation is not None:
                     evaluationguest = SurveyXactEvaluationGuest(
                         evaluation=evaluation,
-                        guest=object.booker
+                        guest=booking.booker
                     )
                     evaluationguest.save()
 
-        object.autosend(
+        booking.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
         )
 
-        object.autosend(EmailTemplateType.notify_editors__booking_created)
+        booking.autosend(EmailTemplateType.notify_editors__booking_created)
 
-        object.autosend(EmailTemplateType.notify_host__req_room)
+        booking.autosend(EmailTemplateType.notify_host__req_room)
 
         return redirect(
             reverse(
                 'visit-booking-success',
-                args=[object.visit.products[0].id]
+                args=[visit.products[0].id]
             ) + "?modal=0"
         )
 
@@ -2688,7 +2891,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
     def get_forms(self, data=None):
         forms = {}
-        bookingform = None
 
         if hasattr(self.request, 'LANGUAGE_CODE'):
             lang = self.request.LANGUAGE_CODE
@@ -2743,6 +2945,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
         if bookingform is not None:
             if self.visit.multiproductvisit:
+                print "bookingform.class: %s" % bookingform.__class__.__name__
                 if 'tmp' in self.request.GET:
                     temp = MultiProductVisitTemp.objects.get(
                         id=self.request.GET['tmp']
@@ -2750,6 +2953,12 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
                     bookingform.initial['notes'] = temp.notes
                 if 'desired_time' in bookingform.fields:
                     del bookingform.fields['desired_time']
+                if temp is not None and temp.date is not None and \
+                        'desired_datetime_date' in bookingform.fields:
+                    bookingform.fields['desired_datetime_date'].widget = \
+                        HiddenInput()
+                    bookingform.initial['desired_datetime_date'] = \
+                        temp.date.strftime('%d-%m-%Y')
 
             forms['bookingform'] = bookingform
         return forms
@@ -2789,10 +2998,6 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
-        kwargs = {
-            'instance': self.object,
-            'products': products
-        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
@@ -2819,6 +3024,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         elif type == Product.STUDY_PROJECT:
             form_class = StudyProjectBookingBaseForm
 
+        kwargs = {
+            'instance': self.object,
+            'products': products
+        }
         bookingform = form_class(
             data,
             **kwargs
@@ -3010,15 +3219,22 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
 
         q = form.cleaned_data.get("q", "").strip()
-
-        # Filtering by freetext has to be the first thing we do
-        qs = self.model.objects.search(q)
+        if q:
+            search_query = SearchQuery(q)
+            # Filtering by freetext has to be the first thing we do
+            qs = self.model.objects.filter(search_vector=search_query)
+        else:
+            qs = self.model.objects.all()
 
         for filter_method in (
             self.filter_multiproduct_subs_off,
             self.filter_by_resource_id,
             self.filter_by_visit_id,
             self.filter_by_unit,
+            self.filter_by_school,
+            self.filter_by_teacher,
+            self.filter_by_host,
+            self.filter_by_coordinator,
             self.filter_by_date,
             self.filter_by_workflow,
             self.filter_by_participants,
@@ -3069,18 +3285,58 @@ class VisitSearchView(VisitListView):
 
         u = int(u)
         profile = self.request.user.userprofile
-        unit_qs = None
 
         if u == form.MY_UNIT:
-            unit_qs = profile.organizationalunit
+            unit_qs = OrganizationalUnit.objects.filter(
+                pk=profile.organizationalunit.pk
+            )
         elif u == form.MY_FACULTY:
             unit_qs = profile.organizationalunit.get_faculty_queryset()
         elif u == form.MY_UNITS:
             unit_qs = profile.get_unit_queryset()
         else:
-            unit_qs = u
+            unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
         return Visit.unit_filter(qs, unit_qs)
+
+    def filter_by_school(self, qs):
+        form = self.get_form()
+        s = form.cleaned_data.get("s", None)
+        if s is not None:
+            qs = qs.filter(bookings__booker__school=s)
+        return qs
+
+    def filter_by_teacher(self, qs):
+        form = self.get_form()
+        l = form.cleaned_data.get("l", None)
+        if l is not None:
+            qs = qs.filter(
+                Q(teachers=l) |
+                Q(resources__teacherresource__user=l)
+            )
+        return qs
+
+    def filter_by_host(self, qs):
+        form = self.get_form()
+        h = form.cleaned_data.get("h", None)
+        if h is not None:
+            qs = qs.filter(
+                Q(hosts=h) |
+                Q(resources__hostresource__user=h)
+            )
+        return qs
+
+    def filter_by_coordinator(self, qs):
+        form = self.get_form()
+        c = form.cleaned_data.get("c", None)
+        if c is not None:
+            qs = qs.filter(
+                Q(
+                    Q(eventtime__product__tilbudsansvarlig__isnull=True) &
+                    Q(eventtime__product__created_by=c)
+                ) | Q(eventtime__product__tilbudsansvarlig=c)
+            )
+        return qs
 
     def filter_by_date(self, qs):
         form = self.get_form()
@@ -3240,6 +3496,46 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         ]
 
 
+class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
+
+    template_name = "booking/cancel.html"
+    model = Booking
+    form_class = ConfirmForm
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            self.object.cancelled = True
+            self.object.save()
+            self.object.visit.resources_updated()
+            return redirect(
+                reverse('booking-view', args=[self.object.pk])
+            )
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'oncancel': reverse('booking-view', args=[self.object.id])
+        }
+        context.update(kwargs)
+        return super(BookingCancelView, self).get_context_data(**context)
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {
+                'url': reverse('booking-cancel', args=[booking.id]),
+                'text': _(u'Aflys')
+            }
+        ]
+
+
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                       ProductBookingDetailView):
     """Display Booking details"""
@@ -3287,6 +3583,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
+        context['cancelledlistform'] = self.get_cancelledlist_form()
         context['waitingattendees'] = {
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
@@ -3320,6 +3617,13 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             ]
         return waitinglistform
 
+    def get_cancelledlist_form(self, **kwargs):
+        cancelledlist = BookingListForm(data=kwargs)
+        cancelledlist.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.cancelled_list
+        ]
+        return cancelledlist
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         action = request.POST['action']
@@ -3340,6 +3644,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                         booking.enqueue()
                     elif action == 'dequeue':
                         booking.dequeue()
+                self.object.resources_updated()
         return self.get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
@@ -3451,6 +3756,9 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     def get_context_data(self, **kwargs):
         context = {}
+        context['booking_enabled_keys'] = EmailTemplateType.get_keys(
+            enable_booking=True
+        )
         context['modelmap'] = modelmap = {}
 
         for model in [Booking, Visit, Product]:
@@ -3583,9 +3891,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            formatted = KUEmailMessage.extract_addresses(user_obj)
-            if len(formatted) > 0:
-                ctx['recipient'] = formatted[0]
+            ctx['recipient'] = KUEmailRecipient.create(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
@@ -3627,13 +3933,13 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         split = TemplateSplit(self.object.body)
         has_guest_block = split.get_subblock_containing(
-            "recipient.guest"
+            "recipient.is_guest"
         ) is not None
         has_teacher_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_teacher"
+            "recipient.is_teacher"
         ) is not None
         has_host_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_host"
+            "recipient.is_host"
         ) is not None
 
         recipient_output = []
@@ -3797,9 +4103,10 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             unit = visit.real.organizationalunit \
                 if visit is not None \
                 else product.organizationalunit
-
-            recipients = orig_message.original_from_email
-
+            recipients = KUEmailRecipient.multiple(
+                orig_message.original_from_email,
+                KUEmailRecipient.TYPE_GUEST
+            )
             KUEmailMessage.send_email(
                 EmailTemplateType.system__email_reply,
                 {
@@ -4040,13 +4347,14 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
+        available_products = self.available_products
         form.fields[self.products_key].choices = [
             (product.id, product.title)
-            for product in self.available_products
+            for product in available_products
         ]
         form.initial[self.products_key] = [
             product for product in self.object.products_ordered
-            if product in self.available_products
+            if product in available_products
         ]
         return form
 
@@ -4122,6 +4430,60 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
             {
                 'url': reverse('mpv-confirm', args=[mpv.id]),
                 'text': _(u'Bekræft')
+            }
+        ]
+
+
+class MultiProductVisitAddProductView(BackMixin,
+                                      MultiProductVisitTempProductsView):
+    model = MultiProductVisit
+    form_class = MultiProductVisitProductsForm
+    template_name = "visit/multi_products_edit.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.workflow_status not in [
+            Visit.WORKFLOW_STATUS_BEING_PLANNED
+        ]:
+            raise HttpResponseBadRequest(
+                u'Can only edit visits that are being planned'
+            )
+        return super(MultiProductVisitAddProductView, self)\
+            .dispatch(request, *args, **kwargs)
+
+    @property
+    def available_products(self):
+        visit = self.object
+        filter = {
+            'state': Product.ACTIVE,
+            'time_mode': Product.TIME_MODE_GUEST_SUGGESTED,
+        }
+        exclude = {
+            'type': Product.STUDENT_FOR_A_DAY
+        }
+        booking = visit.bookings.first()
+        booker = booking.booker
+        date = visit.date_ref
+        institution_level = booker.school.type
+        if institution_level != Subject.SUBJECT_TYPE_BOTH:
+            filter['institution_level'] = institution_level
+        products = Product.objects.filter(**filter).exclude(**exclude)
+        available_products = [
+            product
+            for product in products
+            if product.is_bookable(date)
+        ]
+        return available_products
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(visit):
+        return VisitDetailView.build_breadcrumbs(visit) + [
+            {
+                'url': reverse('visit-mpv-edit', args=[visit.id]),
+                'text': _(u'Redigér tilbud')
             }
         ]
 
@@ -4304,14 +4666,14 @@ class EvaluationStatisticsView(
         data = form.clean()
         has_filter = False
         queryset = Visit.objects.filter(
-            bookings=Booking.objects.filter(
+            bookings__in=Booking.objects.filter(
                 booker__surveyxactevaluationguest__isnull=False
             )
         ).order_by("-eventtime__start")
 
         unit = data.get("unit")
         if unit is not None:
-            queryset = Visit.unit_filter(queryset, unit)
+            queryset = Visit.unit_filter(queryset, [unit])
             has_filter = True
 
         from_date = data.get('from_date')

@@ -1,7 +1,10 @@
 # encoding: utf-8
+import django
+django.setup()
+
 from booking.models import EmailTemplate, EmailTemplateType
 from django.utils.translation import ugettext as _
-import django
+
 import os
 
 
@@ -22,7 +25,6 @@ IMPORT_MAP = {
     EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE: 'booking_planned',
     EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED: 'booking_cancelled',
     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER: 'reminder',
-    EmailTemplateType.NOTIFY_ALL_EVALUATION: 'evaluation',
     EmailTemplateType.NOTIFY_GUEST_REMINDER: 'reminder',
     EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE: 'no_hosts_notification',
     EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE: 'contact_mail',
@@ -71,8 +73,6 @@ def import_one(key):
 
 
 def import_all():
-    django.setup()
-
     for key in IMPORT_MAP:
         import_one(key)
 
@@ -111,7 +111,5 @@ def export_one(key):
 
 
 def export_all():
-    django.setup()
-
     for key in IMPORT_MAP:
         export_one(key)

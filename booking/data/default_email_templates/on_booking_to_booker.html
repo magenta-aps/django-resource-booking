@@ -11,7 +11,7 @@
         </ul>
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
     {% else %}
-        Du har tilmeldt dig besøg {{ visit.display_title }}
+        Du har tilmeldt dig besøg {{ visit.product.title }}
         {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet{% include 'booking/email/snippets/booking_desires.html' with booking=booking %}{% if visit.locality %}:
         {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.

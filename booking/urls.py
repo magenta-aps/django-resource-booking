@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.core.urlresolvers import RegexURLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
-
+from django.views.i18n import JavaScriptCatalog
 from booking.models import Product, ResourcePool
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceDeleteView
@@ -21,11 +21,13 @@ from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
-from booking.views import BecomeHostView
+from booking.views import BecomeHostView, MultiProductVisitAddProductView
 from booking.views import BecomeTeacherView
 from booking.views import BookingAcceptView
+from booking.views import BookingCancelView
 from booking.views import BookingEditView
-from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingNotifyView
+from booking.views import BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView
 from booking.views import CalendarCreateView
@@ -87,10 +89,6 @@ from booking.views import VisitDetailView
 from booking.views import VisitSearchView
 from profile.views import ListAjaxView
 
-js_info_dict = {
-    'packages': ('recurrence', ),
-}
-
 calendarevent_kwargs = {
     'related_kwargs_name': 'res'
 }
@@ -109,10 +107,9 @@ resourcepool_calendarevent_kwargs = resourcepool_calendar_kwargs.copy()
 resourcepool_calendarevent_kwargs['related_kwargs_name'] = 'pool'
 
 
-urlpatterns = patterns(
-
-    '',
-    (r'^jsi18n/?$', 'django.views.i18n.javascript_catalog', js_info_dict),
+urlpatterns = [
+    url(r'^jsi18n/$', JavaScriptCatalog.as_view(packages=["recurrence"]),
+        name='javascript-catalog'),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     url('^(?:da|en)/.*', LocaleRedirectView.as_view()),
@@ -124,6 +121,10 @@ urlpatterns = patterns(
     url(r'^iframe$', TemplateView.as_view(
         template_name='iframe-index.html'),
         name='iframe_search'),
+    # consent page
+    url(r'^consent$', TemplateView.as_view(
+        template_name='consent.html'),
+        name='consent'),
 
     url(r'^product/create/?$',
         EditProductInitialView.as_view(),
@@ -200,6 +201,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/book/success$',
         BookingSuccessView.as_view(modal=False),
         name='visit-booking-success'),
+    url(r'^visit/(?P<pk>[0-9]+)/mpvedit/?$',
+        MultiProductVisitAddProductView.as_view(),
+        name='visit-mpv-edit'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
@@ -210,6 +214,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/edit/?$',
         BookingEditView.as_view(),
         name='booking-edit-view'),
+    url(r'booking/(?P<pk>[0-9]+)/cancel/?$',
+        BookingCancelView.as_view(),
+        name='booking-cancel'),
 
     url(r'^visit/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitStatusView.as_view(),
@@ -477,7 +484,7 @@ urlpatterns = patterns(
         ListAjaxView.as_view(),
         name='ajax-list')
 
-) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 embed_views = [
     'index',
@@ -496,7 +503,7 @@ for x in urlpatterns:
             embedpatterns.append(
                 url(
                     '^(?P<embed>embed/)' + x.regex.pattern[1:],
-                    xframe_options_exempt(x._callback),
+                    xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )
             )

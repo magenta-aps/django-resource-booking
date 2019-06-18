@@ -3,33 +3,44 @@ import sys
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
+from django.contrib.auth.models import User
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput, \
-    ModelMultipleChoiceField
+from django.forms import CheckboxInput
+from django.forms import CheckboxSelectMultiple
+from django.forms import DateInput
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
+from django.forms import ModelMultipleChoiceField
+from django.forms import NumberInput
+from django.forms import Select
+from django.forms import TextInput
+from django.forms import Textarea
+from django.forms import TimeInput
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse_lazy
+from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
-from booking.models import ClassBooking, TeacherBooking, \
-    BookingGymnasieSubjectLevel
+from booking.models import BookingGymnasieSubjectLevel
+from booking.models import ClassBooking
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Product
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
-from booking.models import Visit
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
+from booking.models import TeacherBooking
+from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -185,6 +196,39 @@ class VisitSearchForm(forms.Form):
         required=False
     )
 
+    s = forms.ModelChoiceField(
+        label=_(u'Skole/Gymnasium'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=School.objects.all()
+    )
+
+    l = CustomModelChoiceField(
+        label=_(u'Underviser'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=TEACHER),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    h = CustomModelChoiceField(
+        label=_(u'Vært'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(userprofile__user_role__role=HOST),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
+    c = CustomModelChoiceField(
+        label=_(u'Koordinator'),
+        required=False,
+        widget=forms.widgets.Select,
+        queryset=User.objects.filter(
+            userprofile__user_role__role__in=[COORDINATOR, ADMINISTRATOR]
+        ),
+        choice_label_transform=lambda user: user.get_full_name()
+    )
+
     WORKFLOW_STATUS_PENDING = -1
     WORKFLOW_STATUS_READY = -2
 
@@ -238,9 +282,6 @@ class VisitSearchForm(forms.Form):
         if not qdict.get("go", False):
             if qdict.get("u", "") == "":
                 qdict["u"] = self.MY_UNITS
-
-            if qdict.get("s", "") == "":
-                qdict["s"] = Product.ACTIVE
 
         super(VisitSearchForm, self).__init__(qdict, *args, **kwargs)
 
@@ -387,10 +428,18 @@ class ProductForm(forms.ModelForm):
             'tilbudsansvarlig': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
+
             'booking_close_days_before': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
-            'inquire_enabled': CheckboxInput()
+            'booking_max_days_in_future': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0},
+            ),
+            'inquire_enabled': CheckboxInput(),
+            'education_name': TextInput(attrs={
+                'class': 'form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
         }
         labels = {
             'custom_name': _('Navn')
@@ -531,7 +580,8 @@ class StudentForADayForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
-                  'inquire_enabled',
+                  'booking_max_days_in_future', 'inquire_enabled',
+                  'education_name'
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -571,7 +621,7 @@ class TeacherProductForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
-                  'inquire_enabled',
+                  'booking_max_days_in_future', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -589,7 +639,8 @@ class ClassProductForm(ProductForm):
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'only_one_guest_per_visit',
-                  'booking_close_days_before', 'inquire_enabled',
+                  'booking_close_days_before', 'booking_max_days_in_future',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels
@@ -718,9 +769,6 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(
-        enable_autosend=True, form_show=True
-    ).count(),
     can_delete=False,
     can_order=False
 )
@@ -784,6 +832,8 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    classbooking = False
+    student_for_a_day_booking = False
     products = []
 
     eventtime = VisitEventTimeField(
@@ -799,6 +849,32 @@ class BookingForm(forms.ModelForm):
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=False
     )
+
+    desired_datetime_date = forms.DateField(
+        widget=DateInput(attrs={'class': 'form-control input-sm datepicker'}),
+        input_formats=['%d-%m-%Y'],
+        required=False
+    )
+
+    desired_datetime_time = forms.TimeField(
+        widget=TimeInput(attrs={'class': 'form-control input-sm clockpicker'}),
+        required=False
+    )
+
+    def clean_desired_datetime_date(self):
+        date = self.cleaned_data.get('desired_datetime_date')
+        for product in self.products:
+            bookability = product.is_bookable(date, return_reason=True)
+            if bookability is not True:
+                reason = unicode(
+                    _(u'Det er desværre ikke muligt at '
+                      u'bestille besøget på den valgte dato.\n')
+                )
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
+                raise forms.ValidationError(reason)
+        return date
 
     class Meta:
         model = Booking
@@ -825,10 +901,17 @@ class BookingForm(forms.ModelForm):
         self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
             product.time_mode for product in products
         ]
+        self.classbooking = Product.GROUP_VISIT in [
+            product.type for product in products
+        ]
+        self.student_for_a_day_booking = Product.STUDENT_FOR_A_DAY in [
+            product.type for product in products
+        ]
         if self.scheduled and len(products) > 0:
             product = products[0]
             choices = [(None, BLANK_LABEL)]
-            qs = product.future_bookable_times.order_by('start', 'end')
+            qs = product.future_bookable_times(use_cutoff=True)\
+                .order_by('start', 'end')
             options = {}
             for eventtime in qs:
                 date = eventtime.interval_display
@@ -891,7 +974,9 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
-        else:
+        elif self.classbooking:
+            self.fields['desired_datetime_date'].required = True
+        elif not self.student_for_a_day_booking:
             self.fields['desired_time'].required = True
 
         if 'subjects' in self.fields:
@@ -909,19 +994,13 @@ class BookingForm(forms.ModelForm):
                         (subject.id, subject.name) for subject in qs
                     ]
 
-    def save(self, commit=True, *args, **kwargs):
-        booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit and 'desired_time' in self.cleaned_data:
-            booking.visit.desired_time = self.cleaned_data['desired_time']
-        return booking
-
 
 class BookerForm(forms.ModelForm):
 
     class Meta:
         model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count', 'teacher_count')
+                  'level', 'attendee_count', 'teacher_count', 'consent')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -956,8 +1035,12 @@ class BookerForm(forms.ModelForm):
 
     repeatemail = forms.CharField(
         widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Gentag e-mail')}
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Gentag e-mail'),
+                'autocomplete': 'off',
+                'disablepaste': 'true'
+            }
         )
     )
     school = forms.CharField(
@@ -1090,6 +1173,15 @@ class BookerForm(forms.ModelForm):
                   u'for at få hjælp til tilmelding.')
             )
         return school
+
+    def clean_consent(self):
+        consent = self.cleaned_data.get('consent', False)
+        if not consent:
+            raise forms.ValidationError(
+                _(u'Du skal give samtykke til at vi bruger og opbevarer dine'
+                    u' personoplysninger før vi kan modtage dine data.')
+            )
+        return True
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
@@ -1530,12 +1622,14 @@ class EmailTemplateForm(forms.ModelForm):
             full_text = getattr(self.instance, field)
             split = TemplateSplit(full_text)
 
-            guest_block = split.get_subblock_containing("recipient.guest")
+            guest_block = split.get_subblock_containing(
+                "recipient.is_guest"
+            )
             teacher_block = split.get_subblock_containing(
-                "recipient.user.userprofile.is_teacher"
+                "recipient.is_teacher"
             )
             host_block = split.get_subblock_containing(
-                "recipient.user.userprofile.is_host"
+                "recipient.is_host"
             )
             try:
                 block = next(
@@ -1628,10 +1722,9 @@ class EmailTemplateForm(forms.ModelForm):
                 text = []
                 first = True
                 for condition, fieldname in [
-                    ("recipient.guest", field + "_guest"),
-                    ("recipient.user.userprofile.is_teacher",
-                     field + "_teacher"),
-                    ("recipient.user.userprofile.is_host", field + "_host")
+                    ("recipient.is_guest", field + "_guest"),
+                    ("recipient.is_teacher", field + "_teacher"),
+                    ("recipient.is_host", field + "_host")
                 ]:
                     sub_text = cleaned_data.get(fieldname, "").strip()
                     if len(sub_text) > 0:
@@ -1757,6 +1850,13 @@ class EmailComposeForm(BaseEmailComposeForm):
 
 
 class GuestEmailComposeForm(BaseEmailComposeForm):
+    def __init__(self, **kwargs):
+        super(GuestEmailComposeForm, self).__init__(**kwargs)
+        consent_url = reverse_lazy("consent")
+        self.fields["consent"].label = mark_safe(
+            "<a href={} target='_blank'>Jeg giver samtykke "
+            "til brug af mine persondata</a>".format(consent_url)
+        )
 
     name = forms.CharField(
         max_length=100,
@@ -1789,6 +1889,12 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
             },
         ),
         required=False
+    )
+
+    consent = forms.BooleanField(
+        label=_(u'Samtykke'),
+        widget=CheckboxInput(),
+        required=True
     )
 
 
@@ -1866,24 +1972,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                     _(u'Det er desværre ikke muligt at '
                       u'bestille besøget på den valgte dato.\n')
                 )
-                if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
-                    reason += unicode(
-                        _(u'Der er lukket for tilmelding '
-                          u'%d dage før afholdelse.') %
-                        product.booking_close_days_before
-                    )
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
-                    reason += unicode(_(u'Der er ingen ledige besøg.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__NO_CALENDAR_TIME:
-                    reason += unicode(_(u'Der er ikke er flere ledige tider.'))
-                elif bookability == Product.NONBOOKABLE_REASON__NOT_ACTIVE:
-                    reason += unicode(_(u'Tilbuddet er ikke aktivt.'))
-                elif bookability == \
-                        Product.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
-                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes.'))
-
+                more_reason = product.nonbookable_text(bookability)
+                if more_reason is not None:
+                    reason += unicode(more_reason)
                 raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
 
@@ -1943,6 +2034,47 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
             relation.save()
         return mvpt
+
+
+class MultiProductVisitProductsForm(MultiProductVisitTempProductsForm):
+    class Meta:
+        model = MultiProductVisit
+        fields = ['required_visits']
+        widgets = MultiProductVisitTempProductsForm.Meta.widgets
+
+    def save(self, commit=True):
+        mpv = super(MultiProductVisitTempProductsForm, self).save(commit)
+        products_ordered = self.cleaned_data[self.products_key]
+
+        visits_by_product = {
+            visit.product: visit for visit in mpv.subvisits_unordered
+        }
+
+        for product, visit in visits_by_product.iteritems():
+            if product not in products_ordered:
+                visit.cancel_visit()
+
+        for index, product in enumerate(products_ordered):
+            visit = visits_by_product.get(product, None)
+            if visit is None:
+                eventtime = EventTime(
+                    product=product,
+                    bookable=False,
+                    has_specific_time=False
+                )
+                eventtime.save()
+                eventtime.make_visit(
+                    product=product,
+                    multi_master=mpv,
+                    multi_priority=index,
+                    is_multi_sub=True
+                )
+            elif visit.multi_priority != index:
+                visit.multi_priority = index
+                visit.save()
+        mpv.autoassign_resources()
+        mpv.save()
+        return mpv
 
 
 class EvaluationForm(forms.ModelForm):
@@ -2046,3 +2178,10 @@ class EvaluationStatisticsForm(forms.Form):
             }
         )
     )
+
+
+class ConfirmForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('instance')
+        super(ConfirmForm, self).__init__(*args, **kwargs)

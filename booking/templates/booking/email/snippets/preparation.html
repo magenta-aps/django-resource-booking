@@ -1,8 +1,10 @@
 {% if visit.is_multiproductvisit %}
     <strong>Forberedelsestid</strong>:
     <ul>
-        {% for product in visit.products %}
-            <li>{{ product.title }}: {{ product.preparation_time|default:"Ingen" }}</li>
+        {% for subvisit in visit.real.subvisits_by_time %}
+            {% if not subvisit.is_cancelled and not subvisit.is_rejected %}
+                <li>{{ subvisit.product.title }}: {{ subvisit.product.preparation_time|default:"Ingen" }}</li>
+            {% endif %}
         {% endfor %}
     </ul>
 {% else %}

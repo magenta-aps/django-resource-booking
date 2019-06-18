@@ -1,11 +1,9 @@
-from django.forms.utils import flatatt
-from django.forms import widgets
-from django.utils.safestring import mark_safe
-from django.utils.encoding import force_text
-from django.utils.html import format_html
-
-from itertools import chain
 from datetime import timedelta
+
+from django.forms import widgets
+from django.forms.widgets import HiddenInput
+from django.utils.encoding import force_text
+from django.utils.safestring import mark_safe
 
 
 class DurationWidget(widgets.MultiWidget):
@@ -105,6 +103,58 @@ class DurationWidget(widgets.MultiWidget):
 
 class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
 
+    def __init__(self, attrs=None, choices=[]):
+        super(OrderedMultipleHiddenChooser, self).__init__(attrs)
+        # choices can be any iterable
+        self.choices = choices
+
+    def get_context(self, name, value, attrs):
+        context = HiddenInput.get_context(self, name, value, attrs)
+        final_attrs = context['widget']['attrs']
+        id = context['widget']['attrs'].get('id')
+        selected_elements = [None]*len(value)
+        unselected_elements = []
+        for i, choice in enumerate(self.choices):
+            v, label = choice
+            widget_attrs = final_attrs.copy()
+            selected = v in value
+
+            if not selected:
+                widget_attrs['disabled'] = 'disabled'
+
+            if id:
+                widget_attrs['id'] = '%s_%s' % (id, i)
+            widget = HiddenInput()
+            widget.is_required = self.is_required
+            widgetcontext = widget.get_context(
+                name,
+                force_text(v),
+                widget_attrs
+            )['widget']
+
+            if selected:
+                try:
+                    index = value.index(v)
+                    selected_elements[index] = widgetcontext
+                except ValueError:
+                    pass
+            else:
+                unselected_elements.append(widgetcontext)
+
+        prototype_attrs = dict(disabled='disabled', **final_attrs)
+        del prototype_attrs['id']
+        prototype_attrs['data-prototype'] = 1
+        widget = HiddenInput()
+        unselected_elements.append(
+            widget.get_context(name, '', prototype_attrs)['widget']
+        )
+
+        context['widget']['subwidgets'] = [
+            e for e in selected_elements + unselected_elements
+            if e is not None
+        ]
+        return context
+
     # Take the extracted value list and attempt to map them to choices
     # A bug in Django has them as unicodes instead of integers
     # when the form is bound with submitted data
@@ -120,78 +170,31 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
         for v in value:
             if int(v) in choice_map:
                 coerced_value.append(int(v))
-            elif unicode(v) in choice_map:
-                coerced_value.append(unicode(v))
             else:
                 coerced_value.append(v)
         return coerced_value
-
-    def render(self, name, value, attrs=None, choices=()):
-        if value is None:
-            value = []
-
-        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
-        id_ = final_attrs.get('id', None)
-        selected_elements = [None]*len(value)
-        unselected_elements = []
-        for i, choice in enumerate(chain(self.choices, choices)):
-            v, label = choice
-            input_attrs = dict(value=force_text(v), **final_attrs)
-            selected = v in value
-
-            if not selected:
-                input_attrs['disabled'] = 'disabled'
-            if id_:
-                input_attrs['id'] = '%s_%s' % (id_, i)
-
-            element = format_html('<input{} />', flatatt(input_attrs))
-            if selected:
-                try:
-                    index = value.index(v)
-                    selected_elements[index] = element
-                except ValueError:
-                    pass
-            else:
-                unselected_elements.append(element)
-
-        prototype_attrs = dict(disabled='disabled', **final_attrs)
-        del prototype_attrs['id']
-        prototype_attrs['data-prototype'] = 1
-        unselected_elements.append(
-            format_html('<input{} />', flatatt(prototype_attrs))
-        )
-
-        return mark_safe(
-            '\n'.join(
-                [e for e in selected_elements if e is not None] +
-                unselected_elements
-            )
-        )
 
 
 class DisabledChoiceMixin(object):
     disabled_values = []
 
-    def render_option(self, selected_choices, option_value, option_label):
-        if option_value is None:
-            option_value = ''
-        option_value = force_text(option_value)
-        if option_value in selected_choices:
-            selected_html = mark_safe(' selected="selected"')
-            if not self.allow_multiple_selected:
-                # Only allow for a single selection.
-                selected_choices.remove(option_value)
+    def create_option(self, name,
+                      value, label,
+                      selected, index,
+                      subindex=None, attrs=None):
+        if isinstance(label, dict):
+            label = label['label']
+            disabled = label in self.disabled_values
         else:
-            selected_html = ''
-        if option_value in self.disabled_values:
-            disabled_html = mark_safe(' disabled="disabled"')
-        else:
-            disabled_html = ''
-        return format_html('<option value="{}"{}{}>{}</option>',
-                           option_value,
-                           selected_html,
-                           disabled_html,
-                           force_text(option_label))
+            disabled = value in self.disabled_values
+        option_dict = super(DisabledChoiceMixin, self).create_option(
+            name, value,
+            label, selected,
+            index, subindex=subindex,
+            attrs=attrs)
+        if disabled:
+            option_dict['attrs']['disabled'] = 'disabled'
+        return option_dict
 
 
 # A Select widget that may have disabled options
@@ -204,50 +207,7 @@ class SelectMultipleDisable(DisabledChoiceMixin, widgets.SelectMultiple):
     pass
 
 
-# Renderer class for choicefields that may have disabled options
-class DisabledChoiceFieldRenderer(widgets.ChoiceFieldRenderer):
-    disabled_values = []
-    real_choice_input_class = None
-
-    def __init__(self, *args, **kwargs):
-        if 'disabled_values' in kwargs:
-            values = kwargs.pop('disabled_values')
-            if type(values) == set:
-                values = list(values)
-            elif type(values) != list:
-                values = [values]
-            self.disabled_values = [unicode(x) for x in values]
-        super(DisabledChoiceFieldRenderer, self).__init__(*args, **kwargs)
-
-    # Overriding an attribute on the superclass that is a class reference
-    # replacing it with a regular function that returns an instance
-    def choice_input_class(self, name, value, attrs, choice, index):
-        (choice_value, choice_label) = choice
-        if unicode(choice_value) in self.disabled_values:
-            attrs['disabled'] = "disabled"
-        return self.real_choice_input_class(name, value, attrs, choice, index)
-
-
-class DisabledRadioFieldRenderer(DisabledChoiceFieldRenderer):
-    real_choice_input_class = widgets.RadioChoiceInput
-
-
-class DisabledCheckboxFieldRenderer(DisabledChoiceFieldRenderer):
-    real_choice_input_class = widgets.CheckboxChoiceInput
-
-
 # A CheckboxSelectMultiple widget that may have disabled options
 class CheckboxSelectMultipleDisable(DisabledChoiceMixin,
                                     widgets.CheckboxSelectMultiple):
-    renderer = DisabledCheckboxFieldRenderer
-    disabled_values = []
-
-    def get_renderer(self, name, value, attrs=None, choices=()):
-        if value is None:
-            value = self._empty_value
-        final_attrs = self.build_attrs(attrs)
-        choices = list(chain(self.choices, choices))
-        return self.renderer(
-            name, value, final_attrs, choices,
-            disabled_values=self.disabled_values
-        )
+    pass

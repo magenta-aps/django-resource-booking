@@ -42,15 +42,18 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'booking',
     'profile',
     'recurrence',
-    'timedelta',
     'tinymce',
     'django_cron',
     'macros',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'hijack',
+    'compat',
+    'django_extensions'
 )
 # INSTALLED_APPS might be extended with the debug toolbar
 
@@ -230,6 +233,24 @@ CKEDITOR_CONFIGS = {
 # 'theme_advanced_buttons2':
 # 'undo,redo,|,code,cleanup,visualaid,charmap,help'
 
+# Logging configuration: Log info level to console, even when running prod
+# Messages will end up in the webserver's log files
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
+
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
@@ -281,8 +302,11 @@ CRON_CLASSES = [
     "booking.cron.IdleHostroleJob",
     "booking.cron.RemoveOldMvpJob",
     "booking.cron.NotifyEventTimeJob",
-    "booking.cron.EvaluationReminderJob"
+    "booking.cron.EvaluationReminderJob",
+    "booking.cron.AnonymizeGuestsJob"
 ]
+
+HIJACK_USE_BOOTSTRAP = True
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)

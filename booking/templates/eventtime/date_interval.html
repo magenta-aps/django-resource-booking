@@ -5,7 +5,7 @@
 
 {% timezone "Europe/Copenhagen" %}
 <div class="row form-group time-inputs">
-    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+    <div class="{% if widelabel %}col-sm-3{% else %}col-sm-2{% endif %}{% if field.errors %} has-error{% endif %}">
         <label class="control-label">
             {% with label=override_label|default:'Dato og tidspunkt' %}
             {% trans label %}:
@@ -49,7 +49,7 @@
             <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ end_field.value|date:"d.m.Y" }}" size="10">
         </div>
     </div>
-    <div class="col-sm-3 with-errors">
+    <div class="{% if widelabel %}col-sm-2{% else %}col-sm-3{% endif %} with-errors">
         {% if start_field.errors %}
         <div>
             {% trans 'Startidspunkt' %}:
@@ -66,7 +66,7 @@
 </div>
 
 <div class="row form-group" {% if hide_output %}style="display: none"{% endif %}>
-    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+    <div class="{% if widelabel %}col-sm-3{% else %}col-sm-2{% endif %}{% if field.errors %} has-error{% endif %}">
         <label for="{{ id_prefix }}chosen_datetime" class="control-label">{% trans 'Valgt tidspunkt' %}:</label>
     </div>
     <div class="col-sm-7">

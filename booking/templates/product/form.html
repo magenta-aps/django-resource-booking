@@ -63,7 +63,7 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors %}in{% endif %}
+                {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors or form.education_name.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.title %}
@@ -72,6 +72,7 @@
                         {% include 'product/fields/tour.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.price %}
                         {% include 'product/fields/studymaterials.html' %}
+                        {% include 'common/fields/generic_field.html' with field=form.education_name %}
                     </div>
                 </div>
             </div>
@@ -118,6 +119,7 @@
                         {% include 'common/fields/generic_field.html' with field=form.duration %}
                         {% include 'product/fields/waiting_list.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.booking_close_days_before %}
+                        {% include 'common/fields/generic_field.html' with field=form.booking_max_days_in_future %}
                     </div>
                 </div>
             </div>

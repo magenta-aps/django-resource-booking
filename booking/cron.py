@@ -1,10 +1,10 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 import traceback
@@ -215,15 +215,11 @@ class NotifyEventTimeJob(KuCronJob):
     def run(self):
         prev = self.get_last_run()
         if prev:
-            start = prev.start_time
             end = timezone.now()
-            print "Notifying eventtimes between %s and %s" % (
-                unicode(start), unicode(end)
-            )
+            print "Notifying eventtimes before %s" % (unicode(end))
 
             for eventtime in EventTime.objects.filter(
                     has_notified_start=False,
-                    start__gte=start,
                     start__lt=end
             ):
                 print "Notifying EventTime %d (starting)" % eventtime.id
@@ -231,7 +227,6 @@ class NotifyEventTimeJob(KuCronJob):
 
             for eventtime in EventTime.objects.filter(
                     has_notified_end=False,
-                    end__gte=start,
                     end__lt=end
             ):
                 print "Notifying EventTime %d (ending)" % eventtime.id
@@ -305,3 +300,28 @@ class EvaluationReminderJob(KuCronJob):
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
+
+
+class AnonymizeGuestsJob(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.guests'
+    description = "Anonymizes guests for visits that were held in the past"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        guests = Guest.objects.filter(
+            Q(booking__visit__eventtime__start__lt=limit) |
+            Q(booking__visit__cancelled_eventtime__start__lt=limit)
+        ).exclude(
+            Guest.filter_anonymized()
+        )
+        for guest in guests:
+            visit = guest.booking.visit
+            if hasattr(visit, 'eventtime'):
+                time = visit.eventtime.start
+            elif visit.cancelled_eventtime is not None:
+                time = visit.cancelled_eventtime.start
+            print "Anonymizing guest #%d on visit %d (starttime %s)" % \
+                  (guest.id, visit.id, time)
+            guest.anonymize()

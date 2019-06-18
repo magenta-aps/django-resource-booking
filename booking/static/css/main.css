@@ -145,6 +145,10 @@ strong, .bold {
   filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 
+.btn-link {
+  padding: 0;
+}
+
 .label {
   font-size: 90%;
   padding: .3em .6em .3em;
@@ -1427,6 +1431,19 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
   list-style-type: none;
 }
 
+.listcontainer .list-group-item ul > li > ul {
+  display: inline-block;
+}
+
+.listcontainer .list-group-item ul > li > ul > li {
+    margin-top: 0;
+}
+
+.listcontainer .list-group-item ul > li > label {
+    font-weight: normal;
+    vertical-align: top;
+}
+
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
   font-size: 1em;
   display: inline-block;
@@ -1572,6 +1589,25 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 li.subvisit-status-1 a.visit-link, li.subvisit-status-7 a.visit-link, li.subvisit-status-8 a.visit-link {
   text-decoration: line-through;
 }
+
+.initial-text {
+  display: none;
+}
+.initially-selected .initial-text {
+  display: inline;
+  font-size: 0.75em;
+}
+#selected-product-list .initial-text {
+  color: #3c763d;
+}
+#selected-product-list .initial-text .details {
+  display: none;
+}
+#deselected-product-list .initial-text {
+  color: #a94442;
+}
+
+
 
 
 /* MultiProductVisit END */
