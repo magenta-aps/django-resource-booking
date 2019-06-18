@@ -1,10 +1,10 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 import traceback
@@ -300,3 +300,28 @@ class EvaluationReminderJob(KuCronJob):
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
+
+
+class AnonymizeGuestsJob(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.guests'
+    description = "Anonymizes guests for visits that were held in the past"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        guests = Guest.objects.filter(
+            Q(booking__visit__eventtime__start__lt=limit) |
+            Q(booking__visit__cancelled_eventtime__start__lt=limit)
+        ).exclude(
+            Guest.filter_anonymized()
+        )
+        for guest in guests:
+            visit = guest.booking.visit
+            if hasattr(visit, 'eventtime'):
+                time = visit.eventtime.start
+            elif visit.cancelled_eventtime is not None:
+                time = visit.cancelled_eventtime.start
+            print "Anonymizing guest #%d on visit %d (starttime %s)" % \
+                  (guest.id, visit.id, time)
+            guest.anonymize()

@@ -89,14 +89,14 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             context['type'] = product_types[0]
 
         today_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.get_todays_visits()
+            visit.id for visit in Visit.objects.get_todays_visits()
             if visit.real.unit_qs & unit_qs
         ])
         today_qs = today_qs.with_product_types(product_types).order_by(
             *self.visit_ordering_asc)
 
         recent_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.get_recently_held()
+            visit.id for visit in Visit.objects.get_recently_held()
             if visit.real.unit_qs & unit_qs
         ])
         recent_qs = recent_qs.with_product_types(
