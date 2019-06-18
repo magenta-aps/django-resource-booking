@@ -92,15 +92,15 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             visit.id for visit in Visit.get_todays_visits()
             if visit.real.unit_qs & unit_qs
         ])
-        today_qs = Visit.with_product_types(today_qs, product_types)
-        today_qs = today_qs.order_by(*self.visit_ordering_asc)
+        today_qs = today_qs.with_product_types(product_types).order_by(
+            *self.visit_ordering_asc)
 
         recent_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_recently_held()
             if visit.real.unit_qs & unit_qs
         ])
-        recent_qs = Visit.with_product_types(recent_qs, product_types)
-        recent_qs = recent_qs.order_by(*self.visit_ordering_desc)
+        recent_qs = recent_qs.with_product_types(
+            product_types).order_by(*self.visit_ordering_desc)
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
@@ -212,12 +212,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         product_types = self.product_types()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
-        unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
+        unplanned_qs = Visit.objects.filter(is_multi_sub=False).being_planned()
         # See also VisitSearchView.filter_by_participants
-        unplanned_qs = Visit.unit_filter(
-            unplanned_qs,
-            unit_qs
-        )
+        unplanned_qs = unplanned_qs.unit_filter(unit_qs)
         unplanned_qs = unplanned_qs.annotate(
             num_participants=(
                 Coalesce(Count("bookings__booker__pk"), 0) +
@@ -227,7 +224,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 )
             )
         ).filter(num_participants__gte=1)
-        unplanned_qs = Visit.with_product_types(unplanned_qs, product_types)
+        unplanned_qs = unplanned_qs.with_product_types(product_types)
 
         unplanned = {
             'color': self.HEADING_RED,
@@ -251,9 +248,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
-        planned_qs = Visit.planned_queryset(is_multi_sub=False)
-        planned_qs = Visit.unit_filter(planned_qs, unit_qs)
-        planned_qs = Visit.with_product_types(planned_qs, product_types)
+        planned_qs = Visit.objects.planned_queryset(is_multi_sub=False)
+        planned_qs = planned_qs.unit_filter(unit_qs)
+        planned_qs = planned_qs.with_product_types(product_types)
 
         planned = {
             'color': self.HEADING_GREEN,
@@ -284,13 +281,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         profile = self.request.user.userprofile
         product_types = self.product_types()
 
-        assignable_qs = profile.can_be_assigned_to_qs
-        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
-        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+        assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
+            unit_qs).with_product_types(product_types)
 
-        assigned_qs = profile.all_assigned_visits()
-        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
-        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
+        assigned_qs = profile.all_assigned_visits(
+        ).unit_filter(unit_qs).with_product_types(product_types)
 
         return [
             {
@@ -339,13 +334,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         profile = self.request.user.userprofile
         product_types = self.product_types()
 
-        assignable_qs = profile.can_be_assigned_to_qs
-        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
-        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+        assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
+            unit_qs).with_product_types(product_types)
 
-        assigned_qs = profile.all_assigned_visits()
-        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
-        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
+        assigned_qs = profile.all_assigned_visits().unit_filter(
+            unit_qs).with_product_types(product_types)
 
         return [
             {

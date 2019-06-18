@@ -170,8 +170,6 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
         for v in value:
             if int(v) in choice_map:
                 coerced_value.append(int(v))
-            elif unicode(v) in choice_map:
-                coerced_value.append(unicode(v))
             else:
                 coerced_value.append(v)
         return coerced_value
@@ -188,7 +186,7 @@ class DisabledChoiceMixin(object):
         if isinstance(label, dict):
             label, disabled = (label['label'],
                                label['label'] in self.disabled_values)
-        option_dict = super(widgets.Select, self).create_option(
+        option_dict = super(DisabledChoiceMixin, self).create_option(
             name, value,
             label, selected,
             index, subindex=subindex,

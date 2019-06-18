@@ -25,7 +25,7 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
@@ -38,22 +38,25 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
+from booking.managers import VisitQuerySet
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty
-from booking.utils import CustomStorage
-from booking.utils import bool2int
-from booking.utils import getattr_long
-from booking.utils import prune_list
-from booking.utils import surveyxact_upload
-from booking.utils import flatten
-from booking.utils import full_email
-from booking.utils import get_related_content_types
-from booking.utils import html2text
-from booking.utils import INFINITY
-from booking.utils import merge_dicts
-from booking.utils import prose_list_join
+from booking.utils import (
+    ClassProperty,
+    CustomStorage,
+    bool2int,
+    getattr_long,
+    prune_list,
+    surveyxact_upload,
+    flatten,
+    full_email,
+    get_related_content_types,
+    html2text,
+    INFINITY,
+    merge_dicts,
+    prose_list_join
+)
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 
@@ -2442,14 +2445,22 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
 
-        old_value = self.extra_search_text or ""
-        new_value = self.generate_extra_search_text() or ""
+        extra_search_old = self.extra_search_text or ""
+        extra_search_new = self.generate_extra_search_text() or ""
+        search_vector = SearchVector(
+            "title",
+            "teaser",
+            "description",
+            "mouseover_description",
+            "extra_search_text"
+        )
 
-        if old_value != new_value:
-            self.extra_search_text = new_value
+        if (extra_search_old != extra_search_new) or (
+            self.search_vector != search_vector
+        ):
+            self.extra_search_text = extra_search_new
+            self.search_vector = search_vector
             self.save()
             return True
         else:
@@ -3014,6 +3025,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
+    objects = VisitQuerySet.as_manager()
+
     desired_time = models.CharField(
         null=True,
         blank=True,
@@ -3482,7 +3495,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
             # Send out planned notification if we switched to planned
             if self.workflow_status == self.WORKFLOW_STATUS_PLANNED:
-                self.autosend(EmailTemplateType.notify_all__booking_complete)
+                if not self.is_multi_sub:
+                    self.autosend(
+                        EmailTemplateType.notify_all__booking_complete
+                    )
         if self.is_multi_sub:
             self.multi_master.resources_updated()
 
@@ -3963,27 +3979,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return " ".join(result)
 
-    @staticmethod
-    def unit_filter(qs, unit_qs):
-        mpv_qs = MultiProductVisit.objects.filter(
-            subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit__in=unit_qs
-        )
-        return qs.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs) |
-            Q(multiproductvisit__in=mpv_qs)
-        )
-
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
-        if not self.pk:
-            return False
-
         old_value = self.extra_search_text or ""
         new_value = self.as_searchtext() or ""
 
-        if old_value != new_value:
+        if (old_value != new_value) or (
+            self.search_vector is None
+        ):
             self.extra_search_text = new_value
+            self.search_vector = SearchVector("extra_search_text")
             self.save()
             return True
         else:
@@ -4102,7 +4107,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
         if self.is_multiproductvisit:
@@ -4116,6 +4123,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
 
             # People who will receive any replies to the mail
             reply_recipients = self.get_reply_recipients(template_type)
@@ -4177,81 +4188,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         self.rooms.add(room)
 
         return room
-
-    @staticmethod
-    def get_latest_created():
-        return Visit.objects.\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Visit.objects.\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Visit.objects.\
-            order_by('-statistics__visited_time')
-
-    @staticmethod
-    def get_latest_booked():
-        return Visit.objects.filter(
-            bookings__isnull=False
-        ).order_by(
-            '-bookings__statistics__created_time'
-        )
-
-    @staticmethod
-    def get_todays_visits():
-        return Visit.get_occurring_on_date(timezone.now())
-
-    @staticmethod
-    def get_occurring_at_time(time):
-        # Return the visits that take place exactly at this time
-        # Meaning they begin before the queried time and end after the time
-        return Visit.objects.filter(
-            eventtime__start__lte=time,
-            eventtime__end__gt=time,
-            is_multi_sub=False
-        )
-
-    @staticmethod
-    def get_occurring_on_date(datetime):
-        # Convert datetime object to date-only for current timezone
-        date = timezone.localtime(datetime).date()
-
-        # A visit happens on a date if it starts before the
-        # end of the day and ends after the beginning of the day
-        min_date = datetime.combine(date, time.min)
-        max_date = datetime.combine(date, time.max)
-
-        return Visit.objects.filter(
-            eventtime__start__lte=max_date,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) &
-                Q(eventtime__start__gt=min_date)
-            )
-        )
-
-    @staticmethod
-    def get_recently_held(time=None):
-        if not time:
-            time = timezone.now()
-
-        return Visit.objects.filter(
-            workflow_status__in=[
-                Visit.WORKFLOW_STATUS_EXECUTED,
-                Visit.WORKFLOW_STATUS_EVALUATED],
-            eventtime__start__isnull=False,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
-            )
-        ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -4396,25 +4332,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.products
         return [self.product]
-
-    @property
-    def product_qs(self):
-        return Product.objects.filter(id__in=[x.id for x in self.products])
-
-    @staticmethod
-    def with_product_types(visit_qs, product_types=None):
-        if product_types is None:
-            return visit_qs
-        return (visit_qs.filter(
-            multiproductvisit__isnull=True,
-            eventtime__product__type__in=product_types
-        ) | visit_qs.filter(
-            multiproductvisit__isnull=False,
-            multiproductvisit__subvisit__in=Visit.objects.filter(
-                eventtime__product__type__in=product_types,
-                is_multi_sub=True
-            )
-        )).distinct()
 
     @property
     def products_unique_address(self):
@@ -4678,7 +4595,7 @@ class MultiProductVisit(Visit):
 
     @property
     def subvisits_unordered_noncancelled(self):
-        return Visit.active_qs(self.subvisits_unordered)
+        return self.subvisits_unordered.active_qs()
 
     @property
     def subvisits(self):
@@ -4933,14 +4850,42 @@ class MultiProductVisit(Visit):
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
         unit = None  # TODO: What should the unit be?
         params = {'visit': self, 'products': self.products}
+
+        # If template specifies to send to teachers or hosts,
+        # send to those recipients by the subvisits
+        if template_type.send_to_visit_teachers \
+                or template_type.send_to_visit_hosts:
+            filter = set([])
+            if template_type.send_to_visit_teachers:
+                filter.add(KUEmailRecipient.TYPE_TEACHER)
+            if template_type.send_to_visit_hosts:
+                filter.add(KUEmailRecipient.TYPE_HOST)
+            filter = filter.intersection(only_these_types)
+            for subvisit in self.subvisits:
+                subvisit.autosend(
+                    template_type,
+                    recipients,
+                    only_these_recipients,
+                    filter
+                )
+            only_these_types -= set(filter)
+
         if self.autosend_enabled(template_type):
+
+            # Gather recipients
             if recipients is None:
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
 
             KUEmailMessage.send_email(
                 template_type,
@@ -5847,15 +5792,12 @@ class Booking(models.Model):
         return self.visit.get_reply_recipients(template_type)
 
     def autosend(self, template_type, recipients=None,
-                 only_these_recipients=False):
+                 only_these_recipients=False,
+                 only_these_types=KUEmailRecipient.all_types
+                 ):
 
         visit = self.visit.real
         enabled = visit.autosend_enabled(template_type)
-        # print "Template type %s is %senabled for visit %d" % (
-        #     template_type,
-        #     "" if visit.autosend_enabled(template_type) else "not ",
-        #     visit.id
-        # )
 
         if visit.is_multiproductvisit and template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
@@ -5877,6 +5819,10 @@ class Booking(models.Model):
                 recipients = []
             if not only_these_recipients:
                 recipients.extend(self.get_recipients(template_type))
+            recipients = KUEmailRecipient.filter_list(
+                recipients,
+                only_these_types
+            )
             KUEmailMessage.send_email(
                 template_type,
                 {

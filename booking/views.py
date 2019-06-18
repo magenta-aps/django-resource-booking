@@ -2471,7 +2471,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     def get(self, request, *args, **kwargs):
         self.set_product(kwargs.get("product"))
         if self.product is None:
-            return bad_request(request)
+            raise Http404("Product not found")
 
         self.object = Booking()
         return self.render_to_response(
@@ -3171,13 +3171,13 @@ class VisitCustomListView(VisitListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_COMPLETED:
-                return Visit.get_recently_held()
+                return Visit.objects.get_recently_held()
             elif listtype == self.TYPE_LATEST_BOOKED:
-                return Visit.get_latest_booked()
+                return Visit.objects.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Visit.get_latest_updated()
+                return Visit.objects.get_latest_updated()
             elif listtype == self.TYPE_TODAY:
-                return Visit.get_todays_visits()
+                return Visit.objects.get_todays_visits()
         except:
             pass
         raise Http404
@@ -3206,9 +3206,12 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
 
         q = form.cleaned_data.get("q", "").strip()
-        search_query = SearchQuery(q)
-        # Filtering by freetext has to be the first thing we do
-        qs = self.model.objects.filter(search_vector=search_query)
+        if q:
+            search_query = SearchQuery(q)
+            # Filtering by freetext has to be the first thing we do
+            qs = self.model.objects.filter(search_vector=search_query)
+        else:
+            qs = self.model.objects.all()
 
         for filter_method in (
             self.filter_multiproduct_subs_off,
@@ -3271,15 +3274,17 @@ class VisitSearchView(VisitListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            unit_qs = profile.organizationalunit
+            unit_qs = OrganizationalUnit.objects.filter(
+                pk=profile.organizationalunit.pk
+            )
         elif u == form.MY_FACULTY:
             unit_qs = profile.organizationalunit.get_faculty_queryset()
         elif u == form.MY_UNITS:
             unit_qs = profile.get_unit_queryset()
         else:
-            unit_qs = u
+            unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
-        return Visit.unit_filter(qs, unit_qs)
+        return qs.unit_filter(unit_qs)
 
     def filter_by_school(self, qs):
         form = self.get_form()
@@ -4645,7 +4650,7 @@ class EvaluationStatisticsView(
 
         unit = data.get("unit")
         if unit is not None:
-            queryset = Visit.unit_filter(queryset, [unit])
+            queryset = queryset.unit_filter([unit])
             has_filter = True
 
         from_date = data.get('from_date')
