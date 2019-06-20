@@ -87,7 +87,7 @@ class ChangeVisitTeachersForm(forms.ModelForm):
             teacher.pk
             for teacher in teachers
             if not teacher.userprofile
-                .get_resource().available_for_visit(visit)
+                   .get_resource().available_for_visit(visit)
         ]
         teacherfield.disabled_values = disabled_values
 
