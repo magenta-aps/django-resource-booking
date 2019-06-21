@@ -561,7 +561,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                         user
                     )
                 except Exception as e:
-                    print "Error sending mail to user: %s" % e
+                    print("Error sending mail to user: %s" % e)
 
             messages.add_message(
                 request,
@@ -924,7 +924,7 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                 booking.booker.school.get_type_display() + ")",
                 str(postalcode) + " " +
                 postalcity,
-                unicode(booking.booker.school.address or ""),
+                booking.booker.school.address or "",
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",

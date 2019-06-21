@@ -600,7 +600,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                             id=self.kwargs['unit']
                         )
                 except Exception as e:
-                    print e
+                    print(e)
                     pass
             else:
                 try:
@@ -688,7 +688,7 @@ class ResourcePoolDetailView(BreadcrumbMixin, EditorRequiredMixin, DetailView):
         breadcrumbs = ResourcePoolListView.build_breadcrumbs()
         breadcrumbs.append({
             'url': reverse('resourcepool-view', args=[resourcepool.id]),
-            'text': unicode(resourcepool)
+            'text': str(resourcepool)
         })
         return breadcrumbs
 

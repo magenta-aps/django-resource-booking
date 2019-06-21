@@ -609,7 +609,7 @@ class EmailLoginURL(models.Model):
         return (self.created + self.expires_in) < timezone.now()
 
     def __unicode__(self):
-        return unicode(self.as_public_url())
+        return self.as_public_url()
 
     @classmethod
     def create_from_url(cls, user, url, **kwargs):

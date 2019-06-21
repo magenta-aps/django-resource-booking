@@ -94,7 +94,7 @@ class BreadcrumbMixin(ContextMixin):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
         except Exception as e:
-            print e
+            print(e)
             return []
 
     def get_breadcrumb_args(self):
@@ -201,12 +201,12 @@ class BackMixin(ContextMixin):
 class AccessDenied(PermissionDenied):
     def __init__(self, text, *args, **kwargs):
         self._text = text
-        print self._text.encode('utf-8')
+        print(self._text.encode('utf-8'))
         return super(AccessDenied, self).__init__(text, *args, **kwargs)
 
     def __unicode__(self):
-        print self._text.encode('utf-8')
-        return unicode(self._text)
+        print(self._text.encode('utf-8'))
+        return self._text
 
 
 class ModalMixin(object):
@@ -292,31 +292,31 @@ class AutologgerMixin(object):
         fname = field.verbose_name
 
         if value is None:
-            return (fname, unicode(value))
+            return (fname, str(value))
 
         if field.many_to_one:
             try:
                 o = field.related_model.objects.get(pk=value)
-                return (fname, unicode(o))
+                return (fname, str(o))
             except:
-                return (fname, unicode(value))
+                return (fname, str(value))
 
         if field.many_to_many or field.one_to_many:
             res = []
             for x in value:
                 try:
                     o = field.related_model.objects.get(pk=x)
-                    res.append(unicode(o))
+                    res.append(str(o))
                 except:
-                    res.append(unicode(x))
+                    res.append(str(x))
             return (fname, ", ".join(res))
 
         if field.choices:
             d = dict(field.choices)
             if value in d:
-                return (fname, unicode(d[value]))
+                return (fname, str(d[value]))
 
-        return (fname, unicode(value))
+        return (fname, str(value))
 
     def _changes_to_text(self, changes):
         if not changes:

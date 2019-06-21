@@ -52,5 +52,5 @@ def role_to_text(role):
     """Return text representation of role code."""
     for r, t in user_role_choices:
         if r == role:
-            return unicode(t)
+            return t
     return ""

@@ -341,7 +341,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
                     else:
                         self.object.rooms.add(room_pk)
                 except Exception as e:
-                    print 'Problem adding room: %s' % e
+                    print('Problem adding room: %s' % e)
             elif roomdata.startswith("new:"):
                 # New rooms are identified by "new:<name-of-room>"
                 room = self.object.add_room_by_name(roomdata[4:])
