@@ -3572,7 +3572,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         user = self.request.user
 
         usertype = self.kwargs.get('usertype')
-        if isinstance(usertype, basestring):
+        if isinstance(usertype, str):
             usertype = usertype.lower()
 
         if hasattr(user, 'userprofile'):

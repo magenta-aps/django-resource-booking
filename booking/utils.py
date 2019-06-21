@@ -506,7 +506,7 @@ class TemplateSplit(object):
     def get_subblock_containing(self, c):
         candidates = []
         for block in self.blocks:
-            if isinstance(c, basestring):
+            if isinstance(c, str):
                 subblock = block.get_subblock_with_condition(c)
             else:
                 subblock = block.get_subblock_containing(c)
@@ -555,7 +555,7 @@ def surveyxact_upload(survey_id, data):
         header.append(str(key))
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             value = str(value)
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))

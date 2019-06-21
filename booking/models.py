@@ -1364,7 +1364,7 @@ class KUEmailRecipient(models.Model):
     def create(cls, base=None, recipient_type=None):
         ku_email_recipient = cls()
         address = None
-        if isinstance(base, basestring):
+        if isinstance(base, str):
             address = base
         elif isinstance(base, User):
             ku_email_recipient.user = base
@@ -6360,7 +6360,7 @@ class KUEmailMessage(models.Model):
             address = None
             user = None
             guest = None
-            if isinstance(recipient, basestring):
+            if isinstance(recipient, str):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
