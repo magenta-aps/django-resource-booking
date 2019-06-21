@@ -37,7 +37,7 @@ class DurationWidget(widgets.MultiWidget):
             parsed_choices = []
             for choice in choices:
                 if isinstance(choice, (unicode, int)):
-                    parsed_choices.append((choice, unicode(choice)))
+                    parsed_choices.append((choice, str(choice)))
                 elif isinstance(choice, tuple):
                     parsed_choices.append(choice)
             return widgets.Select(attrs=attrs, choices=parsed_choices)

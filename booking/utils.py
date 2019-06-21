@@ -167,28 +167,41 @@ def get_model_field_map(model, visited_models=None):
             #    continue
 
             if field.one_to_many:
-                # print "ignoring field %s.%s because
-                # it is one-to-many" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it is one-to-many" %
+                #         (model.__name__, field.name)
+                # )
                 continue
 
             if field.many_to_many:
-                # print "ignoring field %s.%s because
-                # it is many-to-many" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it is many-to-many" %
+                #         (model.__name__, field.name)
+                # )
                 continue
 
             if field.related_model == model:
-                # print "ignoring field %s.%s because
-                # it points to the same model" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it points to "
+                #         "the same model" % (model.__name__, field.name)
+                # )
                 continue
 
             if field.related_model in visited_models:
-                # print "Already seen %s.%s (%s)" %
-                # (model.__name__, field.name, field.related_model.__name__)
+                # print(
+                #         "Already seen %s.%s (%s)" % (
+                #             model.__name__,
+                #             field.name,
+                #             field.related_model.__name__
+                #         )
+                # )
                 continue
 
             if issubclass(field.related_model, model):
-                # print "%s is subclass of %s" %
-                # (field.related_model.__name__, model.__name__)
+                # print(
+                #         "%s is subclass of %s" %
+                #         (field.related_model.__name__, model.__name__)
+                # )
                 continue
 
             try:
@@ -539,11 +552,11 @@ def surveyxact_upload(survey_id, data):
     header = []
     body = []
     for key, value in data.iteritems():
-        header.append(unicode(key))
+        header.append(str(key))
         if value is None:
             value = ''
         if not isinstance(value, basestring):
-            value = unicode(value)
+            value = str(value)
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
 
@@ -565,14 +578,14 @@ def surveyxact_upload(survey_id, data):
         }
     )
     if response.status_code != 200:
-        print "Error creating respondent with data:"
-        print body
+        print("Error creating respondent with data:")
+        print(body)
     else:
         m = re.search(r'<collecturl>([^<]*)</collecturl>', response.text)
         if m is not None:
             return m.group(1)
         else:
-            print "Didn't find collecturl in %s" % response.text
+            print("Didn't find collecturl in %s" % response.text)
 
 
 def bool2int(bool):
@@ -596,5 +609,4 @@ def getattr_long(object, path, default=None):
 
 
 def prose_list_join(items, sep, lsep):
-    return sep.join([unicode(item) for item in items[:-1]]) + \
-           unicode(lsep) + unicode(items[-1])
+    return sep.join(items[:-1]) + lsep + items[-1]

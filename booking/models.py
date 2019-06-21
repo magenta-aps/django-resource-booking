@@ -442,9 +442,9 @@ class Locality(models.Model):
         if self.no_address:
             return self.name
         return "%s (%s)" % (
-            unicode(self.name),
+            self.name,
             ", ".join([
-                unicode(x) for x in [self.address_line, self.zip_city]
+                x for x in [self.address_line, self.zip_city]
                 if len(x.strip()) > 0
             ])
         )
@@ -452,8 +452,7 @@ class Locality(models.Model):
     @property
     def full_address(self):
         return " ".join([
-            unicode(x)
-            for x in (self.name, self.address_line, self.zip_city)
+            x for x in [self.name, self.address_line, self.zip_city]
             if len(x.strip()) > 0
         ])
 
@@ -1096,8 +1095,10 @@ class EmailTemplateType(
                 )
                 if qs.count() == 0 and product.type not in \
                         template_type.disabled_product_types:
-                    print "    creating autosend type %d for product %d" % \
-                          (template_type.key, product.id)
+                    print(
+                            "    creating autosend type %d for product %d" % \
+                            (template_type.key, product.id)
+                    )
                     autosend = ProductAutosend(
                         template_key=template_type.key,
                         template_type=template_type,
@@ -1106,8 +1107,10 @@ class EmailTemplateType(
                     )
                     autosend.save()
                 elif qs.count() > 1:
-                    print "    removing extraneous autosend %d " \
-                          "for product %d" % (template_type.key, product.id)
+                    print(
+                            "    removing extraneous autosend %d " \
+                            "for product %d" % (template_type.key, product.id)
+                    )
                     for extra in qs[1:]:
                         extra.delete()
 
@@ -1121,8 +1124,10 @@ class EmailTemplateType(
                     )
                     if qs.count() == 0 and visit.product.type not in \
                             template_type.disabled_product_types:
-                        print "    creating autosend type %d for visit %d" % \
-                              (template_type.key, visit.id)
+                        print(
+                                "    creating autosend type %d "
+                                "for visit %d" % (template_type.key, visit.id)
+                        )
                         visitautosend = VisitAutosend(
                             visit=visit,
                             inherit=True,
@@ -1133,8 +1138,10 @@ class EmailTemplateType(
                         )
                         visitautosend.save()
                     elif qs.count() > 1:
-                        print "    removing extraneous autosend %d " \
-                              "for visit %d" % (template_type.key, visit.id)
+                        print(
+                                "    removing extraneous autosend %d for "
+                                "visit %d" % (template_type.key, visit.id)
+                        )
                     for extra in qs[1:]:
                         extra.delete()
 
@@ -1203,7 +1210,7 @@ class EmailTemplate(models.Model):
         lines = [] + EmailTemplate.default_includes + ["{% language 'da' %}"]
         if not escape:
             lines.append("{% autoescape off %}")
-        lines.append(unicode(template_text))
+        lines.append(template_text)
         if not escape:
             lines.append("{% endautoescape %}")
         lines.append("{% endlanguage %}")
@@ -1211,7 +1218,7 @@ class EmailTemplate(models.Model):
         try:
             return Template(encapsulated)
         except TemplateSyntaxError as e:
-            print "Error in mail template. Full text: %s" % encapsulated
+            print("Error in mail template. Full text: %s" % encapsulated)
             raise e
 
     @staticmethod
@@ -1296,9 +1303,9 @@ class EmailTemplate(models.Model):
                     subtemplate = get_template(x.template.var)
                     self._add_template_vars(subtemplate.template, variables)
                 except Exception as e:
-                    print "Error while processcing included template: %s" % e
+                    print("Error while processcing included template: %s" % e)
             for x in node.get_nodes_by_type(VariableNode):
-                variables.append(unicode(x.filter_expression))
+                variables.append(str(x.filter_expression))
 
     @staticmethod
     def migrate():
@@ -1497,7 +1504,7 @@ class ProductGymnasieFag(models.Model):
         verbose_name_plural = _(u"gymnasiefagtilknytninger")
         ordering = ["subject__name"]
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
     product = models.ForeignKey("Product", blank=False, null=False)
     subject = models.ForeignKey(
@@ -1543,7 +1550,7 @@ class ProductGymnasieFag(models.Model):
 
     @classmethod
     def display(cls, subject, levels):
-        levels = [unicode(x) for x in levels.all()]
+        levels = [str(x) for x in levels.all()]
         levels_desc = None
 
         nr_levels = len(levels)
@@ -1557,10 +1564,10 @@ class ProductGymnasieFag(models.Model):
 
         if levels_desc:
             return u'%s på %s niveau' % (
-                unicode(subject.name), levels_desc
+                subject.name, levels_desc
             )
         else:
-            return unicode(subject.name)
+            return subject.name
 
     def display_value(self):
         if self.display_value_cached is None:
@@ -1571,8 +1578,8 @@ class ProductGymnasieFag(models.Model):
         return self.display_value_cached
 
     def as_submitvalue(self):
-        res = unicode(self.subject.pk)
-        levels = ",".join([unicode(x.pk) for x in self.ordered_levels().all()])
+        res = str(self.subject.pk)
+        levels = ",".join([str(x.pk) for x in self.ordered_levels().all()])
 
         if levels:
             res = ",".join([res, levels])
@@ -1586,7 +1593,7 @@ class ProductGrundskoleFag(models.Model):
         verbose_name_plural = _(u"grundskolefagtilknytninger")
         ordering = ["subject__name"]
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
     product = models.ForeignKey("Product", blank=False, null=False)
     subject = models.ForeignKey(
@@ -1640,10 +1647,10 @@ class ProductGrundskoleFag(models.Model):
         if len(class_range) > 0:
             return u'%s på klassetrin %s' % (
                 subject.name,
-                "-".join([unicode(x) for x in class_range])
+                "-".join([str(x) for x in class_range])
             )
         else:
-            return unicode(subject.name)
+            return subject.name
 
     def display_value(self):
         return ProductGrundskoleFag.display(
@@ -1652,9 +1659,9 @@ class ProductGrundskoleFag(models.Model):
 
     def as_submitvalue(self):
         return ",".join([
-            unicode(self.subject.pk),
-            unicode(self.class_level_min or 0),
-            unicode(self.class_level_max or 0)
+            str(self.subject.pk),
+            str(self.class_level_min or 0),
+            str(self.class_level_max or 0)
         ])
 
 
@@ -1809,7 +1816,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (DISCONTINUED, _(u"Skjult"))
     )
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
@@ -2181,7 +2188,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         BLANK_OPTION,
         (NEEDED_NUMBER_NONE, _(u'Ingen'))
     ] + [
-        (x, unicode(x)) for x in range(1, 11)
+        (x, str(x)) for x in range(1, 11)
     ] + [
         (NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10'))
     ]
@@ -2522,7 +2529,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return "\n".join(texts)
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([str(x) for x in [
             self.pk,
             self.title,
             self.teaser,
@@ -2947,9 +2954,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             else:
                 parts.append(_(u"%s minutter") % minutes)
 
-            return _(u" og ").join([unicode(x) for x in parts])
+            return _(u" og ").join(parts)
         except Exception as e:
-            print e
+            print(e)
             return ""
 
     @staticmethod
@@ -3058,7 +3065,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             else:
                 x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
 
-            print u"%s => %s" % (x, x.get_time_mode_display())
+            print(u"%s => %s" % (x, x.get_time_mode_display()))
             x.save()
 
         # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
@@ -4025,17 +4032,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
                 'id': self.pk,
-                'title': unicode(self.real.display_title),
-                'time': unicode(self.eventtime.interval_display)
+                'title': self.real.display_title,
+                'time': self.eventtime.interval_display
             }
         elif self.cancelled_eventtime:
             return _(u'Besøg %(id)s - %(title)s - %(time)s (aflyst)') % {
                 'id': self.pk,
-                'title': unicode(self.real.display_title),
-                'time': unicode(self.cancelled_eventtime.interval_display)
+                'title': self.real.display_title,
+                'time': self.cancelled_eventtime.interval_display
             }
         else:
-            return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
+            return _(u'Besøg %s - uden tidspunkt') % self.pk
 
     @property
     def product(self):
@@ -5191,10 +5198,10 @@ class MultiProductVisit(Visit):
                      u'%(count)d underbesøg - %(time)s') % {
                 'id': self.pk,
                 'count': self.subvisits_unordered.count(),
-                'time': unicode(self.eventtime.interval_display)
+                'time': self.eventtime.interval_display
             }
         else:
-            return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
+            return _(u'Besøg %s - uden tidspunkt') % self.pk
 
 
 class MultiProductVisitTempProduct(models.Model):
@@ -5347,7 +5354,7 @@ class Autosend(models.Model):
         super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
-        return unicode(self.template_type.name)
+        return self.template_type.name
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -5431,20 +5438,20 @@ class Room(models.Model):
 
     def __unicode__(self):
         if self.locality:
-            return '%s - %s' % (unicode(self.name), unicode(self.locality))
+            return '%s - %s' % (self.name, str(self.locality))
         else:
-            return '%s - %s' % (unicode(self.name), _(u'Ingen lokalitet'))
+            return '%s - %s' % (self.name, _(u'Ingen lokalitet'))
 
     @property
     def name_with_locality(self):
         if self.locality:
             return '%s, %s' % (
-                unicode(self.name),
+                self.name,
                 self.locality.name_and_address
             )
         else:
             return '%s, %s' % (
-                unicode(self.name),
+                self.name,
                 _(u'<uden lokalitet>')
             )
 
@@ -5577,8 +5584,10 @@ class PostCode(models.Model):
                     region = Region.objects.get(name=region_name)
                     regions[region_name] = region
                 except Region.DoesNotExist:
-                    print "Unknown region '%s'. May be a typo, please fix in" \
-                          " booking/data/postcodes.py" % region_name
+                    print(
+                            "Unknown region '%s'. May be a typo, please fix "
+                            "in booking/data/postcodes.py" % region_name
+                    )
                     return
             try:
                 postcode = PostCode.objects.get(number=postcode_number)
@@ -5684,8 +5693,10 @@ class School(models.Model):
                         type=type
                     ).save()
                 except PostCode.DoesNotExist:
-                    print "Warning: Postcode %d not found in database. " \
-                          "Not adding school %s" % (postcode, name)
+                    print(
+                            "Warning: Postcode %d not found in database. "
+                            "Not adding school %s" % (postcode, name)
+                    )
 
         data = schools.elementary_schools
         type = School.ELEMENTARY_SCHOOL
@@ -5700,8 +5711,10 @@ class School(models.Model):
                     name=item.get('municipality')
                 ) if 'municipality' in item else None
             except Municipality.DoesNotExist:
-                print "Municipality '%s' does not exist" % \
-                      item.get('municipality')
+                print(
+                        "Municipality '%s' does not exist" %
+                        item.get('municipality')
+                )
                 return
 
             try:
@@ -5724,8 +5737,10 @@ class School(models.Model):
                         municipality=municipality
                     ).save()
                 except PostCode.DoesNotExist:
-                    print "Warning: Postcode %d not found in database. " \
-                          "Not adding school %s" % (postcode, name)
+                    print(
+                            "Warning: Postcode %d not found in database. "
+                            "Not adding school %s" % (postcode, name)
+                    )
 
     @staticmethod
     def dedup():
@@ -5738,12 +5753,14 @@ class School(models.Model):
                 ).exclude(id=school.id).order_by('id')
                 for other in others:
                     for booker in other.guest_set.all():
-                        print "wire booker to %d instead of %d" % \
-                              (school.id, other.id)
+                        print(
+                                "wire booker to %d instead of %d" %
+                                (school.id, other.id)
+                        )
                         booker.school = school
                         booker.save()
                     remove[other.id] = True
-                    print "remove school %d (%s)" % (other.id, other.name)
+                    print("remove school %d (%s)" % (other.id, other.name))
         r = School.objects.filter(id__in=remove.keys())
         r.delete()
 
@@ -5931,7 +5948,7 @@ class Guest(models.Model):
             return None
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([str(x) for x in [
             self.firstname,
             self.lastname,
             self.email,
@@ -6086,8 +6103,8 @@ class Booking(models.Model):
         ]:
             for product in visit.products:
                 if product.autosend_enabled(template_type):
-                    # print "Making exception for evaluation " \
-                    #       "mail with product %d" % product.id
+                    # print("Making exception for evaluation " \
+                    #       "mail with product %d" % product.id)
                     enabled = True
                     break
 
@@ -6120,7 +6137,7 @@ class Booking(models.Model):
         return False
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([x for x in [
             self.booker.as_searchtext(),
             self.notes
         ] if x])
@@ -6525,7 +6542,7 @@ class KUEmailMessage(models.Model):
             ]
             ctxmsg = context.get('log_message', None)
             if ctxmsg:
-                logmessage.append(unicode(ctxmsg))
+                logmessage.append(str(ctxmsg))
 
             log_action(
                 context.get("web_user", None),

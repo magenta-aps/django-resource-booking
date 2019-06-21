@@ -144,9 +144,9 @@ def timedelta_i18n(value, display="long", sep=", "):
     for i in range(len(values)):
         if values[i]:
             if values[i] == 1:
-                result.append(unicode(words_singular[i]))
+                result.append(words_singular[i])
             else:
-                result.append(unicode(words_plural[i] % values[i]))
+                result.append(words_plural[i] % values[i])
 
     # values with less than one second, which are considered zeroes
     if len(result) == 0:
