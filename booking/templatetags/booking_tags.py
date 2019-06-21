@@ -69,7 +69,7 @@ def timedelta_parse(string):
 def timedelta_i18n(value, display="long", sep=", "):
     if value is None:
         return value
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         try:
             # This should probably use django.utils.dateparse.parse_duration
             # which takes HH:MM:SS but i think that would require changes to
@@ -248,7 +248,7 @@ class FullURLNode(defaulttags.Node):
             user = kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, FilterExpression):
                 user = user.resolve(context)
-            elif isinstance(user, basestring):
+            elif isinstance(user, str):
                 user = context.get(user)
             if isinstance(user, dict) and 'user' in user:
                 user = user['user']
@@ -372,7 +372,7 @@ def evaluation_boolean(value):
     if value is not None:
         if isinstance(value, bool):
             b = value
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             b = value.lower() in ['true', '1', 'y', 'yes', 'ja']
         elif isinstance(value, (int, long, float, complex)):
             b = value > 0
