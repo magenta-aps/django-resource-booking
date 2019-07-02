@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 
-import profile.constants
+import userprofile.constants
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
@@ -29,14 +29,14 @@ from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
     EditorRequriedMixin
 from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import EmailLoginURL
-from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
-from profile.models import HOST, TEACHER
-from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
+from userprofile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
+from userprofile.models import EmailLoginURL
+from userprofile.models import UserProfile, UserRole, EDIT_ROLES, NONE
+from userprofile.models import HOST, TEACHER
+from userprofile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
-import profile.models as profile_models
+import userprofile.models as profile_models
 import sys
 
 
@@ -480,7 +480,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     raise AccessDenied(
                         _(u"Du har ikke rettigheder til at redigere brugere "
                           u"med rollen \"%s\""
-                          % profile.constants.role_to_text(object_role))
+                          % userprofile.constants.role_to_text(object_role))
                     )
             return result
         else:

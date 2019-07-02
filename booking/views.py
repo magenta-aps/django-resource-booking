@@ -122,8 +122,8 @@ from booking.utils import TemplateSplit
 from booking.utils import full_email
 from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
-from profile.constants import FACULTY_EDITOR, ADMINISTRATOR
-from profile.models import EDIT_ROLES
+from userprofile.constants import FACULTY_EDITOR, ADMINISTRATOR
+from userprofile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
