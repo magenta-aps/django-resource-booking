@@ -38,7 +38,7 @@ from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 
 import booking.models as booking_models
-import urls
+import booking.urls as urls
 from booking.constants import LOGACTION_CREATE
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
@@ -132,7 +132,7 @@ i18n_test = _(u"Dette tester oversættelses-systemet")
 def import_views(from_module):
     module_prefix = from_module.__name__
     import_dict = globals()
-    for name, value in from_module.__dict__.iteritems():
+    for name, value in from_module.__dict__.items():
         # Skip stuff that is not classes
         if not isinstance(value, type):
             continue
@@ -4705,8 +4705,8 @@ class EvaluationStatisticsView(
         }]
 
 
-import booking_workflows.views  # noqa
-import_views(booking_workflows.views)
+import booking.booking_workflows.views  # noqa
+import_views(booking.booking_workflows.views)
 
-import resource_based.views  # noqa
-import_views(resource_based.views)
+import booking.resource_based.views  # noqa
+import_views(booking.resource_based.views)
