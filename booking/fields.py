@@ -2,9 +2,9 @@ from inspect import isclass
 
 from django.core.exceptions import ValidationError
 from django.forms.fields import ChoiceField, MultipleChoiceField
+from django.forms.models import ModelChoiceField
 from django.forms.models import ModelMultipleChoiceField
 from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
-from django.forms.models import ModelChoiceField
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import EventTime

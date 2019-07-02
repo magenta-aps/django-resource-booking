@@ -1,4 +1,11 @@
 # encoding: utf-8
+import datetime
+import math
+import re
+import sys
+
+from django.contrib.auth import models as auth_models
+from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -6,21 +13,15 @@ from django.db.models import F
 from django.db.models import Q
 from django.db.models.deletion import SET_NULL
 from django.db.models.expressions import RawSQL
-from django.contrib.auth import models as auth_models
-from django.core.urlresolvers import reverse
 from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
 from profile.constants import TEACHER, HOST, NONE
-
-import datetime
-import math
-import re
-import sys
 
 
 class EventTime(models.Model):

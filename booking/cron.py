@@ -1,13 +1,13 @@
+import traceback
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
-from booking.models import MultiProductVisitTemp, EventTime
-from django_cron import CronJobBase, Schedule
-from django_cron.models import CronJobLog
 from django.db.models import Count, Q
 from django.utils import timezone
+from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 
-import traceback
+from booking.models import MultiProductVisitTemp, EventTime
+from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest
 
 
 class KuCronJob(CronJobBase):

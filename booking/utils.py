@@ -1,5 +1,4 @@
 # encoding: utf-8
-import codecs
 import csv
 import os
 import re

@@ -5,6 +5,7 @@ from django.core.urlresolvers import RegexURLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
 from django.views.i18n import JavaScriptCatalog
+
 from booking.models import Product, ResourcePool
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceDeleteView
@@ -25,9 +26,9 @@ from booking.views import BecomeHostView, MultiProductVisitAddProductView
 from booking.views import BecomeTeacherView
 from booking.views import BookingAcceptView
 from booking.views import BookingCancelView
+from booking.views import BookingDetailView
 from booking.views import BookingEditView
 from booking.views import BookingNotifyView
-from booking.views import BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView
 from booking.views import CalendarCreateView
