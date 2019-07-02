@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView
