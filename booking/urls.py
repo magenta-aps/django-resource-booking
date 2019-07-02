@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.urls import URLPattern
+from django.urls.resolvers import RegexPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
 from django.views.i18n import JavaScriptCatalog
@@ -503,7 +504,7 @@ for x in urlpatterns:
             # Add a corresponding embed URL
             embedpatterns.append(
                 url(
-                    '^(?P<embed>embed/)' + x.pattern[1:],
+                    '^(?P<embed>embed/)' + str(x.pattern)[1:],
                     xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )

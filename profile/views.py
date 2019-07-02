@@ -1,43 +1,42 @@
 # -*- coding: utf-8 -*-
+import sys
+import warnings
 from datetime import datetime, timedelta
 
-import profile.constants
-from booking.models import OrganizationalUnit, Product, Visit, Booking
-from booking.models import EmailTemplateType, KUEmailMessage
-from booking.models import VisitComment
-from booking.utils import UnicodeWriter
-from booking.utils import force_list
 from django.contrib import messages
-from django.db.models import Q, Case, When
-from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.db.models import Q, Case, When
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
 from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
+from django.views.generic.list import ListView
 
+import profile.constants
+import profile.models as profile_models
 from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
     EditorRequriedMixin
+from booking.models import EmailTemplateType, KUEmailMessage
+from booking.models import OrganizationalUnit, Product, Visit, Booking
+from booking.models import VisitComment
+from booking.utils import UnicodeWriter
+from booking.utils import force_list
 from booking.views import VisitCustomListView
-from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 from profile.models import EmailLoginURL
-from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
-from profile.models import HOST, TEACHER
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
-
-import warnings
-import profile.models as profile_models
-import sys
+from profile.models import HOST, TEACHER
+from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
