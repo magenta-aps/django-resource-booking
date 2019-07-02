@@ -44,7 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'booking',
-    'userprofile',
+    'profile',
     'recurrence',
     'tinymce',
     'django_cron',

@@ -7,7 +7,7 @@ from django.db.models.fields.related_descriptors import \
     ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
-from userprofile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from profile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 from . import models as booking_models
 
 EXCLUDE_MODELS = set([

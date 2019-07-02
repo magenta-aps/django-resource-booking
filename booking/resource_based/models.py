@@ -15,7 +15,7 @@ from recurrence.fields import RecurrenceField
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
-from userprofile.constants import TEACHER, HOST, NONE
+from profile.constants import TEACHER, HOST, NONE
 
 import datetime
 import math
