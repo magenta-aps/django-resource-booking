@@ -1,3 +1,7 @@
+import datetime
+import json
+import re
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
@@ -6,16 +10,13 @@ from django.template import defaulttags, Node, TemplateSyntaxError
 from django.template.base import FilterExpression
 from django.template.defaultfilters import register
 from django.templatetags.static import StaticNode
+from django.utils import six
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
 
-from booking.models import Guest, BookerResponseNonce
 from booking.constants import LOGACTION_DISPLAY_MAP
+from booking.models import Guest, BookerResponseNonce
 from profile.models import EmailLoginURL, UserProfile
-import datetime
-import re
-import json
 
 
 @register.filter

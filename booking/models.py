@@ -13,6 +13,8 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
@@ -26,8 +28,6 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.contrib.postgres.search import SearchVector, SearchVectorField
-from django.contrib.postgres.indexes import GinIndex
 from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
 from django.template.context import make_context
@@ -44,17 +44,17 @@ from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty
 from booking.utils import CustomStorage
+from booking.utils import INFINITY
 from booking.utils import bool2int
-from booking.utils import getattr_long
-from booking.utils import prune_list
-from booking.utils import surveyxact_upload
 from booking.utils import flatten
 from booking.utils import full_email
 from booking.utils import get_related_content_types
+from booking.utils import getattr_long
 from booking.utils import html2text
-from booking.utils import INFINITY
 from booking.utils import merge_dicts
 from booking.utils import prose_list_join
+from booking.utils import prune_list
+from booking.utils import surveyxact_upload
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 

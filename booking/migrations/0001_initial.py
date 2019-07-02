@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
 import datetime
-import booking.utils
-import recurrence.fields
-import booking.models
-import booking.mixins
-import django.db.models.deletion
-import django.utils.timezone
-from django.conf import settings
-import django.core.validators
 import uuid
+
+import django.core.validators
+import django.utils.timezone
+import recurrence.fields
+from django.conf import settings
+from django.db import migrations, models
+
+import booking.mixins
+import booking.models
+import booking.utils
 
 
 class Migration(migrations.Migration):

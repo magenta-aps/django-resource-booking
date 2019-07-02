@@ -9,8 +9,8 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.base import ContextMixin
 
-from booking.logging import log_action
 from booking.constants import LOGACTION_CREATE, LOGACTION_CHANGE
+from booking.logging import log_action
 from booking.utils import get_related_content_types
 from profile.constants import EDIT_ROLES, ADMINISTRATOR, role_to_text
 

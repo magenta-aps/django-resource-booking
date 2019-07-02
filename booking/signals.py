@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
-from booking.models import Guest, VisitResource, ResourceRequirement
 from booking.models import Booking, ClassBooking, TeacherBooking
+from booking.models import Guest, VisitResource, ResourceRequirement
 from booking.models import Product
 from booking.models import Visit
 
@@ -66,4 +66,3 @@ def on_visitresource_delete(sender, instance, using, **kwargs):
         instance.visit.autoassign_resources()
 
 # Import resource-based signals
-from booking.resource_based.signals import *  # NOQA
