@@ -1096,8 +1096,8 @@ class EmailTemplateType(
                 if qs.count() == 0 and product.type not in \
                         template_type.disabled_product_types:
                     print(
-                            "    creating autosend type %d for product %d" % \
-                            (template_type.key, product.id)
+                        "    creating autosend type %d for product %d" %
+                        (template_type.key, product.id)
                     )
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -1108,8 +1108,8 @@ class EmailTemplateType(
                     autosend.save()
                 elif qs.count() > 1:
                     print(
-                            "    removing extraneous autosend %d " \
-                            "for product %d" % (template_type.key, product.id)
+                        "    removing extraneous autosend %d for product %d" %
+                        (template_type.key, product.id)
                     )
                     for extra in qs[1:]:
                         extra.delete()
