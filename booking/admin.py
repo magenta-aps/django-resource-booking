@@ -232,10 +232,10 @@ def register_models(models, namespace=None):
         admin.site.register(value, cls)
 
 register_models(
-    booking_models.__dict__.iteritems(),
+    booking_models.__dict__.items(),
     'booking.models'
 )
 register_models(
-    resource_models.__dict__.iteritems(),
+    resource_models.__dict__.items(),
     'booking.resource_based.models'
 )
