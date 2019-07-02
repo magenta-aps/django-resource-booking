@@ -40,7 +40,7 @@ from booking.models import TeacherBooking
 from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
-from userprofile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 

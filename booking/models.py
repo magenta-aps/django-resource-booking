@@ -55,8 +55,8 @@ from booking.utils import html2text
 from booking.utils import INFINITY
 from booking.utils import merge_dicts
 from booking.utils import prose_list_join
-from userprofile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
-from userprofile.constants import TEACHER, HOST, NONE, get_role_name
+from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+from profile.constants import TEACHER, HOST, NONE, get_role_name
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
