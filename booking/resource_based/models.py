@@ -1,4 +1,11 @@
 # encoding: utf-8
+import datetime
+import math
+import re
+import sys
+
+from django.contrib.auth import models as auth_models
+from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -6,21 +13,15 @@ from django.db.models import F
 from django.db.models import Q
 from django.db.models.deletion import SET_NULL
 from django.db.models.expressions import RawSQL
-from django.contrib.auth import models as auth_models
-from django.core.urlresolvers import reverse
 from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
 from profile.constants import TEACHER, HOST, NONE
-
-import datetime
-import math
-import re
-import sys
 
 
 class EventTime(models.Model):
@@ -74,8 +75,8 @@ class EventTime(models.Model):
     }
 
     NONBLOCKED_RESOURCE_STATES = [
-        x[0] for x in resource_status_choices
-        if x[0] != RESOURCE_STATUS_BLOCKED
+        RESOURCE_STATUS_AVAILABLE,
+        RESOURCE_STATUS_ASSIGNED
     ]
 
     resource_status = models.IntegerField(
@@ -261,8 +262,8 @@ class EventTime(models.Model):
     @property
     def l10n_start(self):
         if self.start:
-            return unicode(
-                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            return formats.date_format(
+                self.naive_start, "SHORT_DATETIME_FORMAT"
             )
         else:
             return ''
@@ -270,16 +271,14 @@ class EventTime(models.Model):
     @property
     def l10n_end(self):
         if self.end:
-            return unicode(
-                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
-            )
+            return formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
         else:
             return ''
 
     @property
     def l10n_end_time(self):
         if self.end:
-            return unicode(formats.time_format(self.naive_end))
+            return formats.time_format(self.naive_end)
         else:
             return ''
 
@@ -696,7 +695,7 @@ class EventTime(models.Model):
                         self.naive_start, "SHORT_DATE_FORMAT"
                     ),
             else:
-                return unicode(_(u"<Intet tidspunkt angivet>"))
+                return _(u"<Intet tidspunkt angivet>")
 
     def __unicode__(self):
         parts = [_(u"Tidspunkt:")]
@@ -706,7 +705,7 @@ class EventTime(models.Model):
             parts.append(_(u"(Besøg: %s)") % self.visit.pk)
         parts.append(self.interval_display)
 
-        return " ".join([unicode(x) for x in parts])
+        return " ".join(parts)
 
     def on_start(self):
         self.has_notified_start = True
@@ -1280,8 +1279,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     @property
     def l10n_start(self):
         if self.start:
-            return unicode(
-                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            return formats.date_format(
+                self.naive_start, "SHORT_DATETIME_FORMAT"
             )
         else:
             return ''
@@ -1289,16 +1288,14 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     @property
     def l10n_end(self):
         if self.end:
-            return unicode(
-                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
-            )
+            return formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
         else:
             return ''
 
     @property
     def l10n_end_time(self):
         if self.end:
-            return unicode(formats.time_format(self.naive_end))
+            return formats.time_format(self.naive_end)
         else:
             return ''
 
@@ -1311,11 +1308,11 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                 return " - ".join([self.l10n_start, self.l10n_end_time])
         else:
             if self.start:
-                return unicode(
-                    formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
+                return formats.date_format(
+                    self.naive_start, "SHORT_DATE_FORMAT"
                 )
             else:
-                return unicode(_(u"<Intet tidspunkt angivet>"))
+                return _(u"<Intet tidspunkt angivet>")
 
     @property
     def affected_eventtimes(self):
@@ -1364,14 +1361,13 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
         return CalendarEvent.objects.none()
 
     def __unicode__(self):
-        return ", ".join(unicode(x) for x in [
+        return ", ".join(x for x in [
             self.title,
             "%s %s%s" % (
                 self.get_availability_display().lower(),
                 self.interval_display,
                 _(" (med gentagelser)") if self.has_recurrences else ""
             ),
-
         ] if x)
 
 
@@ -1470,7 +1466,7 @@ class ResourceType(models.Model):
             except ResourceType.DoesNotExist:
                 item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
-                print "Created new ResourceType %d=%s" % (id, name)
+                print("Created new ResourceType %d=%s" % (id, name))
 
     def __unicode__(self):
         return self.name
@@ -1558,8 +1554,8 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
 
     def __unicode__(self):
         return "%s (%s)" % (
-            unicode(self.get_name()),
-            unicode(self.resource_type)
+            self.get_name(),
+            str(self.resource_type)
         )
 
     @property
@@ -1649,7 +1645,7 @@ class UserResource(Resource):
         )
 
     def get_name(self):
-        return unicode(self.user.get_full_name())
+        return self.user.get_full_name()
 
     def can_delete(self):
         return False
@@ -1662,13 +1658,13 @@ class UserResource(Resource):
                 user__userprofile__user_role__role=cls.role
             )
         ])
-        print "We already have resources for %d users" % len(known_users)
+        print("We already have resources for %d users" % len(known_users))
         missing_users = auth_models.User.objects.filter(
             userprofile__user_role__role=cls.role
         ).exclude(
             pk__in=known_users
         )
-        print "We are missing resources for %d users" % len(missing_users)
+        print("We are missing resources for %d users" % len(missing_users))
         if len(missing_users) > 0:
             created = 0
             skipped = 0
@@ -1685,11 +1681,13 @@ class UserResource(Resource):
                     else:
                         skipped += 1
                 except Exception as e:
-                    print e
-            print "Created %d %s objects" % (created, cls.__name__)
+                    print(e)
+            print("Created %d %s objects" % (created, cls.__name__))
             if skipped > 0:
-                print "Skipped creating resources for %d objects " \
-                      "that had no unit" % skipped
+                print(
+                        "Skipped creating resources for %d objects that "
+                        "had no unit" % skipped
+                )
 
     @classmethod
     def create(cls, user, unit=None):
@@ -1907,9 +1905,9 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
     # lost or gained resources, respectively.
     def update_eventtimes_on_resource_change(cls, qs, restrictive=False):
         if restrictive:
-            print "Checking %s for missing resources" % [x for x in qs]
+            print("Checking %s for missing resources" % [x for x in qs])
         else:
-            print "Checking %s for available resources" % [x for x in qs]
+            print("Checking %s for available resources" % [x for x in qs])
 
         qs = EventTime.objects.filter(
             product__resourcerequirement__resource_pool__in=qs
@@ -1939,7 +1937,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
                 for resource in self.resources.all()
                 if resource.calendar is not None
             ],
-            unicode(self),
+            str(self),
             reverse('resourcepool-view', args=[self.pk])
         )
 

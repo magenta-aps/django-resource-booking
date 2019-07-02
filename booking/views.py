@@ -14,9 +14,9 @@ from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
+from django.db.models import F
 from django.db.models import Q
 from django.db.models import Sum
-from django.db.models import F
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.forms import HiddenInput
@@ -38,7 +38,7 @@ from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 
 import booking.models as booking_models
-import urls
+import booking.urls as urls
 from booking.constants import LOGACTION_CREATE
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
@@ -132,7 +132,7 @@ i18n_test = _(u"Dette tester oversættelses-systemet")
 def import_views(from_module):
     module_prefix = from_module.__name__
     import_dict = globals()
-    for name, value in from_module.__dict__.iteritems():
+    for name, value in from_module.__dict__.items():
         # Skip stuff that is not classes
         if not isinstance(value, type):
             continue
@@ -708,7 +708,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 try:
                     filter_method()
                 except Exception as e:
-                    print "Error while filtering query: %s" % e
+                    print("Error while filtering query: %s" % e)
 
             if not self.request.user.is_authenticated():
                 self.filter_for_public_view()
@@ -754,7 +754,7 @@ class SearchView(BreadcrumbMixin, ListView):
             try:
                 filter_method(form)
             except Exception as e:
-                print "Error while admin-filtering query: %s" % e
+                print("Error while admin-filtering query: %s" % e)
 
     def filter_by_state(self, form):
         s = form.cleaned_data.get("s", "")
@@ -900,7 +900,7 @@ class SearchView(BreadcrumbMixin, ListView):
             if value not in hits:
                 continue
 
-            if unicode(value) in selected:
+            if str(value) in selected:
                 sel = 'checked="checked"'
             else:
                 sel = ''
@@ -1011,7 +1011,7 @@ class SearchView(BreadcrumbMixin, ListView):
             values = self.request.GET.getlist(key)
             if values is not None and len(values) > 0:
                 for value in values:
-                    if value is not None and len(unicode(value)) > 0:
+                    if value is not None and len(str(value)) > 0:
                         querylist.append("%s=%s" % (key, value))
         if len(querylist) > 0:
             context['fullquery'] = reverse('search') + \
@@ -1714,8 +1714,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             if autosendformset.is_valid():
                 autosendformset.save()
             else:
-                print "Error with submitted autosendformset:\n"
-                print autosendformset.errors
+                print("Error with submitted autosendformset:\n")
+                print(autosendformset.errors)
         for template_type in EmailTemplateType.objects.filter(
             enable_autosend=True,
             form_show=False
@@ -1887,7 +1887,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                     else:
                         self.object.rooms.add(room_pk)
                 except Exception as e:
-                    print 'Problem adding room: %s' % e
+                    print('Problem adding room: %s' % e)
             elif roomdata.startswith("new:"):
                 # New rooms are identified by "new:<name-of-room>"
                 room = self.object.add_room_by_name(roomdata[4:])
@@ -1978,7 +1978,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
     def build_breadcrumbs(product, request=None):
         return SearchView.build_breadcrumbs(request) + [
             {
-                'text': unicode(product),
+                'text': str(product),
                 'url': reverse('product-view', args=[product.pk])
             }
         ]
@@ -2854,9 +2854,9 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
                 visit.save()
                 # if visit.is_multiproductvisit \
                 #       and hasattr(visit, 'eventtime'):
-                #     print "form save: %s" % str(visit.eventtime.start)
+                #     print("form save: %s" % str(visit.eventtime.start))
                 #     visit.eventtime.start = desired_time
-                #     print "form save: %s" % str(visit.eventtime.start)
+                #     print("form save: %s" % str(visit.eventtime.start))
                 #     visit.eventtime.save()
         if 'bookerform' in forms:
             booking.booker = forms['bookerform'].save()
@@ -2945,7 +2945,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 
         if bookingform is not None:
             if self.visit.multiproductvisit:
-                print "bookingform.class: %s" % bookingform.__class__.__name__
+                print("bookingform.class: %s" % bookingform.__class__.__name__)
                 if 'tmp' in self.request.GET:
                     temp = MultiProductVisitTemp.objects.get(
                         id=self.request.GET['tmp']
@@ -3242,7 +3242,7 @@ class VisitSearchView(VisitListView):
             try:
                 qs = filter_method(qs)
             except Exception as e:
-                print "Error while filtering VO search: %s" % e
+                print("Error while filtering VO search: %s" % e)
 
         qs = qs.order_by("-pk")
 
@@ -3434,7 +3434,7 @@ class VisitSearchView(VisitListView):
             breadcrumbs.append({
                 'text': _(u'Søgeresultat'),
                 'url': reverse('visit-search') + '?' + '&'.join([
-                    "%s=%s" % (key, unicode(value))
+                    "%s=%s" % (key, str(value))
                     for key, value in form.cleaned_data.iteritems()
                 ])
             })
@@ -3572,7 +3572,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         user = self.request.user
 
         usertype = self.kwargs.get('usertype')
-        if isinstance(usertype, basestring):
+        if isinstance(usertype, str):
             usertype = usertype.lower()
 
         if hasattr(user, 'userprofile'):
@@ -3860,7 +3860,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
     def _getObjectJson(self):
         result = {
             key: [
-                {'text': unicode(object), 'value': object.id}
+                {'text': str(object), 'value': object.id}
                 for object in type.objects.order_by('id')
             ]
             for key, type in EmailTemplateDetailView.classes.items()
@@ -4064,7 +4064,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                     pk=self.object.object_id
                 )
             except Exception as e:
-                print "Error when getting email-reply object: %s" % e
+                print("Error when getting email-reply object: %s" % e)
 
         return self.original_object
 
@@ -4705,8 +4705,8 @@ class EvaluationStatisticsView(
         }]
 
 
-import booking_workflows.views  # noqa
-import_views(booking_workflows.views)
+import booking.booking_workflows.views  # noqa
+import_views(booking.booking_workflows.views)
 
-import resource_based.views  # noqa
-import_views(resource_based.views)
+import booking.resource_based.views  # noqa
+import_views(booking.resource_based.views)

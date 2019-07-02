@@ -1,19 +1,20 @@
 # encoding: utf-8
-from booking.models import OrganizationalUnit
-from booking.models import Resource
-from booking.models import ResourceType
-from booking.models import ItemResource, RoomResource
-from booking.models import TeacherResource, HostResource, VehicleResource
-from booking.models import ResourcePool
-from booking.models import ResourceRequirement
-from booking.models import VisitResource
-from booking.fields import MultipleChoiceDisableField
-from booking.widgets import CheckboxSelectMultipleDisable
 from django import forms
 from django.core.validators import RegexValidator
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
+
+from booking.fields import MultipleChoiceDisableField
+from booking.models import ItemResource, RoomResource
+from booking.models import OrganizationalUnit
+from booking.models import Resource
+from booking.models import ResourcePool
+from booking.models import ResourceRequirement
+from booking.models import ResourceType
+from booking.models import TeacherResource, HostResource, VehicleResource
+from booking.models import VisitResource
+from booking.widgets import CheckboxSelectMultipleDisable
 
 
 class CreateTimesFromRulesForm(forms.Form):

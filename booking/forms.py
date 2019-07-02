@@ -5,6 +5,7 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib.auth.models import User
 from django.core import validators
+from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxInput
@@ -21,9 +22,9 @@ from django.forms import TimeInput
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
-from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
-from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
+
 from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import BookingGymnasieSubjectLevel
@@ -154,7 +155,7 @@ class AdminProductSearchForm(forms.Form):
         ]
 
         for x in self.user.userprofile.get_unit_queryset():
-            choices.append((x.pk, unicode(x)))
+            choices.append((x.pk, str(x)))
 
         return choices
 
@@ -315,7 +316,7 @@ class VisitSearchForm(forms.Form):
         ]
 
         for x in self.user.userprofile.get_unit_queryset():
-            choices.append((x.pk, unicode(x)))
+            choices.append((x.pk, str(x)))
 
         return choices
 
@@ -866,13 +867,13 @@ class BookingForm(forms.ModelForm):
         for product in self.products:
             bookability = product.is_bookable(date, return_reason=True)
             if bookability is not True:
-                reason = unicode(
-                    _(u'Det er desværre ikke muligt at '
-                      u'bestille besøget på den valgte dato.\n')
+                reason = _(
+                    u'Det er desværre ikke muligt at bestille '
+                    u'besøget på den valgte dato.\n'
                 )
                 more_reason = product.nonbookable_text(bookability)
                 if more_reason is not None:
-                    reason += unicode(more_reason)
+                    reason += more_reason
                 raise forms.ValidationError(reason)
         return date
 
@@ -1613,7 +1614,7 @@ class EmailTemplateForm(forms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].choices = [BLANK_OPTION] + [
-            (x.pk, unicode(x))
+            (x.pk, str(x))
             for x in user.userprofile.get_unit_queryset()]
 
         self.split = {}
@@ -1787,7 +1788,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
                                  "emailtemplate-type-%s" % type
                     },
                     choices=[
-                        (object.id, unicode(object))
+                        (object.id, str(object))
                         for object in clazz.objects.order_by('id')
                     ]
                 )
@@ -1940,7 +1941,7 @@ class EvaluationOverviewForm(forms.Form):
         super(EvaluationOverviewForm, self).__init__(qdict, *args, **kwargs)
 
         self.fields['organizationalunit'].choices = [
-            (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
+            (x.pk, str(x)) for x in userprofile.get_unit_queryset()
         ]
 
 
@@ -1968,13 +1969,13 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
             product = self.cleaned_data['baseproduct']
             bookability = product.is_bookable(date, return_reason=False)
             if bookability is not True:
-                reason = unicode(
-                    _(u'Det er desværre ikke muligt at '
-                      u'bestille besøget på den valgte dato.\n')
+                reason = _(
+                    u'Det er desværre ikke muligt at bestille '
+                    u'besøget på den valgte dato.\n'
                 )
                 more_reason = product.nonbookable_text(bookability)
                 if more_reason is not None:
-                    reason += unicode(more_reason)
+                    reason += more_reason
                 raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
 

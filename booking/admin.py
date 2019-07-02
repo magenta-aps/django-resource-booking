@@ -7,7 +7,7 @@ from django.db.models.fields.related_descriptors import \
     ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
-from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from profile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 from . import models as booking_models
 
 EXCLUDE_MODELS = set([
@@ -232,10 +232,10 @@ def register_models(models, namespace=None):
         admin.site.register(value, cls)
 
 register_models(
-    booking_models.__dict__.iteritems(),
+    booking_models.__dict__.items(),
     'booking.models'
 )
 register_models(
-    resource_models.__dict__.iteritems(),
+    resource_models.__dict__.items(),
     'booking.resource_based.models'
 )

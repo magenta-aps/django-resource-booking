@@ -39,7 +39,7 @@ def log_action(user, obj, action_flag, change_message=''):
         except:
             pass
         try:
-            object_repr = unicode(obj)
+            object_repr = str(obj)
         except:
             pass
 
