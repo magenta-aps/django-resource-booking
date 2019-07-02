@@ -12,7 +12,7 @@ from django.utils import six
 
 from booking.models import Guest, BookerResponseNonce
 from booking.constants import LOGACTION_DISPLAY_MAP
-from profile.models import EmailLoginURL, UserProfile
+from userprofile.models import EmailLoginURL, UserProfile
 import datetime
 import re
 import json

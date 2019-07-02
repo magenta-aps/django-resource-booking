@@ -54,6 +54,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='user_role',
-            field=models.ForeignKey(to='profile.UserRole'),
+            field=models.ForeignKey(to='userprofile.UserRole'),
         ),
     ]

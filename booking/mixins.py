@@ -12,7 +12,7 @@ from django.views.generic.base import ContextMixin
 from booking.logging import log_action
 from booking.constants import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.utils import get_related_content_types
-from profile.constants import EDIT_ROLES, ADMINISTRATOR, role_to_text
+from userprofile.constants import EDIT_ROLES, ADMINISTRATOR, role_to_text
 
 
 class AvailabilityUpdaterMixin(object):

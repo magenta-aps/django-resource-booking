@@ -19,10 +19,10 @@ from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
 
 # User roles
-from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
+from userprofile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
     role_to_text
-from profile.constants import FACULTY_EDITOR, NONE
-from profile.constants import EDIT_ROLES, user_role_choices, available_roles
+from userprofile.constants import FACULTY_EDITOR, NONE
+from userprofile.constants import EDIT_ROLES, user_role_choices, available_roles
 
 from booking.admin import CLASSES_BY_ROLE
 

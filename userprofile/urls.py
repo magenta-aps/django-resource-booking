@@ -1,11 +1,11 @@
 import django.contrib.auth.views as auth_views
 
 from django.conf.urls import url
-from profile.views import ProfileView, CreateUserView, UnitListView
-from profile.views import DeleteUserView, UserListView, StatisticsView
-from profile.views import EmailLoginView
-from profile.views import EditMyProductsView
-from profile.views import AvailabilityView
+from userprofile.views import ProfileView, CreateUserView, UnitListView
+from userprofile.views import DeleteUserView, UserListView, StatisticsView
+from userprofile.views import EmailLoginView
+from userprofile.views import EditMyProductsView
+from userprofile.views import AvailabilityView
 
 urlpatterns = [
     url(r'^$', ProfileView.as_view(
