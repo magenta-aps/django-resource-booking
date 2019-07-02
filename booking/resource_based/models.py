@@ -74,8 +74,8 @@ class EventTime(models.Model):
     }
 
     NONBLOCKED_RESOURCE_STATES = [
-        x[0] for x in resource_status_choices
-        if x[0] != RESOURCE_STATUS_BLOCKED
+        RESOURCE_STATUS_AVAILABLE,
+        RESOURCE_STATUS_ASSIGNED
     ]
 
     resource_status = models.IntegerField(
