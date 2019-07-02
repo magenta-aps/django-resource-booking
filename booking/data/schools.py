@@ -1282,7 +1282,7 @@ elementary_schools = [
     {'name': u'Kollerup Skole', 'address': u'Kollerupvej 12', 'postnr': 7300, 'municipality': u'Vejle Kommune', 'cvr': 29189900},
     {'name': u'Kollund Skole', 'address': u'Kalveknækket 47, Kollund', 'postnr': 6340, 'municipality': u'Aabenraa Kommune', 'cvr': 29189854},
     {'name': u'Kolt Skole', 'address': u'Kolt Østervej 45', 'postnr': 8361, 'municipality': u'Århus Kommune', 'cvr': 55133018},
-    {'name': u'Kompasset', 'address': u'Linde Allé 53', 'postnr': 2720, 'municipality': u'Københavns Kommune', 'cvr': 30713176, 'ean': 000011114444 },
+    {'name': u'Kompasset', 'address': u'Linde Allé 53', 'postnr': 2720, 'municipality': u'Københavns Kommune', 'cvr': 30713176, 'ean': 11114444 },
     {'name': u'Kompasset, den sikrede institution', 'address': u'Saturnvej 2', 'postnr': 9700, 'municipality': u'Brønderslev Kommune', 'cvr': 29190941},
     {'name': u'Kompetencecenter Kalvehave', 'address': u'Kirkevejen 3', 'postnr': 4771, 'municipality': u'Vordingborg Kommune', 'cvr': 29189676},
     {'name': u'Kon Tiki - Børnenes Skole', 'address': u'Frydenborgvej 37', 'postnr': 3400, 'municipality': u'Hillerød Kommune', 'cvr': 20211989},
