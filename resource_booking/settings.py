@@ -58,7 +58,7 @@ INSTALLED_APPS = (
 # INSTALLED_APPS might be extended with the debug toolbar
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 2017-09-26, ticket #18859: Disabled for now
     # 'django.middleware.locale.LocaleMiddleware',
@@ -277,7 +277,7 @@ SURVEYXACT = {
 
 # Add extra middleware defined in the local settings file to the ones
 # already specified.
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + tuple(EXTRA_MIDDLEWARE)
+MIDDLEWARE = MIDDLEWARE + tuple(EXTRA_MIDDLEWARE)
 
 PUBLIC_URL = "".join([
     PUBLIC_URL_PROTOCOL, "://",
@@ -310,9 +310,9 @@ HIJACK_USE_BOOTSTRAP = True
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         "debug_toolbar.middleware.DebugToolbarMiddleware",
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
     if "127.0.0.1" not in INTERNAL_IPS:
         INTERNAL_IPS = INTERNAL_IPS + ("127.0.0.1",)
 

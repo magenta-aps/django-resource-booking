@@ -11,7 +11,7 @@ urlpatterns = [
     url(r'^$', ProfileView.as_view(
         template_name='profile/profile.html'),
         name='user_profile'),
-    url(r'^login/', auth_views.login,
+    url(r'^login/', auth_views.LoginView.as_view(),
         {'template_name': 'profile/login.html'},
         name='standard_login'),
     url(r'^email-login/(?P<slug>[a-f0-9-]+)(?P<dest_url>.*)',
@@ -19,7 +19,7 @@ urlpatterns = [
         name='email-login'
         ),
     url(r'^logout/',
-        auth_views.logout,
+        auth_views.LogoutView.as_view(),
         {'template_name': 'profile/logout.html'},
         name='logout'
         ),
