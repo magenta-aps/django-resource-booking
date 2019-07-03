@@ -938,7 +938,7 @@ class EmailLoginView(DetailView):
 
         # Already logged in users should be sent where they need to go
         # or logged out if they are the wrong user.
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if request.user == self.object.user:
                 return self.redirect_to_destination(request, *args, **kwargs)
             else:

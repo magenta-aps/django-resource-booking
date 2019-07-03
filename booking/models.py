@@ -2717,7 +2717,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_latest_created(user=None):
         qs = Product.objects.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             # subselect-instead-of-distinct trick
             qs = Product.objects.filter(
                 pk__in=Product.filter_public_bookable(qs).only("pk")
@@ -2729,7 +2729,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_latest_updated(user=None):
         qs = Product.objects.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             # subselect-instead-of-distinct trick
             qs = Product.objects.filter(
                 pk__in=Product.filter_public_bookable(qs).only("pk")
@@ -2741,7 +2741,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_latest_displayed(user=None):
         qs = Product.objects.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             # subselect-instead-of-distinct trick
             qs = Product.objects.filter(
                 pk__in=Product.filter_public_bookable(qs).only("pk")
@@ -2998,7 +2998,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             eventtime__visit__bookings__statistics__created_time__isnull=False
         )
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             qs = Product.objects.filter(
                 pk__in=Product.filter_public_bookable(qs).only("pk")
             )

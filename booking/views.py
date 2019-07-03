@@ -455,7 +455,7 @@ class SearchView(BreadcrumbMixin, ListView):
 
         self.t_from = self.get_date_from_request("from")
         self.t_to = self.get_date_from_request("to")
-        self.is_public = not self.request.user.is_authenticated()
+        self.is_public = not self.request.user.is_authenticated
         # Public searches are always from todays date and onward
         if self.is_public and self.t_from is None:
             self.t_from = timezone.now()
@@ -480,7 +480,7 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def get_admin_form(self):
         if self.admin_form is None:
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 qdict = self.request.GET.copy()
                 qdict['q'] = self.get_query_string()
                 self.admin_form = AdminProductSearchForm(
@@ -710,7 +710,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 except Exception as e:
                     print("Error while filtering query: %s" % e)
 
-            if not self.request.user.is_authenticated():
+            if not self.request.user.is_authenticated:
                 self.filter_for_public_view()
             else:
                 self.filter_for_admin_view(self.get_admin_form())
@@ -1019,7 +1019,7 @@ class SearchView(BreadcrumbMixin, ListView):
         else:
             context['fullquery'] = None
 
-        if (self.request.user.is_authenticated() and
+        if (self.request.user.is_authenticated and
                 self.request.user.userprofile.has_edit_role()):
 
             context['has_edit_role'] = True
@@ -1931,7 +1931,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         """Get queryset, only include active products."""
         qs = super(ProductDetailView, self).get_queryset()
         # Dismiss products that are not active.
-        if not self.request.user.is_authenticated():
+        if not self.request.user.is_authenticated:
             qs = qs.filter(state=Product.ACTIVE)
         return qs
 
