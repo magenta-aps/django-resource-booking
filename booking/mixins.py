@@ -230,7 +230,7 @@ class ModalMixin(object):
         return url
 
 
-class EditorRequriedMixin(RoleRequiredMixin):
+class EditorRequiredMixin(RoleRequiredMixin):
     roles = EDIT_ROLES
 
 
