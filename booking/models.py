@@ -3073,28 +3073,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-<<<<<<< HEAD
-    @classmethod
-    # Migrate from old system where guest-suggest-time products was determined
-    # by them not having any visits
-    def migrate_time_mode(cls):
-        for x in cls.objects.filter(time_mode=cls.TIME_MODE_NONE):
-            if x.visit_set.filter(deprecated_bookable=True).count() > 0:
-                x.time_mode = cls.TIME_MODE_SPECIFIC
-            else:
-                x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
-
-            print(u"%s => %s" % (x, x.get_time_mode_display()))
-            x.save()
-
-        # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
-        EventTime.objects.filter(
-            bookable=True,
-            product__time_mode=cls.TIME_MODE_GUEST_SUGGESTED
-        ).update(bookable=False)
-
-=======
->>>>>>> feature/ticket27367_remove_deprecated_fields
     def __unicode__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
