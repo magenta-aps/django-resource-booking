@@ -6561,7 +6561,6 @@ class KUEmailMessage(models.Model):
         return KUEmailMessage.objects.filter(reply_to_message=self)\
             .order_by('-created')
 
-
     anonymized = "[anonymiseret]"
     anonymized_filter = {'recipients': anonymized}
 
