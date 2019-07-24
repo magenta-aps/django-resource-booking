@@ -1456,6 +1456,14 @@ class KUEmailRecipient(models.Model):
     def is_unit_responsible(self):
         return self.type == KUEmailRecipient.TYPE_UNIT_RESPONSIBLE
 
+    @staticmethod
+    def filter_list(recp_list, types=all_types):
+        return [x for x in recp_list if x.type in types]
+
+    @staticmethod
+    def exclude_list(recp_list, types=all_types):
+        return [x for x in recp_list if x.type not in types]
+
 
 class ObjectStatistics(models.Model):
     class Meta:
