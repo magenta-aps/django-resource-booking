@@ -13,8 +13,6 @@ install.log
 /locale/**/*.mo
 /media/
 /migrate_restart
-/profile/migrations/0*.py
-/profile/migrations/*_auto_*
 *.pyc
 python-env
 /resource_booking/local_saml_settings.py
