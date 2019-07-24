@@ -736,17 +736,18 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
                 .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
-                .prefetch_related('bookinggrundskolesubjectlevel_set'
-                                  '__subject')\
+                .prefetch_related(
+                    'bookinggrundskolesubjectlevel_set__subject'
+                )\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
                     Q(**{
                         'visit__eventtime__product__'
-                        'organizationalunit': self.organizationalunits
+                        'organizationalunit__in': self.organizationalunits
                     }) |
                     Q(**{
                         'visit__cancelled_eventtime__product__'
-                        'organizationalunit': self.organizationalunits
+                        'organizationalunit__in': self.organizationalunits
                     })
                 )
             if from_date:

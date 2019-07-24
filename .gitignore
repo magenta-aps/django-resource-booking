@@ -1,7 +1,6 @@
 *~
 /booking/management/commands/local_*
-/booking/migrations/0*.py
-/booking/migrations/*_auto_*
+
 /build
 /config/booking
 /cron.log
