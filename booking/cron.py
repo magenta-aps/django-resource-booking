@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # coding=utf-8
 from datetime import timedelta, date
 
@@ -8,10 +9,20 @@ from booking.models import SurveyXactEvaluation
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django_cron.models import CronJobLog
+=======
+import traceback
+from datetime import timedelta, date
+
+>>>>>>> develop
 from django.db.models import Count, Q
 from django.utils import timezone
+from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 
-import traceback
+from booking.models import EmailTemplateType, KUEmailMessage
+from booking.models import Guest
+from booking.models import MultiProductVisitTemp, EventTime
+from booking.models import VisitAutosend, Visit
 
 from booking.utils import surveyxact_anonymize
 
@@ -382,3 +393,4 @@ class AnonymizeEvaluationsJob(KuCronJob):
             success = surveyxact_anonymize(survey_id, limit)
             if not success:
                 print "Failed anonymizing survey %d" % survey_id
+
