@@ -382,4 +382,3 @@ class AnonymizeEvaluationsJob(KuCronJob):
             success = surveyxact_anonymize(survey_id, limit)
             if not success:
                 print "Failed anonymizing survey %d" % survey_id
-
