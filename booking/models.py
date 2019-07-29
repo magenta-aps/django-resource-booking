@@ -3,7 +3,6 @@
 import math
 import random
 import re
-import sys
 import uuid
 from datetime import timedelta, datetime, date, time
 
@@ -3993,7 +3992,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         limit = self.product.maximum_number_of_visitors \
             if self.product is not None else None
         if limit is None:
-            return sys.maxint
+            return AVAILABLE_SEATS_NO_LIMIT
         return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):

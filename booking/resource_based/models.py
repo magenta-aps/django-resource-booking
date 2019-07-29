@@ -2,7 +2,6 @@
 import datetime
 import math
 import re
-import sys
 
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
@@ -163,9 +162,6 @@ class EventTime(models.Model):
         if "needs_attention_since" not in kwargs:
             kwargs['needs_attention_since'] = timezone.now()
 
-        # filter out kwargs that are not fields on the actual visit model.
-        fields = set(f.name for f in visit_model._meta.get_fields())
-        kwargs = {k: v for k, v in kwargs.items() if k in fields}
         visit = visit_model(**kwargs)
 
         # If the product specifies no rooms are needed, set this on the
@@ -292,19 +288,6 @@ class EventTime(models.Model):
         else:
             return 0
 
-    def get_duration_display(self):
-        mins = self.duration_in_minutes
-        if mins > 0:
-            hours = math.floor(mins / 60)
-            mins = mins % 60
-            if(hours == 1):
-                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
-            else:
-                return _(u"%(hours)d timer og %(minutes)d minutter") % {
-                    'hours': hours, 'minutes': mins
-                }
-        else:
-            return ""
 
     @property
     def available_seats(self):
@@ -313,7 +296,7 @@ class EventTime(models.Model):
         elif self.product:
             max = self.product.maximum_number_of_visitors
             if max is None:  # No limit set
-                return sys.maxint
+                return AVAILABLE_SEATS_NO_LIMIT
             return max
         else:
             return 0
@@ -633,6 +616,41 @@ class EventTime(models.Model):
                 self.product is not None and
                 self.product.duration_in_minutes == self.duration_in_minutes)
 
+    @classmethod
+    def migrate_from_visits(cls):
+        visit_model = cls.visit.field.related_model
+
+        # Skip if the neccessary date fields are no longer present on the
+        # Visit model
+        try:
+            visit_model._meta.get_field_by_name("deprecated_start_datetime")
+            visit_model._meta.get_field_by_name("deprecated_end_datetime")
+        except:
+            return
+
+        qs = visit_model.objects.filter(
+            eventtime__isnull=True,
+            deprecated_product__isnull=False
+        )
+
+        for x in qs.order_by("deprecated_start_datetime",
+                             "deprecated_end_datetime"):
+            obj = cls(
+                product=x.deprecated_product,
+                visit=x,
+                start=x.deprecated_start_datetime,
+                notes=_(u'Migreret fra Visit')
+            )
+
+            if x.deprecated_end_datetime:
+                obj.end = x.deprecated_end_datetime
+            else:
+                # Try to calculate the end time
+                obj.set_calculated_end_time()
+
+            obj.has_specific_time = obj.calculated_has_specific_time()
+            obj.save()
+
     @property
     def expired(self):
         return self.start and self.start < timezone.now()
@@ -765,7 +783,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     calendar=self
                 )
 
-    def generate_product_unavailable(self, from_dt, to_dt):
+    def generate_product_unavailalbe(self, from_dt, to_dt):
         if hasattr(self, 'product'):
             for x in self.product.occupied_eventtimes(
                 from_dt, to_dt
@@ -790,7 +808,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             )
         if hasattr(self, 'product'):
             generators.append(
-                self.generate_product_unavailable(from_dt, to_dt)
+                self.generate_product_unavailalbe(from_dt, to_dt)
             )
 
         # Pick the first remaining item from any of the generators and remove
@@ -1574,11 +1592,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
 
     def available_for_visit(self, visit):
         eventtime = getattr(visit, 'eventtime', None)
-        if (
-            eventtime is None or
-            eventtime.start is None or
-            eventtime.end is None
-        ):
+        if eventtime is None:
             return False
         return self.is_available_between(
             eventtime.start,
@@ -1610,12 +1624,6 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         # Auto-create a calendar along with the resource
         if is_creating:
             self.make_calendar()
-
-    @property
-    def products_qs(self):
-        return Product.objects.filter(
-            resourcerequirement__resource_pool__in=self.resourcepool_set.all()
-        )
 
 
 class UserResource(Resource):

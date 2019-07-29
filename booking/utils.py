@@ -2,7 +2,6 @@
 import csv
 import os
 import re
-import sys
 from itertools import chain
 
 import requests
@@ -299,7 +298,7 @@ def binary_and(*items):
     """
     AND several integers together (handy when they vary in number)
     """
-    base = sys.maxint
+    base = (1 << 64) - 1
     for item in flatten(items):
         try:
             base = base & item

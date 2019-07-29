@@ -49,7 +49,6 @@ from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
 import profile.models as profile_models
-import sys
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -422,7 +421,7 @@ class ListAjaxView(TemplateView):
             'headerless': True,
             'list': {
                 'type': type,
-                'limit': sys.maxint,
+                'limit': 1000000,
                 'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
             }
         }
