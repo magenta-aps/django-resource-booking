@@ -783,7 +783,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         new_generators = []
         for x in generators:
             try:
-                item = x.next()
+                item = next(x)
                 new_generators.append(x)
             except StopIteration:
                 continue
@@ -803,7 +803,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             # move next item from the matched generator to pending items
             # If generator is empty, remove it and its pending item slot
             try:
-                pending_items[item_idx] = generators[item_idx].next()
+                pending_items[item_idx] = next(generators[item_idx])
             except StopIteration:
                 del generators[item_idx]
                 del pending_items[item_idx]
@@ -883,7 +883,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         current_end = None
 
         try:
-            next_unavailable = unavailables.next()
+            next_unavailable = next(unavailables)
         except StopIteration:
             next_unavailable = None
 
@@ -953,7 +953,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                 # ot compare it to
                 if current_start:
                     try:
-                        next_unavailable = unavailables.next()
+                        next_unavailable = next(unavailables)
                     except StopIteration:
                         next_unavailable = None
 
