@@ -2,8 +2,8 @@
 
 import json
 import re
-import urllib
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 from dateutil.rrule import rrulestr
 from django.contrib import messages
@@ -2671,7 +2671,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             return redirect(
                 self.modalurl(
                     reverse("product-book-success", args=[self.product.id]) +
-                    "?" + urllib.urlencode(params)
+                    "?" + urlencode(params)
                 )
             )
 
