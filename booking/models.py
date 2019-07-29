@@ -35,6 +35,7 @@ from django.utils import formats
 from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.translation import ugettext
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
 from booking.managers import VisitQuerySet
@@ -6050,17 +6051,17 @@ class ClassBooking(Booking):
     def verbose_desires(self):
         desires = []
         if self.tour_desired:
-            desires.append(_(u'rundvisning'))
+            desires.append(ugettext(u'rundvisning'))
         if self.catering_desired:
-            desires.append(_(u'forplejning'))
+            desires.append(ugettext(u'forplejning'))
         if self.presentation_desired:
-            desires.append(_(u'oplæg om uddannelse'))
+            desires.append(ugettext(u'oplæg om uddannelse'))
         if self.custom_desired:
             try:
                 desires.append(self.visit.product.custom_name.lower())
             except:
                 pass
-        return prose_list_join(desires, ', ', _(' og '))
+        return prose_list_join(desires, ', ', ugettext(' og '))
 
 
 class TeacherBooking(Booking):
