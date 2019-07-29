@@ -25,8 +25,20 @@ from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
-from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
-    EditorRequriedMixin
+import profile.constants
+import profile.models as profile_models
+from booking.mixins import AccessDenied
+from booking.mixins import BreadcrumbMixin
+from booking.mixins import EditorRequiredMixin
+from booking.mixins import LoginRequiredMixin
+from booking.models import Booking
+from booking.models import EmailTemplateType
+from booking.models import KUEmailMessage
+from booking.models import OrganizationalUnit
+from booking.models import Product
+from booking.models import Visit
+from booking.models import VisitComment
+from booking.utils import UnicodeWriter, force_list
 from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm

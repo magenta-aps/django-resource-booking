@@ -1392,8 +1392,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     )
 
             # Delete any remaining values that were not submitted
-            for x in existing_gym_fag.itervalues():
-                x.delete()
+            for key, value in existing_gym_fag.items():
+                value.delete()
 
         if self.object.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE:
             existing_gs_fag = {}
@@ -1432,8 +1432,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     )
 
             # Delete any remaining values that were not submitted
-            for x in existing_gs_fag.itervalues():
-                x.delete()
+            for key, value in existing_gs_fag.items():
+                value.delete()
 
     def add_to_my_resources(self):
         # Newly created objects should be added to the users list of
