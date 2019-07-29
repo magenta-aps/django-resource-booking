@@ -848,7 +848,7 @@ class ResourceRequirementConfirmMixin(object):
     def get_form(self, form_class=None):
         form = super(ResourceRequirementConfirmMixin, self).\
             get_form(form_class)
-        for name, field in form.fields.iteritems():
+        for name, field in form.fields.items():
             field.widget = HiddenInput()
         return form
 
@@ -1509,7 +1509,7 @@ class CalendarEventCreateView(
                 hours=16
             )
         form = form_class(**kwargs)
-        for fieldname, widget in self.widgets.iteritems():
+        for fieldname, widget in self.widgets.items():
             form.fields[fieldname].widget = widget
 
         return form

@@ -322,7 +322,7 @@ class AutologgerMixin(object):
             return ""
 
         result = {}
-        for key, val in changes.iteritems():
+        for key, val in changes.items():
             name, value = self._field_value_to_display(key, val[1])
             result[name] = value
 
