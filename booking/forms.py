@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib.auth.models import User
@@ -25,6 +23,7 @@ from django.utils.dates import MONTHS
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
+from booking.constants import AVAILABLE_SEATS_NO_LIMIT
 from booking.fields import CustomModelChoiceField
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import BookingGymnasieSubjectLevel
@@ -929,7 +928,8 @@ class BookingForm(forms.ModelForm):
                     waitinglist_capacity = 0
                     bookings = 0
 
-                if available_seats is None or available_seats == sys.maxint:
+                if available_seats is None or \
+                        available_seats == AVAILABLE_SEATS_NO_LIMIT:
                     option = (eventtime.pk, date)
                 else:
                     if bookings == 0:

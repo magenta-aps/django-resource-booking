@@ -17,3 +17,5 @@ LOGACTION_DISPLAY_MAP = {
     LOGACTION_MAIL_SENT: _(u'Mail sendt'),
     LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
 }
+
+AVAILABLE_SEATS_NO_LIMIT = -1

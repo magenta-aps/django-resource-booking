@@ -2,7 +2,6 @@
 import datetime
 import math
 import re
-import sys
 
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
@@ -289,6 +288,7 @@ class EventTime(models.Model):
         else:
             return 0
 
+
     @property
     def available_seats(self):
         if self.visit:
@@ -296,7 +296,7 @@ class EventTime(models.Model):
         elif self.product:
             max = self.product.maximum_number_of_visitors
             if max is None:  # No limit set
-                return sys.maxint
+                return AVAILABLE_SEATS_NO_LIMIT
             return max
         else:
             return 0
