@@ -679,7 +679,7 @@ class EventTime(models.Model):
             else:
                 return _(u"<Intet tidspunkt angivet>")
 
-    def __unicode__(self):
+    def __str__(self):
         parts = [_(u"Tidspunkt:")]
         if self.product:
             parts.append(self.product.title)
@@ -1140,7 +1140,7 @@ class CalendarEventInstance(object):
             )
         return NotImplemented
 
-    def __unicode__(self):
+    def __str__(self):
         return 'CalendarEventInstance: %s %s - %s' % (
             "Available" if self.available else "Unavailable",
             self.start,
@@ -1342,7 +1342,7 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
             return qs
         return CalendarEvent.objects.none()
 
-    def __unicode__(self):
+    def __str__(self):
         return ", ".join(x for x in [
             self.title,
             "%s %s%s" % (
@@ -1450,7 +1450,7 @@ class ResourceType(models.Model):
                 item.save()
                 print("Created new ResourceType %d=%s" % (id, name))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -1534,7 +1534,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         cls = type.resource_class
         return cls()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (
             self.get_name(),
             str(self.resource_type)
@@ -1838,7 +1838,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
     def can_delete(self):
         return True
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (self.name, _("Gruppe af %s") % self.resource_type)
 
     @property
