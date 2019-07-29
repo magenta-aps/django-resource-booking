@@ -3206,7 +3206,7 @@ class VisitSearchView(VisitListView):
             # Make new form object
             qdict = self.request.GET.copy()
             if 'q' in qdict:
-                qdict['q'] = urllib.unquote(qdict['q']).strip()
+                qdict['q'] = urlunquote_plus(qdict['q']).strip()
             self.form = VisitSearchForm(
                 qdict,
                 user=self.request.user
