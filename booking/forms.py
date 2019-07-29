@@ -128,7 +128,7 @@ class AdminProductSearchForm(forms.Form):
         }
 
         # Add classnames to all fields
-        for fname, f in self.fields.iteritems():
+        for fname, f in self.fields.items():
             f.widget.attrs['class'] = " ".join([
                 x for x in (
                     f.widget.attrs.get('class'),
@@ -294,7 +294,7 @@ class VisitSearchForm(forms.Form):
         }
 
         # Add classnames to all fields
-        for fname, f in self.fields.iteritems():
+        for fname, f in self.fields.items():
             f.widget.attrs['class'] = " ".join([
                 x for x in (
                     f.widget.attrs.get('class'),
@@ -2051,7 +2051,7 @@ class MultiProductVisitProductsForm(MultiProductVisitTempProductsForm):
             visit.product: visit for visit in mpv.subvisits_unordered
         }
 
-        for product, visit in visits_by_product.iteritems():
+        for product, visit in visits_by_product.items():
             if product not in products_ordered:
                 visit.cancel_visit()
 

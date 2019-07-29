@@ -5890,7 +5890,7 @@ class Guest(models.Model):
         return {
             thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
             for thisref, grundskoleref
-            in Guest.grundskole_level_conversion.iteritems()
+            in Guest.grundskole_level_conversion.items()
         }
 
     school = models.ForeignKey(

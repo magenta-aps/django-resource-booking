@@ -538,7 +538,7 @@ def surveyxact_upload(survey_id, data):
     csv_suffix = '\x0a\x00'
     header = []
     body = []
-    for key, value in data.iteritems():
+    for key, value in data.items():
         header.append(str(key))
         if value is None:
             value = ''
