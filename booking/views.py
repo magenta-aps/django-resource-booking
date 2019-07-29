@@ -3675,9 +3675,9 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
     def get_context_data(self, **kwargs):
         context = {}
         context['duplicates'] = []
-        for i in xrange(0, len(self.object_list)):
+        for i in range(0, len(self.object_list)):
             objectA = self.object_list[i]
-            for j in xrange(i, len(self.object_list)):
+            for j in range(i, len(self.object_list)):
                 objectB = self.object_list[j]
                 if objectA != objectB \
                         and objectA.type == objectB.type \
