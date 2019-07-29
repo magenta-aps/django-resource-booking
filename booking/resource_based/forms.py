@@ -40,7 +40,7 @@ class CreateTimesFromRulesForm(forms.Form):
     )
 
 
-class ResourceTypeForm(forms.Form):
+class EditResourceTypeForm(forms.Form):
 
     EXCEPT_TYPES = [
         ResourceType.RESOURCE_TYPE_TEACHER,
@@ -51,7 +51,6 @@ class ResourceTypeForm(forms.Form):
     type = forms.ModelChoiceField(
         label=_(u'Type'),
         queryset=ResourceType.objects.exclude(id__in=EXCEPT_TYPES),
-        to_field_name="name",
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -67,7 +66,7 @@ class ResourceTypeForm(forms.Form):
             kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
         except AttributeError:
             pass
-        super(ResourceTypeForm, self).__init__(**kwargs)
+        super(EditResourceTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
 
 

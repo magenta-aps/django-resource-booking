@@ -3894,11 +3894,13 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             key = v[0]
             className = v[1]
             clazz = self.classes[className]
-            initial.append({
-                'key': key,
-                'type': className,
-                'value': clazz.objects.order_by('id').first().id
-            })
+            firstitem = clazz.objects.order_by('id').first()
+            if firstitem:
+                initial.append({
+                    'key': key,
+                    'type': className,
+                    'value': firstitem.id
+                })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
         context = {

@@ -1436,7 +1436,7 @@ class ResourceType(models.Model):
                 item.save()
                 print("Created new ResourceType %d=%s" % (id, name))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 

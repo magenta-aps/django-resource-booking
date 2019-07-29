@@ -6835,3 +6835,4 @@ def run_initializers():
     GrundskoleLevel.create_defaults()
     School.create_defaults()
     EmailTemplateType.migrate()
+    ResourceType.create_defaults()

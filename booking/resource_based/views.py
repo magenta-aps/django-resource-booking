@@ -423,7 +423,7 @@ class CancelledVisitsView(DetailView):
 class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                          FormView):
     template_name = "resource/typeform.html"
-    form_class = rb_forms.ResourceTypeForm
+    form_class = rb_forms.EditResourceTypeForm
     just_preserve_back = True
 
     def get_form_kwargs(self):
@@ -436,7 +436,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'])
+            typeId = int(form.cleaned_data['type'].pk)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(reverse(
