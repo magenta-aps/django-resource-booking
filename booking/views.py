@@ -827,9 +827,9 @@ class SearchView(BreadcrumbMixin, ListView):
         filters = self.get_filters()
         qs = self.get_base_queryset()
         qs = self.annotate_for_filters(qs)
-        filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
+        filter_args = [v for k, v in filters.items() if k.startswith('__')]
         filter_kwargs = {
-            k: v for k, v in filters.iteritems() if not k.startswith('__')
+            k: v for k, v in filters.items() if not k.startswith('__')
         }
         qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
@@ -849,11 +849,11 @@ class SearchView(BreadcrumbMixin, ListView):
         # Remove filter for the field we want to facetize
         filters = self.get_filters()
         new_filter_args = [
-            v for k, v in filters.iteritems()
+            v for k, v in filters.items()
             if k.startswith('__') and not k.startswith('__' + facet_field)
         ]
         new_filter_kwargs = {
-            k: v for k, v in filters.iteritems()
+            k: v for k, v in filters.items()
             if not k.startswith(facet_field) and not k.startswith('__')
         }
 
@@ -2825,7 +2825,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
     def post(self, request, *args, **kwargs):
         forms = self.get_forms(request.POST)
         all_valid = True
-        for key, form in forms.iteritems():
+        for key, form in forms.items():
             if not form.is_valid():
                 all_valid = False
         if all_valid:
@@ -3421,7 +3421,7 @@ class VisitSearchView(VisitListView):
                 'text': _(u'Søgeresultat'),
                 'url': reverse('visit-search') + '?' + '&'.join([
                     "%s=%s" % (key, str(value))
-                    for key, value in form.cleaned_data.iteritems()
+                    for key, value in form.cleaned_data.items()
                 ])
             })
         return breadcrumbs
