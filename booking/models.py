@@ -112,7 +112,7 @@ class RoomResponsible(models.Model):
     admin_delete_button.allow_tags = True
     admin_delete_button.short_description = _(u"Delete")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def get_name(self):
@@ -138,7 +138,7 @@ class OrganizationalUnitType(models.Model):
 
     name = models.CharField(max_length=25)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -205,7 +205,7 @@ class OrganizationalUnit(models.Model):
         else:
             return OrganizationalUnit.objects.none()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (self.name, self.type.name)
 
     def get_users(self, role=None):
@@ -314,7 +314,7 @@ class Subject(models.Model):
     )
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (%s)' % (self.name, self.get_subject_type_display())
 
     @classmethod
@@ -360,7 +360,7 @@ class Link(models.Model):
     # pages.
     description = models.CharField(max_length=256, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -369,7 +369,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -383,7 +383,7 @@ class Topic(models.Model):
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -410,7 +410,7 @@ class StudyMaterial(models.Model):
         on_delete=models.CASCADE,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         s = u"{0}: {1}".format(
             u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
             self.url if self.type == self.URL else self.file
@@ -443,7 +443,7 @@ class Locality(models.Model):
     # the booker's own location
     no_address = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -566,7 +566,7 @@ class EmailTemplateType(
     def name(self):
         return self.name_da
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     # Template available for manual sending from visits
@@ -1573,7 +1573,7 @@ class ProductGymnasieFag(models.Model):
 
         return f
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     def ordered_levels(self):
@@ -1667,7 +1667,7 @@ class ProductGrundskoleFag(models.Model):
 
         return f
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     @classmethod
@@ -1732,7 +1732,7 @@ class GymnasieLevel(models.Model):
                 o = GymnasieLevel(level=val)
                 o.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_level_display()
 
 
@@ -1783,7 +1783,7 @@ class GrundskoleLevel(models.Model):
                 o = GrundskoleLevel(level=val)
                 o.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_level_display()
 
 
@@ -3081,7 +3081,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
 
@@ -3979,9 +3979,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    def __unicode__(self):
+    def __str__(self):
         if self.is_multiproductvisit:
-            return self.multiproductvisit.__unicode__()
+            return str(self.multiproductvisit)
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
                 'id': self.pk,
@@ -4998,7 +4998,7 @@ class MultiProductVisit(Visit):
         for visit in self.subvisits_unordered:
             visit.autoassign_resources()
 
-    def __unicode__(self):
+    def __str__(self):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %(id)s - Prioriteret liste af '
                      u'%(count)d underbesøg - %(time)s') % {
@@ -5171,7 +5171,7 @@ class Autosend(models.Model):
     def get_name(self):
         return self.template_type.name
 
-    def __unicode__(self):
+    def __str__(self):
         return "[%d] %s (%s)" % (
             self.id,
             self.get_name(),
@@ -5206,10 +5206,10 @@ class ProductAutosend(Autosend):
         on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s on %s" % (
-            super(ProductAutosend, self).__unicode__(),
-            self.product.__unicode__()
+            super(ProductAutosend, self).__str__(),
+            self.product.__str__()
         )
 
 
@@ -5228,10 +5228,10 @@ class VisitAutosend(Autosend):
         if self.inherit:
             return self.visit.get_autosend(self.template_type)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s on %s" % (
-            super(VisitAutosend, self).__unicode__(),
-            self.visit.__unicode__()
+            super(VisitAutosend, self).__str__(),
+            self.visit.__str__()
         )
 
 
@@ -5253,7 +5253,7 @@ class Room(models.Model):
         max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
     )
 
-    def __unicode__(self):
+    def __str__(self):
         if self.locality:
             return '%s - %s' % (self.name, str(self.locality))
         else:
@@ -5312,7 +5312,7 @@ class Region(models.Model):
         verbose_name=_(u'Engelsk navn')
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -5343,7 +5343,7 @@ class Municipality(models.Model):
         on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -5378,7 +5378,7 @@ class PostCode(models.Model):
         on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%d %s" % (self.number, self.city)
 
     @staticmethod
@@ -5470,7 +5470,7 @@ class School(models.Model):
         verbose_name=_(u'Uddannelsestype')
     )
 
-    def __unicode__(self):
+    def __str__(self):
         if self.postcode is not None:
             return "%s (%d %s)" % \
                    (self.name, self.postcode.number, self.postcode.city)
@@ -5779,7 +5779,7 @@ class Guest(models.Model):
             self.school
         ] if x])
 
-    def __unicode__(self):
+    def __str__(self):
         if self.email is not None and self.email != "":
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
@@ -5987,7 +5987,7 @@ class Booking(models.Model):
             self.statistics = statistics
             self.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return _("Tilmelding #%d") % self.id
 
     @property
@@ -6112,7 +6112,7 @@ class BookingGymnasieSubjectLevel(models.Model):
         on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
 
     def display_value(self):
@@ -6147,7 +6147,7 @@ class BookingGrundskoleSubjectLevel(models.Model):
         on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
 
     def display_value(self):
@@ -6572,7 +6572,7 @@ class SurveyXactEvaluation(models.Model):
                     )
                     evaluationguest.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
 
