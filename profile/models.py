@@ -97,7 +97,7 @@ class UserRole(models.Model):
                 name=entry["name"]
             )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -128,7 +128,7 @@ class UserProfile(models.Model):
         default=""
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.username
 
     def get_full_email(self):
@@ -604,7 +604,7 @@ class EmailLoginURL(models.Model):
     def is_expired(self):
         return (self.created + self.expires_in) < timezone.now()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.as_public_url()
 
     @classmethod

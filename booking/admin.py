@@ -200,7 +200,7 @@ CUSTOM_ADMIN_CLASSES[booking_models.OrganizationalUnit] = KUBookingUnitAdmin
 
 
 class KUBookingRoomResponsibleAdmin(KUBookingModelAdmin):
-    list_display = ['__unicode__', 'admin_delete_button']
+    list_display = ['__str__', 'admin_delete_button']
 
 
 CUSTOM_ADMIN_CLASSES[booking_models.RoomResponsible] = (
