@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 import warnings
 from datetime import datetime, timedelta
 
@@ -422,7 +421,7 @@ class ListAjaxView(TemplateView):
             'headerless': True,
             'list': {
                 'type': type,
-                'limit': sys.maxint,
+                'limit': 1000000,
                 'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
             }
         }
