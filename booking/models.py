@@ -687,7 +687,7 @@ class EmailTemplateType(
         return template_type
 
     @staticmethod
-    def set_defaults():
+    def create_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
             name_da=u'Besked til gæst ved tilmelding (med fast tid)',
@@ -1156,7 +1156,7 @@ class EmailTemplateType(
 
     @staticmethod
     def migrate():
-        EmailTemplateType.set_defaults()
+        EmailTemplateType.create_defaults()
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
@@ -6828,3 +6828,10 @@ VehicleResource = rb_models.VehicleResource
 ResourcePool = rb_models.ResourcePool
 ResourceRequirement = rb_models.ResourceRequirement
 VisitResource = rb_models.VisitResource
+
+def run_initializers():
+    Locality.create_defaults()
+    GymnasieLevel.create_defaults()
+    GrundskoleLevel.create_defaults()
+    School.create_defaults()
+    EmailTemplateType.migrate()
