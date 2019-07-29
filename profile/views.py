@@ -36,6 +36,7 @@ from booking.mixins import AccessDenied
 from booking.mixins import BreadcrumbMixin
 from booking.mixins import EditorRequiredMixin
 from booking.mixins import LoginRequiredMixin
+from booking.models import Booking
 from booking.models import EmailTemplateType
 from booking.models import KUEmailMessage
 from booking.models import OrganizationalUnit
