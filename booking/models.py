@@ -39,7 +39,7 @@ from django.utils.translation import ugettext
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
 from booking.managers import VisitQuerySet
-from booking.constants import LOGACTION_MAIL_SENT
+from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import (

@@ -1381,7 +1381,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
             if not created:
                 found = False
-                for x in existing_gym_fag.keys():
+                for x in list(existing_gym_fag.keys()):
                     if existing_gym_fag[x].subject.is_all():
                         # Unschedule 'all' from deletion
                         del existing_gym_fag[x]
@@ -1393,7 +1393,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     )
 
             # Delete any remaining values that were not submitted
-            for key, value in existing_gym_fag.items():
+            for key, value in list(existing_gym_fag.items()):
                 value.delete()
 
         if self.object.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE:

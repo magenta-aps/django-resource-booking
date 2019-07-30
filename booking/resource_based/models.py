@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 
+from booking.constants import AVAILABLE_SEATS_NO_LIMIT
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
