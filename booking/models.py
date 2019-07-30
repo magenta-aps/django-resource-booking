@@ -17,7 +17,7 @@ from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models
 from django.db.models import Count, Case, When
 from django.db.models import F
@@ -38,7 +38,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
-from booking.constants import LOGACTION_MAIL_SENT
+from booking.managers import VisitQuerySet
+from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty
