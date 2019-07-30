@@ -6292,6 +6292,7 @@ class KUEmailMessage(models.Model):
                 address.formatted_address
                 for address in original_from_email
                 if isinstance(address, KUEmailRecipient)
+                and address.formatted_address is not None
             ]),
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,

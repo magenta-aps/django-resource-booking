@@ -33,6 +33,7 @@ from django.utils.translation.trans_real import get_languages
 from django.views.defaults import bad_request
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import RedirectView
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
@@ -2978,6 +2979,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 class BookingEditView(BreadcrumbMixin, EditorRequiredMixin, UpdateView):
     template_name = "booking/edit.html"
     model = Booking
+    form_class = BookingForm
 
     def get_forms(self, data=None):
         products = self.object.visit.products
