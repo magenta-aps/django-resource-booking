@@ -53,7 +53,7 @@ class VisitQuerySet(models.QuerySet):
                 eventtime__product__type__in=product_types,
             ) | self.filter(
                 multiproductvisit__isnull=False,
-                multiproductvisit__subvisit__in=self.filter(
+                multiproductvisit__subvisit__in=self.model.objects.filter(
                     eventtime__product__type__in=product_types,
                     is_multi_sub=True,
                 ),
