@@ -139,7 +139,7 @@ class RoleRequiredMixin(object):
                 return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
         else:
             pass
-        txts = map(role_to_text, self.roles)
+        txts = map(str, map(role_to_text, self.roles))
         # TODO: Render this with the error message!
         raise AccessDenied(
             u"Kun brugere med disse roller kan logge ind: " +
