@@ -18,7 +18,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Case, When
-from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.base import ModelBase

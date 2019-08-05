@@ -179,7 +179,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.objects.get_latest_updated(self.request.user),
+                    'queryset': Product.objects.get_latest_updated(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -190,7 +192,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.objects.get_latest_booked(self.request.user),
+                    'queryset': Product.objects.get_latest_booked(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -1955,8 +1959,9 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         context['EmailTemplate'] = EmailTemplate
 
         if can_edit:
-            context['emails'] = KUEmailMessage\
-                objects.get_by_instance(self.object).order_by('-created')
+            context['emails'] = KUEmailMessage.objects.get_by_instance(
+                self.object
+            ).order_by('-created')
 
         context.update(kwargs)
 
@@ -3453,8 +3458,9 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             )
-        context['emails'] = KUEmailMessage.objects.get_by_instance(self.object)\
-            .order_by('-created')
+        context['emails'] = KUEmailMessage.objects.get_by_instance(
+            self.object
+        ).order_by('-created')
 
         context.update(kwargs)
 
