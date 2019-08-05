@@ -2400,7 +2400,7 @@ class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
         type = request.GET.get('t')
-        items = School.search(query, type)
+        items = School.objects.search(query, type)
         json = {
             'schools': [
                 {
