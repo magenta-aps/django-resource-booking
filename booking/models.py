@@ -64,25 +64,6 @@ BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
 
 
-# TODO: remove this, along with the djorm_pgfulltext dependency.
-class VectorField(djorm_pgfulltext.fields.VectorField):
-    """
-    Customized version of djorm_pgfulltext.fields.VectorField that does
-    not always enable indexes. This is needed since the default index created
-    does not work for large amounts of data.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['null'] = True
-        kwargs['default'] = ''
-        kwargs['editable'] = False
-        kwargs['serialize'] = False
-        # Note: Calling the super of super here, since the super
-        # will re-enable kwargs['db_index']
-        super(djorm_pgfulltext.fields.VectorField, self).__init__(
-            *args, **kwargs
-        )
-
-
 class RoomResponsible(models.Model):
     class Meta:
         verbose_name = _(u'Lokaleanvarlig')

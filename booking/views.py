@@ -686,15 +686,6 @@ class SearchView(BreadcrumbMixin, ListView):
 
         return qs
 
-    def annotate(self, qs):
-        # No longer used, annotations are carried out on the result object
-        # list in get_context_data.
-        # qs = qs.annotate(
-        #     eventtime_count=Count('eventtime__pk', distinct=True),
-        #     first_eventtime=Min('eventtime__start')
-        # )
-        return qs
-
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
