@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from django.db import models
 from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
 
 
 class VisitQuerySet(models.QuerySet):
@@ -36,11 +37,14 @@ class VisitQuerySet(models.QuerySet):
 
     def unit_filter(self, unit_qs, **kwargs):
         return self.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs) | Q(**{
-                "multiproductvisit__subvisit__is_multi_sub": True,
-                "multiproductvisit__subvisit__eventtime__"
-                "product__organizationalunit__in": unit_qs,
-            }),
+            Q(eventtime__product__organizationalunit__in=unit_qs)
+            | Q(
+                **{
+                    "multiproductvisit__subvisit__is_multi_sub": True,
+                    "multiproductvisit__subvisit__eventtime__"
+                    "product__organizationalunit__in": unit_qs,
+                }
+            ),
             **kwargs
         )
 
@@ -51,11 +55,11 @@ class VisitQuerySet(models.QuerySet):
             self.filter(
                 multiproductvisit__isnull=True,
                 eventtime__product__type__in=product_types,
-            ) | self.filter(
+            )
+            | self.filter(
                 multiproductvisit__isnull=False,
                 multiproductvisit__subvisit__in=self.filter(
-                    eventtime__product__type__in=product_types,
-                    is_multi_sub=True,
+                    eventtime__product__type__in=product_types, is_multi_sub=True
                 ),
                 **kwargs
             )
@@ -97,13 +101,9 @@ class VisitQuerySet(models.QuerySet):
         min_date = datetime.combine(date, time.min)
         max_date = datetime.combine(date, time.max)
 
-        return self.filter(
-            eventtime__start__lte=max_date, is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) & Q(
-                    eventtime__start__gt=min_date)
-            )
+        return self.filter(eventtime__start__lte=max_date, is_multi_sub=False).filter(
+            Q(eventtime__end__gte=min_date)
+            | (Q(eventtime__end__isnull=True) & Q(eventtime__start__gt=min_date))
         )
 
     def get_recently_held(self, time=None, **kwargs):
@@ -121,10 +121,114 @@ class VisitQuerySet(models.QuerySet):
                 **kwargs
             )
             .filter(
-                Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) & Q(
-                        eventtime__start__lt=time + timedelta(hours=12))
+                Q(eventtime__end__lt=time)
+                | (
+                    Q(eventtime__end__isnull=True)
+                    & Q(eventtime__start__lt=time + timedelta(hours=12))
                 )
             )
             .order_by("-eventtime__end")
+        )
+
+
+class BookingQuerySet(models.QuerySet):
+    def get_latest_created(self):
+        return self.order_by("-statistics__created_time")
+
+    def get_latest_updated(self):
+        return self.order_by("-statistics__updated_time")
+
+    def get_latest_displayed(self):
+        return self.order_by("-statistics__visited_time")
+
+
+class ProductQuerySet(models.QuerySet):
+    def filter_public_bookable(self):
+        from booking.models import EventTime, Visit
+
+        nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        resource_controlled = [
+            self.model.TIME_MODE_RESOURCE_CONTROLLED,
+            self.model.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
+        ]
+        return self.filter(
+            Q(time_mode=self.model.TIME_MODE_GUEST_SUGGESTED)
+            | Q(
+                # Only stuff that can be booked
+                eventtime__bookable=True,
+                # In the future
+                eventtime__start__gt=timezone.now(),
+                # Only include stuff with bookable states
+                eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
+            )
+            & Q(
+                # Either not resource controlled
+                (~Q(time_mode__in=resource_controlled))
+                |
+                # Or resource-controlled with nonblocked eventtimes
+                Q(
+                    time_mode__in=resource_controlled,
+                    eventtime__resource_status__in=nonblocked,
+                )
+            )
+        ).filter(state=self.model.ACTIVE)
+
+    def get_latest_created(self, user=None):
+        qs = self.filter(statistics__isnull=False)
+
+        if user and not user.is_authenticated():
+            # subselect-instead-of-distinct trick
+            qs = qs.filter_public_bookable().only("pk")
+
+        return qs.order_by("-statistics__created_time")
+
+    def get_latest_updated(self, user=None):
+        qs = Product.objects.filter(statistics__isnull=False)
+
+        if user and not user.is_authenticated():
+            # subselect-instead-of-distinct trick
+            qs = qs.filter_public_bookable().only("pk")
+
+        return qs.order_by("-statistics__updated_time")
+
+    def get_latest_displayed(self, user=None):
+        qs = self.filter(statistics__isnull=False)
+
+        if user and not user.is_authenticated():
+            # subselect-instead-of-distinct trick
+            qs = qs.filter_public_bookable().only("pk")
+
+        return qs.order_by("-statistics__visited_time")
+
+    def get_latest_booked(self, user=None):
+        qs = self.filter(
+            eventtime__visit__bookings__statistics__created_time__isnull=False
+        )
+
+        if user and not user.is_authenticated():
+            qs = qs.filter_public_bookable().only("pk")
+
+        return qs.annotate(
+            latest_booking=Max("eventtime__visit__bookings__statistics__created_time")
+        ).order_by("-latest_booking")
+
+
+class SchoolQuerySet(models.QuerySet):
+    def search(self, query, type=None):
+        qs = self.filter(name__icontains=query)
+        if type is not None:
+            try:
+                type = int(type)
+                if type in [id for id, title in School.type_choices]:
+                    qs = qs.filter(type=type)
+            except ValueError:
+                pass
+        return qs
+
+
+class KUEmailMessageQuerySet(models.QuerySet):
+    def get_by_instance(self, instance):
+        return self.filter(
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.id,
         )
