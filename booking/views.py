@@ -179,7 +179,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.get_latest_updated(self.request.user),
+                    'queryset': Product.objects.get_latest_updated(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -190,7 +192,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.get_latest_booked(self.request.user),
+                    'queryset': Product.objects.get_latest_booked(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -1077,9 +1081,9 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
         try:
             listtype = self.request.GET.get("type", "")
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked(self.request.user)
+                return Product.objects.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated(self.request.user)
+                return Product.objects.get_latest_updated(self.request.user)
         except:
             pass
         raise Http404
@@ -1955,8 +1959,9 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         context['EmailTemplate'] = EmailTemplate
 
         if can_edit:
-            context['emails'] = KUEmailMessage\
-                .get_by_instance(self.object).order_by('-created')
+            context['emails'] = KUEmailMessage.objects.get_by_instance(
+                self.object
+            ).order_by('-created')
 
         context.update(kwargs)
 
@@ -2395,7 +2400,7 @@ class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
         type = request.GET.get('t')
-        items = School.search(query, type)
+        items = School.objects.search(query, type)
         json = {
             'schools': [
                 {
@@ -3453,8 +3458,9 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             )
-        context['emails'] = KUEmailMessage.get_by_instance(self.object)\
-            .order_by('-created')
+        context['emails'] = KUEmailMessage.objects.get_by_instance(
+            self.object
+        ).order_by('-created')
 
         context.update(kwargs)
 

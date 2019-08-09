@@ -18,7 +18,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Case, When
-from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.base import ModelBase
@@ -37,7 +36,13 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
-from booking.managers import VisitQuerySet
+from booking.managers import (
+    VisitQuerySet,
+    BookingQuerySet,
+    ProductQuerySet,
+    SchoolQuerySet,
+    KUEmailMessageQuerySet
+)
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
@@ -1737,6 +1742,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
+    objects = ProductQuerySet.as_manager()
+
     # Product type.
     STUDENT_FOR_A_DAY = 0
     GROUP_VISIT = 1
@@ -2646,69 +2653,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return True
 
-    @staticmethod
-    def get_latest_created(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__visited_time')
-
-    @classmethod
-    def filter_public_bookable(cls, queryset):
-        nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
-        resource_controlled = [
-            Product.TIME_MODE_RESOURCE_CONTROLLED,
-            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
-        ]
-        return queryset.filter(
-            Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
-            Q(
-                # Only stuff that can be booked
-                eventtime__bookable=True,
-                # In the future
-                eventtime__start__gt=timezone.now(),
-                # Only include stuff with bookable states
-                eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
-            ) & Q(
-                # Either not resource controlled
-                (~Q(time_mode__in=resource_controlled)) |
-                # Or resource-controlled with nonblocked eventtimes
-                Q(
-                    time_mode__in=resource_controlled,
-                    eventtime__resource_status__in=nonblocked
-                )
-            )
-        ).filter(state=cls.ACTIVE)
-
     def ensure_statistics(self):
         if self.statistics is None:
             statistics = ObjectStatistics()
@@ -2901,21 +2845,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 hours=int(hours),
                 minutes=int(minutes)
             )
-
-    @staticmethod
-    def get_latest_booked(user=None):
-        qs = Product.objects.filter(
-            eventtime__visit__bookings__statistics__created_time__isnull=False
-        )
-
-        if user and not user.is_authenticated():
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.annotate(latest_booking=Max(
-            'eventtime__visit__bookings__statistics__created_time'
-        )).order_by("-latest_booking")
 
     @property
     def room_responsible_users(self):
@@ -5329,6 +5258,8 @@ class School(models.Model):
         verbose_name_plural = _(u'uddannelsesinstitutioner')
         ordering = ["name", "postcode"]
 
+    objects = SchoolQuerySet.as_manager()
+
     name = models.CharField(
         max_length=128,
     )
@@ -5372,19 +5303,6 @@ class School(models.Model):
             return "%s (%d %s)" % \
                    (self.name, self.postcode.number, self.postcode.city)
         return self.name
-
-    @staticmethod
-    def search(query, type=None):
-        query = query.lower()
-        qs = School.objects.filter(name__icontains=query)
-        if type is not None:
-            try:
-                type = int(type)
-                if type in [id for id, title in School.type_choices]:
-                    qs = qs.filter(type=type)
-            except ValueError:
-                pass
-        return qs
 
     @staticmethod
     def create_defaults():
@@ -5635,12 +5553,6 @@ class Guest(models.Model):
         except:
             return 0
 
-    def get_booking(self):
-        try:
-            return self.booking
-        except:
-            return None
-
     def evaluationguest_student(self):
         try:
             return self.surveyxactevaluationguest_set.filter(
@@ -5671,9 +5583,6 @@ class Guest(models.Model):
         if self.email is not None and self.email != "":
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
-
-    def get_email(self):
-        return self.email
 
     def get_name(self):
         if self.firstname == Guest.anonymized:
@@ -5706,6 +5615,8 @@ class Booking(models.Model):
     class Meta:
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
+
+    objects = BookingQuerySet.as_manager()
 
     booker = models.OneToOneField(Guest)
 
@@ -5851,18 +5762,6 @@ class Booking(models.Model):
             self.booker.as_searchtext(),
             self.notes
         ] if x])
-
-    @staticmethod
-    def get_latest_created():
-        return Booking.objects.order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Booking.objects.order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Booking.objects.order_by('-statistics__visited_time')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -6018,6 +5917,9 @@ class BookingGrundskoleSubjectLevel(models.Model):
 
 class KUEmailMessage(models.Model):
     """Email data for logging purposes."""
+
+    objects = KUEmailMessageQuerySet.as_manager()
+
     created = models.DateTimeField(
         blank=False,
         null=False,
@@ -6078,7 +5980,7 @@ class KUEmailMessage(models.Model):
                 user = recipient
             elif isinstance(recipient, Guest):
                 name = recipient.get_name()
-                address = recipient.get_email()
+                address = recipient.email
                 guest = recipient
             else:
                 try:
@@ -6086,7 +5988,7 @@ class KUEmailMessage(models.Model):
                 except:
                     pass
                 try:
-                    address = recipient.get_email()
+                    address = recipient.email
                 except:
                     pass
             if address is not None and address != '':
@@ -6275,13 +6177,6 @@ class KUEmailMessage(models.Model):
                     email.template_key
                 )
                 email.save()
-
-    @staticmethod
-    def get_by_instance(instance):
-        return KUEmailMessage.objects.filter(
-            content_type=ContentType.objects.get_for_model(instance),
-            object_id=instance.id
-        )
 
     @property
     def replies(self):
