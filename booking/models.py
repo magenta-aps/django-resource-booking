@@ -41,7 +41,8 @@ from booking.managers import (
     BookingQuerySet,
     ProductQuerySet,
     SchoolQuerySet,
-    KUEmailMessageQuerySet
+    KUEmailMessageQuerySet,
+    SurveyXactEvaluationGuestQuerySet
 )
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
@@ -6324,6 +6325,7 @@ class SurveyXactEvaluation(models.Model):
 
 
 class SurveyXactEvaluationGuest(models.Model):
+    objects = SurveyXactEvaluationGuestQuerySet.as_manager()
 
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
@@ -6361,14 +6363,6 @@ class SurveyXactEvaluationGuest(models.Model):
     shortlink_id = models.CharField(
         max_length=16,
     )
-
-    @staticmethod
-    def filter_status(qs, status):
-        return qs.filter(status=status)
-
-    @staticmethod
-    def filter_visit(qs, visit):
-        qs.filter(guest__booking__visit=visit)
 
     @property
     def link(self):
