@@ -232,3 +232,11 @@ class KUEmailMessageQuerySet(models.QuerySet):
             content_type=ContentType.objects.get_for_model(instance),
             object_id=instance.id,
         )
+
+
+class SurveyXactEvaluationGuestQuerySet(models.QuerySet):
+    def filter_visit(self, visit):
+        return self.filter(guest__booking__visit=visit)
+
+    def filter_status(self, status):
+        return self.filter(status=status)
