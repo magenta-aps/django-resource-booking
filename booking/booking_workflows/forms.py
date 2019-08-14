@@ -176,6 +176,7 @@ class BecomeSomethingForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         label=_(u'Opfyld behov for'),
         required=False,
+        queryset=None,
     )
 
     comment = forms.CharField(
