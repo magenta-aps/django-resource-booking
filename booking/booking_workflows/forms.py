@@ -172,11 +172,10 @@ class VisitAddCommentForm(forms.Form):
 class BecomeSomethingForm(forms.Form):
 
     resourcerequirements = forms.ModelMultipleChoiceField(
-        booking.models.ResourceRequirement,
+        queryset=None,
         widget=forms.CheckboxSelectMultiple,
         label=_(u'Opfyld behov for'),
         required=False,
-        queryset=None,
     )
 
     comment = forms.CharField(
