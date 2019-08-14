@@ -1596,7 +1596,11 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
 
     def available_for_visit(self, visit):
         eventtime = getattr(visit, 'eventtime', None)
-        if eventtime is None:
+        if (
+            eventtime is None or
+            eventtime.start is None or
+            eventtime.end is None
+        ):
             return False
         return self.is_available_between(
             eventtime.start,
