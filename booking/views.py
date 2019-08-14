@@ -827,7 +827,6 @@ class SearchView(BreadcrumbMixin, ListView):
             k: v for k, v in filters.iteritems() if not k.startswith('__')
         }
         qs = qs.filter(*filter_args, **filter_kwargs)
-        qs = self.annotate(qs)
 
         qs = qs.prefetch_related(
             'productgymnasiefag_set', 'productgrundskolefag_set'
