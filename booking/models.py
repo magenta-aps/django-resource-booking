@@ -5585,6 +5585,9 @@ class Guest(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_email(self):
+        return self.email
+
     def get_name(self):
         if self.firstname == Guest.anonymized:
             return Guest.anonymized
@@ -5981,7 +5984,7 @@ class KUEmailMessage(models.Model):
                 user = recipient
             elif isinstance(recipient, Guest):
                 name = recipient.get_name()
-                address = recipient.email
+                address = recipient.get_email()
                 guest = recipient
             else:
                 try:
@@ -5989,7 +5992,7 @@ class KUEmailMessage(models.Model):
                 except:
                     pass
                 try:
-                    address = recipient.email
+                    address = recipient.get_email()
                 except:
                     pass
             if address is not None and address != '':
