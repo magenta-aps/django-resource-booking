@@ -2490,7 +2490,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         self._old_state = self._as_state()
 
         forms = self.get_forms(request.POST)
-
         # We must disregard one of the school subject forms, depending on
         # which school is selected
         forms['bookerform'].full_clean()
@@ -2517,9 +2516,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 eventtime_pk = relevant_forms['bookingform'].cleaned_data.get(
                     'eventtime', ''
                 )
+                desired_date = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_date', None
+                )
+                desired_time = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_time', None
+                )
             else:
                 booking = self.object
                 eventtime_pk = None
+                desired_date = None
+                desired_time = None
 
             if eventtime_pk:
                 eventtime = self.product.eventtime_set.filter(
@@ -2537,7 +2544,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
-                eventtime.make_visit()
+                # if a desired date and time exists, include it on the visit
+                if desired_date is not None and desired_time is not None:
+                    desired_datetime = datetime.combine(
+                        desired_date, desired_time
+                    ).strftime("%d.%m.%Y %H:%M")
+                    eventtime.make_visit(desired_time=desired_datetime)
+                else:
+                    eventtime.make_visit()
                 log_action(
                     self.request.user,
                     eventtime.visit,
@@ -2840,7 +2854,6 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
         bookingform = forms['bookingform']
         booking = self.object = bookingform.save(commit=False)
         visit = booking.visit = self.visit
-
         if visit:
             cleaned_data = bookingform.cleaned_data
             if 'desired_time' in cleaned_data:
