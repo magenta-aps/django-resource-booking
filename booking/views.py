@@ -2490,6 +2490,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         self._old_state = self._as_state()
 
         forms = self.get_forms(request.POST)
+
         # We must disregard one of the school subject forms, depending on
         # which school is selected
         forms['bookerform'].full_clean()
@@ -2854,6 +2855,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
         bookingform = forms['bookingform']
         booking = self.object = bookingform.save(commit=False)
         visit = booking.visit = self.visit
+
         if visit:
             cleaned_data = bookingform.cleaned_data
             if 'desired_time' in cleaned_data:
