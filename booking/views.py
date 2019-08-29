@@ -2986,6 +2986,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     template_name = "booking/edit.html"
     model = Booking
+    fields = '__all__'
 
     def get_forms(self, data=None):
         products = self.object.visit.products
