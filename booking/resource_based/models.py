@@ -162,6 +162,9 @@ class EventTime(models.Model):
         if "needs_attention_since" not in kwargs:
             kwargs['needs_attention_since'] = timezone.now()
 
+        # filter out kwargs that are not fields on the actual visit model.
+        fields = set(f.name for f in visit_model._meta.get_fields())
+        kwargs = {k: v for k, v in kwargs.items() if k in fields}
         visit = visit_model(**kwargs)
 
         # If the product specifies no rooms are needed, set this on the

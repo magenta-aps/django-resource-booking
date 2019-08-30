@@ -4433,7 +4433,7 @@ class MultiProductVisitAddProductView(BackMixin,
         if self.object.workflow_status not in [
             Visit.WORKFLOW_STATUS_BEING_PLANNED
         ]:
-            raise HttpResponseBadRequest(
+            return HttpResponseBadRequest(
                 u'Can only edit visits that are being planned'
             )
         return super(MultiProductVisitAddProductView, self)\
