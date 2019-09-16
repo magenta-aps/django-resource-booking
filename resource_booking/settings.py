@@ -262,7 +262,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 PUBLIC_URL_PROTOCOL = 'http'
-PUBLIC_URL_HOSTNAME = 'kubooking.magenta-aps.dk'
+PUBLIC_URL_HOSTNAME = 'kubooking.magenta.dk'
 PUBLIC_URL_PORT = None
 
 SURVEYXACT = {

@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
-import booking.models
 from booking.fields import MultipleChoiceDisableModelField
 from booking.models import EmailTemplateType
 from booking.models import Visit, VisitAutosend, MultiProductVisit
@@ -172,7 +171,7 @@ class VisitAddCommentForm(forms.Form):
 class BecomeSomethingForm(forms.Form):
 
     resourcerequirements = forms.ModelMultipleChoiceField(
-        booking.models.ResourceRequirement,
+        queryset=None,
         widget=forms.CheckboxSelectMultiple,
         label=_(u'Opfyld behov for'),
         required=False,

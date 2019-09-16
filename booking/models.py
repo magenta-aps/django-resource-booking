@@ -41,7 +41,8 @@ from booking.managers import (
     BookingQuerySet,
     ProductQuerySet,
     SchoolQuerySet,
-    KUEmailMessageQuerySet
+    KUEmailMessageQuerySet,
+    SurveyXactEvaluationGuestQuerySet
 )
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
@@ -5584,6 +5585,9 @@ class Guest(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_email(self):
+        return self.email
+
     def get_name(self):
         if self.firstname == Guest.anonymized:
             return Guest.anonymized
@@ -5980,7 +5984,7 @@ class KUEmailMessage(models.Model):
                 user = recipient
             elif isinstance(recipient, Guest):
                 name = recipient.get_name()
-                address = recipient.email
+                address = recipient.get_email()
                 guest = recipient
             else:
                 try:
@@ -5988,7 +5992,7 @@ class KUEmailMessage(models.Model):
                 except:
                     pass
                 try:
-                    address = recipient.email
+                    address = recipient.get_email()
                 except:
                     pass
             if address is not None and address != '':
@@ -6324,6 +6328,7 @@ class SurveyXactEvaluation(models.Model):
 
 
 class SurveyXactEvaluationGuest(models.Model):
+    objects = SurveyXactEvaluationGuestQuerySet.as_manager()
 
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
@@ -6356,14 +6361,6 @@ class SurveyXactEvaluationGuest(models.Model):
     shortlink_id = models.CharField(
         max_length=16,
     )
-
-    @staticmethod
-    def filter_status(qs, status):
-        return qs.filter(status=status)
-
-    @staticmethod
-    def filter_visit(qs, visit):
-        qs.filter(guest__booking__visit=visit)
 
     @property
     def link(self):
