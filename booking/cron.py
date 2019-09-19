@@ -1,15 +1,22 @@
 # coding=utf-8
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit, Guest, \
-    SurveyXactEvaluation
-from booking.models import MultiProductVisitTemp, EventTime
-from django_cron import CronJobBase, Schedule
-from django_cron.models import CronJobLog
+from booking.models import (
+    VisitAutosend,
+    EmailTemplateType,
+    Visit,
+    Guest,
+    SurveyXactEvaluation,
+    KUEmailMessage,
+    MultiProductVisitTemp,
+    EventTime
+)
+import traceback
+
 from django.db.models import Count, Q
 from django.utils import timezone
-
-import traceback
+from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 
 from booking.utils import surveyxact_anonymize
 
@@ -348,3 +355,35 @@ class AnonymizeEvaluationsJob(KuCronJob):
             success = surveyxact_anonymize(survey_id, limit)
             if not success:
                 print "Failed anonymizing survey %d" % survey_id
+
+
+class AnonymizeInquirersJob(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.inquirers'
+    description = "Anonymizes inquirers that asked about products"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        messages = KUEmailMessage.objects.filter(
+            template_type__key=EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
+            created__lt=limit
+        )
+        messages.delete()
+
+
+class AnonymizeEmailsJob(KuCronJob):
+    RUN_AT_TIMES = ['00:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.anonymize.emails'
+    description = "Anonymizes emails"
+
+    def run(self):
+        limit = timezone.now() - timedelta(days=90)
+        messages = KUEmailMessage.objects.filter(
+            created__lt=limit,
+        ).exclude(
+            **KUEmailMessage.anonymized_filter
+        )
+        for message in messages:
+            message.anonymize()
