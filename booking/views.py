@@ -2517,9 +2517,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 eventtime_pk = relevant_forms['bookingform'].cleaned_data.get(
                     'eventtime', ''
                 )
+                desired_date = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_date', None
+                )
+                desired_time = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_time', None
+                )
             else:
                 booking = self.object
                 eventtime_pk = None
+                desired_date = None
+                desired_time = None
 
             if eventtime_pk:
                 eventtime = self.product.eventtime_set.filter(
@@ -2537,7 +2545,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
-                eventtime.make_visit()
+                # if a desired date and time exists, include it on the visit
+                if desired_date is not None and desired_time is not None:
+                    desired_datetime = datetime.combine(
+                        desired_date, desired_time
+                    ).strftime("%d.%m.%Y %H:%M")
+                    eventtime.make_visit(desired_time=desired_datetime)
+                else:
+                    eventtime.make_visit()
                 log_action(
                     self.request.user,
                     eventtime.visit,
@@ -2986,6 +3001,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     template_name = "booking/edit.html"
     model = Booking
+    fields = '__all__'
 
     def get_forms(self, data=None):
         products = self.object.visit.products
@@ -4445,7 +4461,7 @@ class MultiProductVisitAddProductView(BackMixin,
         if self.object.workflow_status not in [
             Visit.WORKFLOW_STATUS_BEING_PLANNED
         ]:
-            raise HttpResponseBadRequest(
+            return HttpResponseBadRequest(
                 u'Can only edit visits that are being planned'
             )
         return super(MultiProductVisitAddProductView, self)\
