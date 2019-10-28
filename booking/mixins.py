@@ -3,7 +3,9 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import model_to_dict
+from django.http import QueryDict
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.base import ContextMixin
@@ -378,3 +380,26 @@ class LoggedViewMixin(object):
             log_entries=self.get_log_queryset(),
             **kwargs
         )
+
+
+class CustomCanonicalUrlMixin(ContextMixin):
+
+    canonical_url_params = []
+
+    def get_canonical_url(self):
+        path = self.request.path
+        if self.request.GET.keys() == set(self.canonical_url_params):
+            params = self.request.GET
+        else:
+            params = QueryDict(mutable=True)
+            for key in self.canonical_url_params:
+                if key in self.request.GET:
+                    params[key] = self.request.GET[key]
+        if len(params):
+            path = path + "?" + params.urlencode()
+        return path
+
+    def get_context_data(self, **kwargs):
+        context = super(CustomCanonicalUrlMixin, self).get_context_data(**kwargs)
+        context['canonical_url'] = self.get_canonical_url()
+        return context

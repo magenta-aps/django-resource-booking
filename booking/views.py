@@ -5,6 +5,7 @@ import re
 import urllib
 from datetime import datetime, timedelta
 
+import urls
 from dateutil.rrule import rrulestr
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -14,9 +15,9 @@ from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
+from django.db.models import F
 from django.db.models import Q
 from django.db.models import Sum
-from django.db.models import F
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.forms import HiddenInput
@@ -38,7 +39,6 @@ from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 
 import booking.models as booking_models
-import urls
 from booking.constants import LOGACTION_CREATE
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
@@ -86,6 +86,7 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
+from booking.mixins import CustomCanonicalUrlMixin
 from booking.mixins import EditorRequriedMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
@@ -1072,7 +1073,7 @@ class SearchView(BreadcrumbMixin, ListView):
         return size
 
 
-class ProductCustomListView(BreadcrumbMixin, ListView):
+class ProductCustomListView(BreadcrumbMixin, CustomCanonicalUrlMixin, ListView):
 
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
@@ -1081,6 +1082,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
     model = Product
     context_object_name = "results"
     paginate_by = 10
+    canonical_url_params = ['type', 'page', 'pagesize']
 
     def get_queryset(self):
         try:
@@ -2960,7 +2962,6 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 
         if bookingform is not None:
             if self.visit.multiproductvisit:
-                print "bookingform.class: %s" % bookingform.__class__.__name__
                 if 'tmp' in self.request.GET:
                     temp = MultiProductVisitTemp.objects.get(
                         id=self.request.GET['tmp']
@@ -3148,11 +3149,14 @@ class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
         ]
 
 
-class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
+class VisitListView(CustomCanonicalUrlMixin, LoginRequiredMixin,
+                    BreadcrumbMixin, ListView):
     model = Visit
     template_name = "visit/list.html"
     context_object_name = "results"
     paginate_by = 10
+
+    canonical_url_params = ['qstring', 'page', 'pagesize']
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3166,14 +3170,11 @@ class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             qdict.pop("pagesize")
 
         context["qstring"] = qdict.urlencode()
-
         context['pagesizes'] = [5, 10, 15, 20]
 
         context.update(kwargs)
 
-        return super(VisitListView, self).get_context_data(
-            **context
-        )
+        return super(VisitListView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
         size = self.request.GET.get("pagesize", 10)
@@ -3194,6 +3195,7 @@ class VisitCustomListView(VisitListView):
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
     TYPE_TODAY = "today"
+    canonical_url_params = VisitListView.canonical_url_params + ['type']
 
     def get_queryset(self):
         try:

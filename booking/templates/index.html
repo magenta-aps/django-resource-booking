@@ -14,6 +14,7 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         {% include 'common/google_tag_manager/script.html' %}
         <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
+        <link rel="canonical" href="{% if canonical_url %}{{ canonical_url }}{% else %}{{ request.path }}{% endif %}" />
         {% if not view.kwargs.embed %}
             <!-- 3rd party stylesheets -->
             <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
