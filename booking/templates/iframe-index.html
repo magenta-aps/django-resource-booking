@@ -9,6 +9,10 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         {% include 'common/google_tag_manager/script.html' %}
         <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
+        <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% if canonical_url %}{{ canonical_url }}{% else %}{{ request.path }}{% endif %}" />
+        {% if no_index %}
+            <meta name="robots" content="noindex"/>
+        {% endif %}
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
         <!-- Our own stylesheet -->
