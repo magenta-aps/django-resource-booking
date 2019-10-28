@@ -3200,7 +3200,7 @@ class VisitCustomListView(VisitListView):
 
 class VisitSearchView(VisitListView):
     template_name = "visit/searchresult.html"
-
+    no_index = True
     form = None
 
     def get_form(self):
