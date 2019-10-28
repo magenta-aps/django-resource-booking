@@ -5,7 +5,6 @@ from django.core.exceptions import PermissionDenied
 from django.forms import model_to_dict
 from django.http import QueryDict
 from django.shortcuts import redirect
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.base import ContextMixin
