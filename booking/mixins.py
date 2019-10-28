@@ -382,24 +382,27 @@ class LoggedViewMixin(object):
         )
 
 
-class CustomCanonicalUrlMixin(ContextMixin):
+class SearchEngineMixin(ContextMixin):
 
     canonical_url_params = []
+    no_index = False
 
     def get_canonical_url(self):
         path = self.request.path
-        if self.request.GET.keys() == set(self.canonical_url_params):
-            params = self.request.GET
-        else:
-            params = QueryDict(mutable=True)
-            for key in self.canonical_url_params:
-                if key in self.request.GET:
-                    params[key] = self.request.GET[key]
-        if len(params):
-            path = path + "?" + params.urlencode()
+        if len(self.canonical_url_params):
+            if self.request.GET.keys() == set(self.canonical_url_params):
+                params = self.request.GET
+            else:
+                params = QueryDict(mutable=True)
+                for key in self.canonical_url_params:
+                    if key in self.request.GET:
+                        params[key] = self.request.GET[key]
+            if len(params):
+                path = path + "?" + params.urlencode()
         return path
 
     def get_context_data(self, **kwargs):
-        context = super(CustomCanonicalUrlMixin, self).get_context_data(**kwargs)
+        context = super(SearchEngineMixin, self).get_context_data(**kwargs)
         context['canonical_url'] = self.get_canonical_url()
+        context['no_index'] = self.no_index
         return context

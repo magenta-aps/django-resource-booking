@@ -86,7 +86,7 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.mixins import CustomCanonicalUrlMixin
+from booking.mixins import SearchEngineMixin
 from booking.mixins import EditorRequriedMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
@@ -425,7 +425,7 @@ class EmailSuccessView(TemplateView):
     template_name = "email/success.html"
 
 
-class SearchView(BreadcrumbMixin, ListView):
+class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     """Class for handling main search."""
     model = Product
     template_name = "product/searchresult.html"
@@ -443,6 +443,9 @@ class SearchView(BreadcrumbMixin, ListView):
     t_from = None
     t_to = None
     is_public = True
+
+    # Search engine exclusion
+    no_index = True
 
     boolean_choice = (
         (1, _(u'Ja')),
@@ -1073,7 +1076,7 @@ class SearchView(BreadcrumbMixin, ListView):
         return size
 
 
-class ProductCustomListView(BreadcrumbMixin, CustomCanonicalUrlMixin, ListView):
+class ProductCustomListView(BreadcrumbMixin, SearchEngineMixin, ListView):
 
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
@@ -3149,7 +3152,7 @@ class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
         ]
 
 
-class VisitListView(CustomCanonicalUrlMixin, LoginRequiredMixin,
+class VisitListView(SearchEngineMixin, LoginRequiredMixin,
                     BreadcrumbMixin, ListView):
     model = Visit
     template_name = "visit/list.html"
