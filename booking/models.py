@@ -4277,12 +4277,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             teacher.get_full_name()
             for teacher in self.teachers.all()
         ]) if self.teachers.count() else _("<ingen>")
-        output.append(_("Undervisere: %s") % teachers)
+        output.append(_(u"\nUndervisere: %s") % teachers)
         hosts = ', '.join([
             host.get_full_name()
             for host in self.hosts.all()
         ]) if self.hosts.count() else _("<ingen>")
-        output.append(_("Værter: %s") % hosts)
+        output.append(_(u"\nVærter: %s") % hosts)
         return ''.join(output)
 
     def context_for_user(self, user, request_usertype=None):
