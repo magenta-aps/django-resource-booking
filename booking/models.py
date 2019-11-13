@@ -4270,11 +4270,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def calender_event_title(self):
-        res = _(u'Besøg #%s') % self.pk
+        output = [_(u'Besøg #%s') % self.pk]
         if self.product:
-            return '%s - %s' % (res, self.product.title)
-        else:
-            return res
+            output.append(" - %s" % self.product.title)
+        teachers = ', '.join([
+            teacher.get_full_name()
+            for teacher in self.teachers.all()
+        ]) if self.teachers.count() else _("<ingen>")
+        output.append(_("Undervisere: %s") % teachers)
+        hosts = ', '.join([
+            host.get_full_name()
+            for host in self.hosts.all()
+        ]) if self.hosts.count() else _("<ingen>")
+        output.append(_("Værter: %s") % hosts)
+        return ''.join(output)
 
     def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile
