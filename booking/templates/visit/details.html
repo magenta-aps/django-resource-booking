@@ -488,7 +488,7 @@
                         {% trans 'Tilmeldte' %}
                         ({{ object.nr_attendees }}{% if object.product.maximum_number_of_visitors %}/{{ object.product.maximum_number_of_visitors }}{% endif %})
                     </h2>
-                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' can_edit=can_edit %}
                 </div>
             </div>
         </div>
