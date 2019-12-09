@@ -3632,6 +3632,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = request.user
         action = request.POST['action']
         listname = request.POST['listname']
 
@@ -3641,7 +3642,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         elif listname == 'waiting':
             form = self.get_waitinglist_form(**request.POST)
         if form is not None:
-            if form.is_valid():
+            if form.is_valid() and user.userprofile.can_edit(self.object):
                 for booking_id in form.cleaned_data['bookings']:
                     booking = Booking.objects.filter(id=booking_id).first()
                     if action == 'delete':
