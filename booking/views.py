@@ -3607,7 +3607,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
-
+        context['can_edit'] = user.userprofile.can_edit(self.object)
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
 
