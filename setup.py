@@ -39,6 +39,6 @@ designed for the University of Copenhagen.""",
         "ipython==5.8.0",
     ],
     entry_points="""
-      # -*- Entry points: -*-
-      """,
+    # -*- Entry points: -*-
+    """,
 )
