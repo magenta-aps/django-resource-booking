@@ -3507,6 +3507,11 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = self.request.user
+        if not user.userprofile.can_edit(self.object):
+            raise AccessDenied(
+                _(u"Du har ikke adgang til at annullere dette besøg")
+            )
         form = self.get_form()
         if form.is_valid():
             self.object.cancelled = True
@@ -3591,7 +3596,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
-
+        context['can_edit'] = user.userprofile.can_edit(self.object)
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
 
@@ -3629,6 +3634,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = request.user
         action = request.POST['action']
         listname = request.POST['listname']
 
@@ -3638,7 +3644,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         elif listname == 'waiting':
             form = self.get_waitinglist_form(**request.POST)
         if form is not None:
-            if form.is_valid():
+            if form.is_valid() and user.userprofile.can_edit(self.object):
                 for booking_id in form.cleaned_data['bookings']:
                     booking = Booking.objects.filter(id=booking_id).first()
                     if action == 'delete':
