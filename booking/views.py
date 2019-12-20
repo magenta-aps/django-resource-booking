@@ -87,12 +87,12 @@ from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
 from booking.mixins import EditorRequiredMixin
-from booking.mixins import SearchEngineMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
 from booking.mixins import LoginRequiredMixin
 from booking.mixins import ModalMixin
 from booking.mixins import RoleRequiredMixin
+from booking.mixins import SearchEngineMixin
 from booking.mixins import UnitAccessRequiredMixin
 from booking.models import BookerResponseNonce
 from booking.models import Booking, Guest
