@@ -19,7 +19,7 @@ designed for the University of Copenhagen.""",
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-          'Django==1.11.22',
+          'Django==1.11.23',
           'flake8==2.5.0',
           'psycopg2',
           'django-npm==1.0.0',
