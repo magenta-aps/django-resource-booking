@@ -4618,12 +4618,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         teachers = ', '.join([
             teacher.get_full_name()
             for teacher in self.teachers.all()
-        ]) if self.teachers.count() else _("<ingen>")
+        ]) if self.teachers.exists() else _("<ingen>")
         output.append(_(u"\nUndervisere: %s") % teachers)
         hosts = ', '.join([
             host.get_full_name()
             for host in self.hosts.all()
-        ]) if self.hosts.count() else _("<ingen>")
+        ]) if self.hosts.exists() else _("<ingen>")
         output.append(_(u"\nVærter: %s") % hosts)
         return ''.join(output)
 
