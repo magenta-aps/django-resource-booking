@@ -3522,7 +3522,9 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
         self.object = self.get_object()
         user = self.request.user
         if not user.userprofile.can_edit(self.object):
-            raise AccessDenied(_(u"Du har ikke adgang til at annullere dette besøg"))
+            raise AccessDenied(
+                _(u"Du har ikke adgang til at annullere dette besøg")
+            )
         form = self.get_form()
         if form.is_valid():
             self.object.cancelled = True
