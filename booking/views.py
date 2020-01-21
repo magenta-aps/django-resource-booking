@@ -86,6 +86,7 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
+from booking.mixins import SearchEngineMixin
 from booking.mixins import EditorRequiredMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
@@ -3509,7 +3510,9 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
         self.object = self.get_object()
         user = self.request.user
         if not user.userprofile.can_edit(self.object):
-            raise AccessDenied(_(u"Du har ikke adgang til at annullere dette besøg"))
+            raise AccessDenied(
+                _(u"Du har ikke adgang til at annullere dette besøg")
+            )
         form = self.get_form()
         if form.is_valid():
             self.object.cancelled = True
