@@ -19,11 +19,6 @@ import json
 
 
 @register.filter
-def upload_name_clean(value):
-    return re.sub(r'_[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)$', r'\1', value)
-
-
-@register.filter
 def upload_name_strip_path(value):
     return re.sub(r'.*/(.*)$', r'\1', value)
 
@@ -290,7 +285,6 @@ class FullURLNode(defaulttags.Node):
             else:
                 return self.prefix(self.tokenize(result, context))
         except:
-            # return _(u'&lt;Forkert url&gt;')
             args = [arg.resolve(context) for arg in self.url_node.args]
             string_if_invalid = context.template.engine.string_if_invalid
             if not string_if_invalid:
@@ -303,10 +297,6 @@ class FullURLNode(defaulttags.Node):
                        (self.url_node.view_name, arg)
             else:
                 return ''
-            # if '%s' in string_if_invalid:
-            #    return string_if_invalid % args
-            # else:
-            #    return string_if_invalid
 
 
 @register.tag
