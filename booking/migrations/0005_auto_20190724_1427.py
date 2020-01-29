@@ -7,13 +7,11 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('booking', '0003_auto_20190724_1332'),
-    ]
+    dependencies = [("booking", "0004_auto_20190724_1332")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='objectstatistics',
-            options={'verbose_name_plural': 'object statistics'},
-        ),
+            name="objectstatistics",
+            options={"verbose_name_plural": "object statistics"},
+        )
     ]
