@@ -6,16 +6,9 @@ from booking.models import Booking, ClassBooking, TeacherBooking
 from booking.models import Product
 from booking.models import Visit
 
-MODELS_WITH_SEARCHVECTOR = set([
-    Product,
-    Visit
-])
+MODELS_WITH_SEARCHVECTOR = set([Product, Visit])
 
-BOOKING_MODELS = set([
-    Booking,
-    ClassBooking,
-    TeacherBooking
-])
+BOOKING_MODELS = set([Booking, ClassBooking, TeacherBooking])
 
 
 def run_searchvector_for_object(obj):
@@ -33,23 +26,26 @@ def run_searchvector_for_object(obj):
 def update_search_vectors(sender, instance, **kwargs):
     run_searchvector_for_object(instance)
 
+
 for model in MODELS_WITH_SEARCHVECTOR:
     post_save.connect(update_search_vectors, sender=model)
 
 
 def on_booking_save(sender, instance, **kwargs):
-    vo = getattr(instance, 'visit', None)
+    vo = getattr(instance, "visit", None)
     if vo:
         run_searchvector_for_object(vo)
+
 
 for model in BOOKING_MODELS:
     post_save.connect(on_booking_save, sender=model)
 
 
 def on_booker_save(sender, instance, **kwargs):
-    vo = getattr(instance, 'visit', None)
+    vo = getattr(instance, "visit", None)
     if vo:
         run_searchvector_for_object(vo)
+
 
 post_save.connect(on_booker_save, sender=Guest)
 
@@ -64,6 +60,3 @@ def before_requirement_delete(sender, instance, using, **kwargs):
 def on_visitresource_delete(sender, instance, using, **kwargs):
     if instance.visit is not None:
         instance.visit.autoassign_resources()
-
-# Import resource-based signals
-from booking.resource_based.signals import *  # NOQA
