@@ -124,12 +124,14 @@ class StatisticsForm(forms.Form):
             attrs={
                 'class': 'form-control input-sm datepicker datepicker-admin'
             }
-        )
+        ),
+        required=False
     )
     to_date = forms.DateField(
         widget=forms.TextInput(
             attrs={
                 'class': 'form-control input-sm datepicker datepicker-admin'
             }
-        )
+        ),
+        required=False
     )

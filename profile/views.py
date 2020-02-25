@@ -760,6 +760,13 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                     Q(visit__eventtime__end__lt=to_date) |
                     Q(visit__cancelled_eventtime__end__lt=to_date)
                 )
+            if not from_date and not to_date:
+                qs = qs.filter(
+                    (Q(visit__eventtime__start__isnull=True) &
+                        Q(visit__cancelled_eventtime__start__isnull=True)) &
+                    (Q(visit__eventtime__end__isnull=True) &
+                        Q(visit__cancelled_eventtime__end__isnull=True))
+                )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
