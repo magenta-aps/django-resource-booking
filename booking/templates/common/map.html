@@ -1,12 +1,6 @@
 {% load i18n %}
 <div class="panel panel-default" id="{{ map_id|default:'mapinfo' }}">
-    <a class="panel-heading collapsed"
-       role="button"
-       data-toggle="collapse"
-       href="#mapContainer"
-       aria-expanded="false"
-       aria-controls="collapseExample"
-       style="display: block;">
+    <a class="panel-heading collapsed" role="button" data-toggle="collapse" href="#mapContainer" aria-expanded="false" aria-controls="mapContainer" style="display: block;">
         <h3 class="panel-title">{% trans 'Se kort' %}</h3>
     </a>
     <div class="panel-body google-maps-container collapse" id="mapContainer">
