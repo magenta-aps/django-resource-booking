@@ -471,11 +471,12 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('teachers')
             ).filter(
+                (Q(eventtime__start__gt=timezone.now()) |
+                 Q(eventtime__start__isnull=True)),
                 eventtime__product__time_mode__in=[
                     Product.TIME_MODE_SPECIFIC,
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
-                eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
@@ -489,11 +490,12 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('hosts')
             ).filter(
+                (Q(eventtime__start__gt=timezone.now()) |
+                 Q(eventtime__start__isnull=True)),
                 eventtime__product__time_mode__in=[
                     Product.TIME_MODE_SPECIFIC,
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
-                eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
