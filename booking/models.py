@@ -1341,6 +1341,9 @@ class KUEmailRecipient(models.Model):
     guest = models.ForeignKey('Guest', blank=True, null=True)
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
 
+    def __str__(self):
+        return "KUEmailRecipient<%s,%s>" % (self.email, self.role_name)
+
     @classmethod
     def create(cls, base=None, recipient_type=None):
         ku_email_recipient = cls()
@@ -4746,7 +4749,8 @@ class MultiProductVisit(Visit):
         if template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
         ]:
             return True
         else:
