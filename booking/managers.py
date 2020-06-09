@@ -72,21 +72,29 @@ class VisitQuerySet(models.QuerySet):
                 ),
                 **kwargs
             )
-        ).distinct())
+            ).distinct())
 
     def get_latest_created(self):
-        return VisitQuerySet.prefetch(self.order_by("-statistics__created_time"))
+        return VisitQuerySet.prefetch(
+            self.order_by("-statistics__created_time")
+        )
 
     def get_latest_updated(self):
-        return VisitQuerySet.prefetch(self.order_by("-statistics__updated_time"))
+        return VisitQuerySet.prefetch(
+            self.order_by("-statistics__updated_time")
+        )
 
     def get_latest_displayed(self):
-        return VisitQuerySet.prefetch(self.order_by("-statistics__visited_time"))
+        return VisitQuerySet.prefetch(
+            self.order_by("-statistics__visited_time")
+        )
 
     def get_latest_booked(self, **kwargs):
-        return VisitQuerySet.prefetch(self.filter(bookings__isnull=False, **kwargs).order_by(
-            "-bookings__statistics__created_time"
-        ))
+        return VisitQuerySet.prefetch(
+            self.filter(bookings__isnull=False, **kwargs).order_by(
+                "-bookings__statistics__created_time"
+            )
+        )
 
     def get_todays_visits(self):
         return self.get_occurring_on_date(timezone.now())
@@ -123,23 +131,23 @@ class VisitQuerySet(models.QuerySet):
             time = timezone.now()
 
         return (
-            VisitQuerySet.prefetch(self.filter(
-                workflow_status__in=[
-                    self.model.WORKFLOW_STATUS_EXECUTED,
-                    self.model.WORKFLOW_STATUS_EVALUATED,
-                ],
-                eventtime__start__isnull=False,
-                is_multi_sub=False,
-                **kwargs
+            VisitQuerySet.prefetch(
+                self.filter(
+                    workflow_status__in=[
+                        self.model.WORKFLOW_STATUS_EXECUTED,
+                        self.model.WORKFLOW_STATUS_EVALUATED,
+                    ],
+                    eventtime__start__isnull=False,
+                    is_multi_sub=False,
+                    **kwargs
+                ).filter(
+                    Q(eventtime__end__lt=time) | (
+                        Q(eventtime__end__isnull=True) &
+                        Q(eventtime__start__lt=time + timedelta(hours=12))
+                    )
+                ).order_by("-eventtime__end")
             )
-            .filter(
-                Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
-                )
-            )
-            .order_by("-eventtime__end")
-        ))
+        )
 
 
 class BookingQuerySet(models.QuerySet):

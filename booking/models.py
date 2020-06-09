@@ -4243,7 +4243,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_multiproductvisit(self):
         if self._is_multiproductvisit is None:
-            self._is_multiproductvisit = True if hasattr(self, 'multiproductvisit') else False
+            self._is_multiproductvisit = True \
+                if hasattr(self, 'multiproductvisit') else False
         return self._is_multiproductvisit
 
     @property
