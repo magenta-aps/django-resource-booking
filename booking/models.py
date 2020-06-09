@@ -2935,6 +2935,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
 class Visit(AvailabilityUpdaterMixin, models.Model):
 
+    def __init__(self, *args, **kwargs):
+        super(Visit, self).__init__(*args, **kwargs)
+        self._is_multiproductvisit = None
+        self.qs_cache = {}
+
     class Meta:
         verbose_name = _(u"besøg")
         verbose_name_plural = _(u"besøg")
@@ -3538,11 +3543,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for requirement in self.product.resourcerequirement_set.filter(
             resource_pool__resource_type_id=resource_type
         ):
-            resources = self.visitresource.filter(
+            resources_count = self.visitresource.filter(
                 resource_requirement=requirement
-            )
-            if resources.count() < requirement.required_amount:
-                missing += (requirement.required_amount - resources.count())
+            ).count()
+            if resources_count < requirement.required_amount:
+                missing += (requirement.required_amount - resources_count)
         return missing
 
     @property
@@ -3737,7 +3742,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if exclude_cancelled and exclude_non_cancelled:
             return self.bookings.none()
 
-        qs = self.bookings.all()
+        qs = self.bookings.all().prefetch_related("visit")
 
         if exclude_waiting:  # Only accept non-waiting
             qs = qs.filter(waitinglist_spot=0)
@@ -4237,7 +4242,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def is_multiproductvisit(self):
-        return hasattr(self, 'multiproductvisit')
+        if self._is_multiproductvisit is None:
+            self._is_multiproductvisit = True if hasattr(self, 'multiproductvisit') else False
+        return self._is_multiproductvisit
 
     @property
     def real(self):
@@ -4254,7 +4261,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def products_unique_address(self):
         addresses = {
-            product.locality.id: product for product in self.products
+            product.locality.id: product
+            for product in self.products
+            if product is not None
         }
         return addresses.values()
 
@@ -4491,6 +4500,11 @@ class MultiProductVisit(Visit):
         verbose_name=_(u'Besøgsansvarlig')
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_multiproductvisit = True
+        self.qs_cache = {}
+
     @property
     def date_ref(self):
         return timezone.localtime(self.eventtime.start).date() \
@@ -4515,18 +4529,31 @@ class MultiProductVisit(Visit):
     @property
     def subvisits_unordered(self):
         # Faster than ordered, and often we don't need the ordering anyway
-        return Visit.objects.filter(
-            is_multi_sub=True,
-            multi_master=self
-        )
+        if 'subvisits_unordered' not in self.qs_cache:
+            self.qs_cache['subvisits_unordered'] = VisitQuerySet.prefetch(
+                Visit.objects.filter(
+                    is_multi_sub=True,
+                    multi_master=self
+                )
+            )
+            list(self.qs_cache['subvisits_unordered'])
+        return self.qs_cache['subvisits_unordered']
 
     @property
     def subvisits_unordered_noncancelled(self):
-        return self.subvisits_unordered.active_qs()
+        if 'subvisits_unordered_noncancelled' not in self.qs_cache:
+            self.qs_cache['subvisits_unordered_noncancelled'] = \
+                VisitQuerySet.prefetch(self.subvisits_unordered.active_qs())
+            list(self.qs_cache['subvisits_unordered_noncancelled'])
+        return self.qs_cache['subvisits_unordered_noncancelled']
 
     @property
     def subvisits(self):
-        return self.subvisits_unordered.order_by('multi_priority')
+        if 'subvisits_ordered' not in self.qs_cache:
+            self.qs_cache['subvisits_ordered'] = VisitQuerySet.prefetch(
+                self.subvisits_unordered.order_by('multi_priority')
+            )
+        return self.qs_cache['subvisits_ordered']
 
     @property
     def subvisits_by_time(self):
