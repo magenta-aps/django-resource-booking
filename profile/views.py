@@ -96,8 +96,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             is_multi_sub=False,
             id__in=[
                 v['multi_master']
-                for v in unit_visits.filter(multi_master__isnull=False)
-                    .values("multi_master")
+                for v in unit_visits.filter(
+                    multi_master__isnull=False
+                ).values("multi_master")
             ]
         )
         today_qs = VisitQuerySet.prefetch(
@@ -131,8 +132,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_TODAY
             }
-        }
-            , {
+        }, {
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
