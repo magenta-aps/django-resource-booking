@@ -3972,7 +3972,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             if type not in by_type:
                 by_type[type] = []
             by_type[type].append(item)
-            by_value[value] = item
+            by_value[unicode(value)] = item
         for type, items in by_type.items():
             if type in self.classes.keys():
                 clazz = self.classes[type]
