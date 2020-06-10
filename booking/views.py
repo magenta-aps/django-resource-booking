@@ -3857,18 +3857,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         return result
 
-    def _get_object_as_json(self):
-        result = {}
-        for key, type in EmailTemplateDetailView.classes.items():
-            qs = type.objects.p.order_by('id') \
-                if hasattr(type.objects, 'p') \
-                else type.objects.order_by('id')
-            result[key] = [
-                {'text': unicode(object), 'value': object.id}
-                for object in qs
-            ]
-        return json.dumps(result)
-
     def update_context_with_recipient(self, selected, ctx):
         if selected is None:
             return
@@ -3922,13 +3910,17 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             initial.append({
                 'key': key,
                 'type': className,
-                'value': clazz.objects.order_by('id').first().id
+                'value': clazz.objects.values(
+                    'id'
+                ).order_by(
+                    'id'
+                ).first()['id']
             })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
         context = {
             'form': formset,
-            'objects': self._get_object_as_json(),
+            'objects': list(EmailTemplateDetailView.classes.keys()),
             'template': self.object
         }
 
@@ -3972,21 +3964,34 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
     def get_filled_template(self, items):
         context = {}
+        by_type = {}
+        by_value = {}
         for item in items:
-            key = item['key']
             type = item['type']
             value = item['value']
+            if type not in by_type:
+                by_type[type] = []
+            by_type[type].append(item)
+            by_value[value] = item
+        for type, items in by_type.items():
             if type in self.classes.keys():
                 clazz = self.classes[type]
+                manager = clazz.objects
+                if hasattr(manager, 'p'):
+                    manager = manager.p()
                 try:
-                    value = clazz.objects.get(pk=value)
+                    objects = manager.filter(
+                        pk__in=[item['value'] for item in items]
+                    )
+                    for object in objects:
+                        item = by_value[unicode(object.pk)]
+                        context[item['key']] = object
                 except clazz.DoesNotExist:
                     pass
             elif type == "Recipient":
-                self.update_context_with_recipient(value, context)
+                for item in items:
+                    self.update_context_with_recipient(item['value'], context)
                 continue
-            context[key] = value
-
         self.extend_context(context)
         return {
             'subject': self.object.expand_subject(context, True),

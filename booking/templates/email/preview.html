@@ -106,7 +106,8 @@
         $(function(){
             var objects = {{ objects|jsonify }};
             var typeClassMap = {'string': 'emailtemplate-type-string'};
-            for (var type in objects) {
+            for (var i=0; i<objects.length; i++) {
+                var type = objects[i];
                 typeClassMap[type] = 'emailtemplate-type-' + type;
             }
 
