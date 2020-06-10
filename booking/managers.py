@@ -17,7 +17,6 @@ class VisitQuerySet(models.QuerySet):
             "multi_master"
         )
 
-    @property
     def p(self):
         return VisitQuerySet.prefetch(self)
 
@@ -155,6 +154,17 @@ class VisitQuerySet(models.QuerySet):
 
 
 class BookingQuerySet(models.QuerySet):
+
+    @staticmethod
+    def prefetch(query):
+        return query.select_related(
+            "booker",
+            "visit",
+        )
+
+    def p(self):
+        return BookingQuerySet.prefetch(self)
+
     def get_latest_created(self):
         return self.order_by("-statistics__created_time")
 
