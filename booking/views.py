@@ -3910,7 +3910,8 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             initial.append({
                 'key': key,
                 'type': className,
-                'value': clazz.objects.values("id").order_by('id').first()["id"]
+                'value': clazz.objects.values("id")
+                    .order_by('id').first()["id"]
             })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
@@ -3976,7 +3977,9 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                 if hasattr(manager, 'p'):
                     manager = manager.p()
                 try:
-                    objects = manager.filter(pk__in=[item['value'] for item in items])
+                    objects = manager.filter(
+                        pk__in=[item['value'] for item in items]
+                    )
                     for object in objects:
                         item = by_value[unicode(object.pk)]
                         context[item['key']] = object
