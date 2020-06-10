@@ -2940,7 +2940,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Visit, self).__init__(*args, **kwargs)
-        self._is_multiproductvisit = None
         self.qs_cache = {}
 
     class Meta:
@@ -4243,12 +4242,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             })
         return details
 
-    @property
-    def is_multiproductvisit(self):
-        if self._is_multiproductvisit is None:
-            self._is_multiproductvisit = True \
-                if hasattr(self, 'multiproductvisit') else False
-        return self._is_multiproductvisit
+    is_multiproductvisit = models.BooleanField(
+        default=False
+    )
 
     @property
     def real(self):
@@ -4505,8 +4501,8 @@ class MultiProductVisit(Visit):
     )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._is_multiproductvisit = True
+        super(MultiProductVisit, self).__init__(*args, **kwargs)
+        self.is_multiproductvisit = True
         self.qs_cache = {}
 
     @property

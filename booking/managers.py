@@ -17,6 +17,10 @@ class VisitQuerySet(models.QuerySet):
             "multi_master"
         )
 
+    @property
+    def p(self):
+        return VisitQuerySet.prefetch(self)
+
     def active_qs(self):
         return VisitQuerySet.prefetch(self.exclude(
             workflow_status__in=[

@@ -3858,13 +3858,15 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         return result
 
     def _get_object_as_json(self):
-        result = {
-            key: [
+        result = {}
+        for key, type in EmailTemplateDetailView.classes.items():
+            qs = type.objects.p.order_by('id') \
+                if hasattr(type.objects, 'p') \
+                else type.objects.order_by('id')
+            result[key] = [
                 {'text': unicode(object), 'value': object.id}
-                for object in type.objects.order_by('id')
+                for object in qs
             ]
-            for key, type in EmailTemplateDetailView.classes.items()
-        }
         return json.dumps(result)
 
     def update_context_with_recipient(self, selected, ctx):
