@@ -105,14 +105,14 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             Visit.objects.get_todays_visits().filter(
                 Q(multiproductvisit__in=unit_visits) | Q(id__in=unit_visits)
             ),
-            "bookings__booker"
+            to_many=["bookings__booker"]
         )
         recent_qs = VisitQuerySet.prefetch(
             Visit.objects.get_recently_held().filter(
                 Q(id__in=unit_visits) |
                 Q(multiproductvisit__in=unit_multivisits)
             ),
-            "bookings__booker"
+            to_many=["bookings__booker"]
         )
 
         recent_qs = recent_qs.with_product_types(
