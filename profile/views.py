@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 
 import profile.constants
+from booking.managers import VisitQuerySet
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
@@ -88,17 +89,32 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 and product_types != Product.applicable_types:
             context['type'] = product_types[0]
 
-        today_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.objects.get_todays_visits()
-            if visit.real.unit_qs & unit_qs
-        ])
-        today_qs = today_qs.with_product_types(product_types).order_by(
-            *self.visit_ordering_asc)
+        unit_visits = Visit.objects.filter(
+            eventtime__product__organizationalunit__in=unit_qs
+        )
+        unit_multivisits = Visit.objects.filter(
+            is_multi_sub=False,
+            id__in=[
+                v['multi_master']
+                for v in unit_visits.filter(
+                    multi_master__isnull=False
+                ).values("multi_master")
+            ]
+        )
+        today_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_todays_visits().filter(
+                Q(multiproductvisit__in=unit_visits) | Q(id__in=unit_visits)
+            ),
+            to_many=["bookings__booker"]
+        )
+        recent_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_recently_held().filter(
+                Q(id__in=unit_visits) |
+                Q(multiproductvisit__in=unit_multivisits)
+            ),
+            to_many=["bookings__booker"]
+        )
 
-        recent_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.objects.get_recently_held()
-            if visit.real.unit_qs & unit_qs
-        ])
         recent_qs = recent_qs.with_product_types(
             product_types).order_by(*self.visit_ordering_desc)
 
@@ -134,7 +150,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_LATEST_COMPLETED
             }
-        }])
+        }
+        ])
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
 
