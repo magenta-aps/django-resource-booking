@@ -9,13 +9,14 @@ from django.contrib.contenttypes.models import ContentType
 class VisitQuerySet(models.QuerySet):
 
     @staticmethod
-    def prefetch(query, *extra_select):
+    def prefetch(query, *extra_related):
         return query.select_related(
             "multiproductvisit",
             "eventtime__product",
-            *extra_select
+            *extra_related.get('to_one', [])
         ).prefetch_related(
-            "multi_master"
+            "multi_master",
+            *extra_related.get('to_many', [])
         )
 
     def p(self):
