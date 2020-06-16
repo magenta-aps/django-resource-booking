@@ -9,10 +9,11 @@ from django.contrib.contenttypes.models import ContentType
 class VisitQuerySet(models.QuerySet):
 
     @staticmethod
-    def prefetch(query):
+    def prefetch(query, *extra_select):
         return query.select_related(
             "multiproductvisit",
             "eventtime__product",
+            *extra_select
         ).prefetch_related(
             "multi_master"
         )
