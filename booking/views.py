@@ -86,13 +86,13 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.mixins import SearchEngineMixin
 from booking.mixins import EditorRequiredMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
 from booking.mixins import LoginRequiredMixin
 from booking.mixins import ModalMixin
 from booking.mixins import RoleRequiredMixin
+from booking.mixins import SearchEngineMixin
 from booking.mixins import UnitAccessRequiredMixin
 from booking.models import BookerResponseNonce
 from booking.models import Booking, Guest
@@ -121,7 +121,6 @@ from booking.models import Visit
 from booking.utils import DummyRecipient
 from booking.utils import TemplateSplit
 from booking.utils import full_email
-from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
 from profile.constants import FACULTY_EDITOR, ADMINISTRATOR
 from profile.models import EDIT_ROLES
@@ -3786,7 +3785,10 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             ]),
             (u'Mulighed for oplæg om uddannelse', [
                 (u'ja/nej', '{{ product.presentation_available|yesno }}'),
-                (u'Som blok', '{% if product.presentation_available %}{% endif %}')
+                (
+                    u'Som blok',
+                    '{% if product.presentation_available %}{% endif %}'
+                )
             ]),
             (u'Andet', [
                 (u'ja/nej', '{{ product.custom_available|yesno }}'),
@@ -3796,8 +3798,14 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             (u'Varighed', '{{ product.duration }}'),
             (u'Beskrivelse', '{{ product.description }}'),
             (u'Pris', '{{ product.price }}'),
-            (u'Antal pladser på venteliste', '{{ product.waiting_list_length }}'),
-            (u'Højeste antal deltagere', '{{ product.maximum_number_of_visitors }}'),
+            (
+                u'Antal pladser på venteliste',
+                '{{ product.waiting_list_length }}'
+            ),
+            (
+                u'Højeste antal deltagere',
+                '{{ product.maximum_number_of_visitors }}'
+            ),
             (u'Nødvendigt antal værter', '{{ product.needed_hosts }}'),
             (u'Nødvendigt antal undervisere', '{{ product.needed_teachers }}'),
             (u'Tilbud kræver brug af et eller flere lokaler', [
@@ -3840,8 +3848,16 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             (u'Besøgende email', '{{ booking.booker.email }}'),
             (u'Antal deltagere', '{{ booking.booker.attendee_count }}'),
             (u'Fag/niveau', [
-                (u'Kommasepareret', '{{ booking.booker.subjectlevel_displayvalues|join:", " }}'),
-                (u'Punktliste', '<ul>{% for subjectlevel in booking.booker.subjectlevel_displayvalues %}<li>{{ subjectlevel }}</li>{% endfor %}</ul>')
+                (
+                    u'Kommasepareret',
+                    '{{ booking.booker.subjectlevel_displayvalues|join:", " }}'
+                ),
+                (
+                    u'Punktliste',
+                    '<ul>{% for subjectlevel in '
+                    'booking.booker.subjectlevel_displayvalues %}'
+                    '<li>{{ subjectlevel }}</li>{% endfor %}</ul>'
+                )
             ])
         ],))
 

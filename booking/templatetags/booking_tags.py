@@ -432,5 +432,3 @@ class CounterNode(Node):
             value = self.start
         context.set_upward(self.name, value)
         return ''
-
-

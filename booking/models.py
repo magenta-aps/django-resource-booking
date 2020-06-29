@@ -2088,7 +2088,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def state_display(self):
         return Product.state_name(self.state)
 
-
     rooms_needed = models.BooleanField(
         default=True,
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
