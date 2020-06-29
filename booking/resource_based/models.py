@@ -293,6 +293,20 @@ class EventTime(models.Model):
         else:
             return 0
 
+    def get_duration_display(self):
+        mins = self.duration_in_minutes
+        if mins > 0:
+            hours = math.floor(mins / 60)
+            mins = mins % 60
+            if(hours == 1):
+                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
+            else:
+                return _(u"%(hours)d timer og %(minutes)d minutter") % {
+                    'hours': hours, 'minutes': mins
+                }
+        else:
+            return ""
+
     @property
     def available_seats(self):
         if self.visit:
