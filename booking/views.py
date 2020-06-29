@@ -3864,8 +3864,6 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
 
-
-
     def get_form_kwargs(self):
         args = super(EmailTemplateEditView, self).get_form_kwargs()
         args['user'] = self.request.user
