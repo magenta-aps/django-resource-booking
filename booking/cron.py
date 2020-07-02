@@ -320,7 +320,7 @@ class AnonymizeGuestsJob(KuCronJob):
     description = "Anonymizes guests for visits that were held in the past"
 
     def run(self):
-        limit = timezone.now() - timedelta(days=90)
+        limit = timezone.now() - timedelta(days=365*2)
         guests = Guest.objects.filter(
             Q(booking__visit__eventtime__start__lt=limit) |
             Q(booking__visit__cancelled_eventtime__start__lt=limit)
@@ -349,7 +349,7 @@ class AnonymizeEvaluationsJob(KuCronJob):
             evaluation.surveyId
             for evaluation in SurveyXactEvaluation.objects.distinct('surveyId')
         ])
-        limit = timezone.now() - timedelta(days=90)
+        limit = timezone.now() - timedelta(days=365*2)
         for survey_id in survey_ids:
             print "Anonymizing survey %d" % survey_id
             success = surveyxact_anonymize(survey_id, limit)
@@ -364,7 +364,7 @@ class AnonymizeInquirersJob(KuCronJob):
     description = "Anonymizes inquirers that asked about products"
 
     def run(self):
-        limit = timezone.now() - timedelta(days=90)
+        limit = timezone.now() - timedelta(days=365*2)
         messages = KUEmailMessage.objects.filter(
             template_type__key=EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
             created__lt=limit
@@ -379,7 +379,7 @@ class AnonymizeEmailsJob(KuCronJob):
     description = "Anonymizes emails"
 
     def run(self):
-        limit = timezone.now() - timedelta(days=90)
+        limit = timezone.now() - timedelta(days=365*2)
         messages = KUEmailMessage.objects.filter(
             created__lt=limit,
         ).exclude(

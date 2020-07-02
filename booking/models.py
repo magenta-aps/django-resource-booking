@@ -12,6 +12,8 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
@@ -23,9 +25,6 @@ from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.contrib.postgres.search import SearchVector, SearchVectorField
-from django.contrib.postgres.indexes import GinIndex
-from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
 from django.template.context import make_context
 from django.template.loader import get_template
@@ -36,6 +35,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
+from booking.constants import LOGACTION_MAIL_SENT
+from booking.logging import log_action
 from booking.managers import (
     VisitQuerySet,
     BookingQuerySet,
@@ -44,8 +45,6 @@ from booking.managers import (
     KUEmailMessageQuerySet,
     SurveyXactEvaluationGuestQuerySet
 )
-from booking.constants import LOGACTION_MAIL_SENT
-from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import (
     ClassProperty,
@@ -1196,11 +1195,7 @@ class EmailTemplate(models.Model):
             lines.append("{% endautoescape %}")
         lines.append("{% endlanguage %}")
         encapsulated = "\n".join(lines)
-        try:
-            return Template(encapsulated)
-        except TemplateSyntaxError as e:
-            print "Error in mail template. Full text: %s" % encapsulated
-            raise e
+        return Template(encapsulated)
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False, escape=True):
@@ -1340,6 +1335,9 @@ class KUEmailRecipient(models.Model):
     user = models.ForeignKey(User, blank=True, null=True)
     guest = models.ForeignKey('Guest', blank=True, null=True)
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
+
+    def __str__(self):
+        return "KUEmailRecipient<%s,%s>" % (self.email, self.role_name)
 
     @classmethod
     def create(cls, base=None, recipient_type=None):
@@ -4770,7 +4768,8 @@ class MultiProductVisit(Visit):
         if template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
         ]:
             return True
         else:
@@ -6225,6 +6224,8 @@ class KUEmailMessage(models.Model):
 
     def anonymize(self):
         self.recipients = KUEmailMessage.anonymized
+        self.body = KUEmailMessage.anonymized
+        self.htmlbody = KUEmailMessage.anonymized
         self.save()
 
 
