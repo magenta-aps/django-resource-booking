@@ -5870,8 +5870,8 @@ class Booking(models.Model):
     def subjectlevel_displayvalues(self):
         return [
             s.display_value() for s in
-            list(self.bookinggrundskolesubjectlevel_set) +
-            list(self.bookinggymnasiesubjectlevel_set)
+            list(self.bookinggrundskolesubjectlevel_set.all()) +
+            list(self.bookinggymnasiesubjectlevel_set.all())
         ]
 
 
