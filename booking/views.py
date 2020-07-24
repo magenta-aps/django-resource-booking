@@ -3850,12 +3850,12 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             (u'Fag/niveau', [
                 (
                     u'Kommasepareret',
-                    '{{ booking.booker.subjectlevel_displayvalues|join:", " }}'
+                    '{{ booking.subjectlevel_displayvalues|join:", " }}'
                 ),
                 (
                     u'Punktliste',
                     '<ul>{% for subjectlevel in '
-                    'booking.booker.subjectlevel_displayvalues %}'
+                    'booking.subjectlevel_displayvalues %}'
                     '<li>{{ subjectlevel }}</li>{% endfor %}</ul>'
                 )
             ])
