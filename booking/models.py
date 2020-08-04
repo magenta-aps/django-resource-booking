@@ -6264,6 +6264,8 @@ class KUEmailMessage(models.Model):
 
     def anonymize(self):
         self.recipients = KUEmailMessage.anonymized
+        self.body = KUEmailMessage.anonymized
+        self.htmlbody = KUEmailMessage.anonymized
         self.save()
 
 
