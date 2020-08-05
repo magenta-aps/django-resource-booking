@@ -37,6 +37,7 @@ designed for the University of Copenhagen.""",
         "Pillow",
         "django-extensions==2.1.5",
         "ipython==5.8.0",
+        "backports.unittest-mock"
     ],
     entry_points="""
     # -*- Entry points: -*-
