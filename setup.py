@@ -38,6 +38,9 @@ designed for the University of Copenhagen.""",
         "django-extensions==2.1.5",
         "ipython==5.8.0",
         "backports.unittest-mock"
+        
+        "pyquery",
+        "lxml"
     ],
     entry_points="""
     # -*- Entry points: -*-

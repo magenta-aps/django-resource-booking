@@ -27,7 +27,7 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
 from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
-    EditorRequiredMixin
+    EditorRequiredMixin, AdminRequiredMixin
 from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
@@ -610,7 +610,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         return breadcrumbs
 
 
-class DeleteUserView(BreadcrumbMixin, DeleteView):
+class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
