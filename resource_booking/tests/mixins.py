@@ -1,14 +1,15 @@
 import backports.unittest_mock
 from django.contrib.auth.models import User
+from django.test.client import Client
 
 from booking.models import Product
 from profile.constants import ADMINISTRATOR, TEACHER, HOST, COORDINATOR, \
     FACULTY_EDITOR
 from profile.models import UserRole, UserProfile
 
-backports.unittest_mock.install()
+backports.unittest_mock.install()  # noqa
 from unittest.mock import patch
-from django.test.client import Client
+
 
 class TestMixin(object):
 
@@ -80,7 +81,10 @@ class TestMixin(object):
                 "mismatch on %s, different value %s != %s" % (path, a, b)
             )
 
-    def create_user(self, username, email, role, first_name=None, last_name=None, unit=None):
+    def create_user(
+            self, username, email, role,
+            first_name=None, last_name=None, unit=None
+    ):
         user = User(
             username=username,
             first_name=first_name,
@@ -96,7 +100,10 @@ class TestMixin(object):
         profile.save()
         return user
 
-    def create_default_teacher(self, username="test_teacher", email="test_teacher@example.com", first_name="test", last_name="teacher", unit=None):
+    def create_default_teacher(
+            self, username="test_teacher", email="test_teacher@example.com",
+            first_name="test", last_name="teacher", unit=None
+    ):
         return self.create_user(
             username,
             email,
@@ -106,7 +113,10 @@ class TestMixin(object):
             unit
         )
 
-    def create_default_host(self, username="test_host", email="test_host@example.com", first_name="test", last_name="host", unit=None):
+    def create_default_host(
+            self, username="test_host", email="test_host@example.com",
+            first_name="test", last_name="host", unit=None
+    ):
         return self.create_user(
             username,
             email,
@@ -116,7 +126,11 @@ class TestMixin(object):
             unit
         )
 
-    def create_default_coordinator(self, username="test_coordinator", email="test_coordinator@example.com", first_name="test", last_name="coordinator", unit=None):
+    def create_default_coordinator(
+            self, username="test_coordinator",
+            email="test_coordinator@example.com", first_name="test",
+            last_name="coordinator", unit=None
+    ):
         return self.create_user(
             username,
             email,
@@ -126,7 +140,10 @@ class TestMixin(object):
             unit
         )
 
-    def create_default_editor(self, username="test_editor", email="test_editor@example.com", first_name="test", last_name="editor", unit=None):
+    def create_default_editor(
+            self, username="test_editor", email="test_editor@example.com",
+            first_name="test", last_name="editor", unit=None
+    ):
         return self.create_user(
             username,
             email,
@@ -136,7 +153,11 @@ class TestMixin(object):
             unit
         )
 
-    def create_default_product(self, unit=None, time_mode=Product.TIME_MODE_NONE, potential_teachers=None, potential_hosts=None, state=Product.CREATED):
+    def create_default_product(
+            self, unit=None, time_mode=Product.TIME_MODE_NONE,
+            potential_teachers=None, potential_hosts=None,
+            state=Product.CREATED
+    ):
         product = Product(
             title="testproduct",
             teaser="for testing",

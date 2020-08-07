@@ -20,7 +20,9 @@ class TestUser(TestMixin, TestCase):
         UserRole.create_defaults()
         ResourceType.create_defaults()
         cls.unittype = OrganizationalUnitType.objects.create(name="Fakultet")
-        cls.unit = OrganizationalUnit.objects.create(name="testunit", type=cls.unittype)
+        cls.unit = OrganizationalUnit.objects.create(
+            name="testunit", type=cls.unittype
+        )
         cls.admin.userprofile.organizationalunit = cls.unit
         cls.admin.userprofile.save()
 
@@ -33,7 +35,10 @@ class TestUser(TestMixin, TestCase):
             role=TEACHER
         )
         self.assertEqual("tester", str(user.userprofile))
-        self.assertEqual("\"test testersen\" <test@example.com>", user.userprofile.get_full_email())
+        self.assertEqual(
+            "\"test testersen\" <test@example.com>",
+            user.userprofile.get_full_email()
+        )
         self.assertEqual(TEACHER, user.userprofile.get_role())
         self.assertEqual("Underviser", user.userprofile.get_role_name())
         self.assertFalse(user.userprofile.can_create())
@@ -76,7 +81,8 @@ class TestUser(TestMixin, TestCase):
                 response = self.client.post("/profile/user/create", data)
                 self.assertEquals(200, response.status_code)
                 query = pq(response.content)
-                errors = query("[name=\"%s\"]" % key).closest("div.form-group").find("ul.errorlist li")
+                errors = query("[name=\"%s\"]" % key)\
+                    .closest("div.form-group").find("ul.errorlist li")
                 self.assertEquals(1, len(errors))
 
         response = self.client.post("/profile/user/create", form_data)
@@ -169,7 +175,8 @@ class TestUser(TestMixin, TestCase):
                 response = self.client.post("/profile/user/%d" % user.id, data)
                 self.assertEquals(200, response.status_code)
                 query = pq(response.content)
-                errors = query("[name=\"%s\"]" % key).closest("div.form-group").find("ul.errorlist li")
+                errors = query("[name=\"%s\"]" % key)\
+                    .closest("div.form-group").find("ul.errorlist li")
                 self.assertEquals(1, len(errors))
 
         response = self.client.post("/profile/user/%d" % user.id, form_data)
@@ -184,12 +191,16 @@ class TestUser(TestMixin, TestCase):
         query = pq(response.content)
         items = query("input[type=\"submit\"]")
         self.assertEquals(1, len(items))
-        self.assertEquals(1, User.objects.filter(username=user.username).count())
+        self.assertEquals(
+            1, User.objects.filter(username=user.username).count()
+        )
 
         response = self.client.post("/profile/user/%d/delete" % user.id)
         self.assertEquals(302, response.status_code)
         self.assertEquals("/profile/users", response['Location'])
-        self.assertEquals(0, User.objects.filter(username=user.username).count())
+        self.assertEquals(
+            0, User.objects.filter(username=user.username).count()
+        )
 
     def test_profile_capabilities(self):
         teacher = self.create_default_teacher(unit=self.unit)
@@ -198,7 +209,9 @@ class TestUser(TestMixin, TestCase):
         editor = self.create_default_editor(unit=self.unit)
         other_editor = self.create_default_editor(
             username="test_editor2",
-            unit=OrganizationalUnit.objects.create(name="testunit2", type=self.unittype)
+            unit=OrganizationalUnit.objects.create(
+                name="testunit2", type=self.unittype
+            )
         )
         product = self.create_default_product(
             unit=self.unit,
@@ -257,14 +270,34 @@ class TestUser(TestMixin, TestCase):
         self.assertEquals(self.unit, editor.userprofile.get_faculty())
         self.assertEquals(self.unit, self.admin.userprofile.get_faculty())
 
-        self.assertListEqual([self.admin], list(teacher.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(host.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(coordinator.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(editor.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(self.admin.userprofile.get_admins()))
+        self.assertListEqual(
+            [self.admin], list(teacher.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(host.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(coordinator.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(editor.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(self.admin.userprofile.get_admins())
+        )
 
-        self.assertListEqual([self.admin], list(teacher.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(host.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(coordinator.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(editor.userprofile.get_admins()))
-        self.assertListEqual([self.admin], list(self.admin.userprofile.get_admins()))
+        self.assertListEqual(
+            [self.admin], list(teacher.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(host.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(coordinator.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(editor.userprofile.get_admins())
+        )
+        self.assertListEqual(
+            [self.admin], list(self.admin.userprofile.get_admins())
+        )
