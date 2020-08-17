@@ -1,8 +1,14 @@
+from datetime import timedelta
+
 import backports.unittest_mock
+import pytz
 from django.contrib.auth.models import User
 from django.test.client import Client
+from django.utils.datetime_safe import datetime
 
-from booking.models import Product
+from booking.models import Product, EmailTemplate, EmailTemplateType, Visit, \
+    EventTime, ProductAutosend, VisitAutosend
+from booking.resource_based.models import ResourcePool, ResourceRequirement
 from profile.constants import ADMINISTRATOR, TEACHER, HOST, COORDINATOR, \
     FACULTY_EDITOR
 from profile.models import UserRole, UserProfile
@@ -153,28 +159,106 @@ class TestMixin(object):
             unit
         )
 
-    def create_default_product(
-            self, unit=None, time_mode=Product.TIME_MODE_NONE,
+    def create_product(
+            self, unit=None, title="testproduct", teaser="for testing",
+            description="this is a test product",
+            time_mode=Product.TIME_MODE_NONE,
             potential_teachers=None, potential_hosts=None,
-            state=Product.CREATED
+            state=Product.CREATED,
+            product_type=Product.STUDENT_FOR_A_DAY,
     ):
         product = Product(
-            title="testproduct",
-            teaser="for testing",
-            description="this is a test product",
+            title=title,
+            teaser=teaser,
+            description=description,
             organizationalunit=unit,
             time_mode=time_mode,
-            state=state
+            state=state,
+            type=product_type,
         )
         product.save()
         if potential_teachers is not None:
             if type(potential_teachers) != list:
                 potential_teachers = [potential_teachers]
             for teacher in potential_teachers:
-                product.potentielle_vaerter.add(teacher)
+                product.potentielle_undervisere.add(teacher)
         if potential_hosts is not None:
             if type(potential_hosts) != list:
                 potential_hosts = [potential_hosts]
             for host in potential_hosts:
                 product.potentielle_vaerter.add(host)
         return product
+
+    def create_visit(
+            self,
+            product,
+            start=datetime.utcnow(),
+            end=datetime.utcnow() + timedelta(hours=1),
+            workflow_status=Visit.WORKFLOW_STATUS_BEING_PLANNED
+    ):
+        visit = Visit(
+            workflow_status=workflow_status
+        )
+        visit.save()
+        eventtime = EventTime(
+            product=product,
+            visit=visit,
+            start=pytz.utc.localize(start),
+            end=pytz.utc.localize(end)
+        )
+        eventtime.save()
+        return visit
+
+
+    def create_emailtemplate(
+            self,
+            key=1,
+            type=None,
+            subject="",
+            body="",
+            unit=None
+    ):
+        if key is not None and type is None:
+            type = EmailTemplateType.get(key)
+        template = EmailTemplate(
+            key=key,
+            type=type,
+            subject=subject,
+            body=body,
+            organizationalunit=unit
+        )
+        template.save()
+        return template
+
+    def create_resourcepool(self, name, type, unit, *resources):
+        resourcepool = ResourcePool(
+            name=name,
+            resource_type=type,
+            organizationalunit=unit
+        )
+        resourcepool.save()
+        for resource in resources:
+            resourcepool.resources.add(resource)
+        return resourcepool
+
+    def create_resourcerequirement(self, product, pool, amount):
+        requirement = ResourceRequirement(
+            product=product,
+            resource_pool=pool,
+            required_amount=amount
+        )
+        requirement.save()
+        return requirement
+
+    def create_autosend(self, item, template_type, **kwargs):
+        autosend = None
+        if isinstance(item, Product):
+            (autosend, created) = ProductAutosend.objects.get_or_create(product=item, template_type=template_type, **kwargs)
+        elif isinstance(item, Visit):
+            if 'inherit' not in kwargs:
+                kwargs['inherit'] = False
+            (autosend, created) = VisitAutosend.objects.get_or_create(visit=item, template_type=template_type, **kwargs)
+        if autosend:
+            autosend.enabled = True
+            autosend.save()
+        return autosend

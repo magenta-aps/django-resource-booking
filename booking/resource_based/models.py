@@ -1438,7 +1438,6 @@ class ResourceType(models.Model):
             except ResourceType.DoesNotExist:
                 item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
-                print "Created new ResourceType %d=%s" % (id, name)
 
     def __unicode__(self):
         return self.name
@@ -1673,6 +1672,7 @@ class UserResource(Resource):
                 organizationalunit=unit
             )
             user_resource.save()
+            return user_resource
 
     @classmethod
     def for_user(cls, user):

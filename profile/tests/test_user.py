@@ -92,16 +92,16 @@ class TestUser(TestMixin, TestCase):
     def test_user_list_ui(self):
         self.login("/profile/users", self.admin)
         user = self.create_default_teacher(unit=self.unit)
-        list = self.client.get("/profile/users?role=%d" % TEACHER)
-        self.assertTemplateUsed(list, "profile/user_list.html")
+        response = self.client.get("/profile/users?role=%d" % TEACHER)
+        self.assertTemplateUsed(response, "profile/user_list.html")
         self.assertInHTML(
             '<a href="/profile/user/create" class="btn btn-primary btn-sm">'
             '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'
             'Opret ny bruger'
             '</a>',
-            list.content
+            response.content
         )
-        query = pq(list.content)
+        query = pq(response.content)
         items = query("ul.list-unstyled li")
         self.assertEquals(1, len(items))
         found = {}
@@ -120,25 +120,25 @@ class TestUser(TestMixin, TestCase):
             found
         )
 
-        list = self.client.get("/profile/users?unit=%d" % (self.unit.id+1))
-        query = pq(list.content)
+        response = self.client.get("/profile/users?unit=%d" % (self.unit.id+1))
+        query = pq(response.content)
         items = query("ul.list-unstyled li")
         self.assertEquals(0, len(items))
 
-        list = self.client.get("/profile/users?role=6")
-        query = pq(list.content)
+        response = self.client.get("/profile/users?role=6")
+        query = pq(response.content)
         items = query("ul.list-unstyled li")
         self.assertEquals(0, len(items))
 
-        list = self.client.get("/profile/users?q=nouser")
-        query = pq(list.content)
+        response = self.client.get("/profile/users?q=nouser")
+        query = pq(response.content)
         items = query("ul.list-unstyled li")
         self.assertEquals(0, len(items))
 
         for name in [user.username, user.first_name, user.last_name]:
             for i in range(1, len(name)):
-                list = self.client.get("/profile/users?q=%s" % name[0:i])
-                query = pq(list.content)
+                response = self.client.get("/profile/users?q=%s" % name[0:i])
+                query = pq(response.content)
                 items = query("ul.list-unstyled li")
                 self.assertEquals(1, len(items))
 
@@ -213,7 +213,7 @@ class TestUser(TestMixin, TestCase):
                 name="testunit2", type=self.unittype
             )
         )
-        product = self.create_default_product(
+        product = self.create_product(
             unit=self.unit,
             time_mode=Product.TIME_MODE_SPECIFIC,
             potential_teachers=teacher,

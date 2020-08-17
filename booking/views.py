@@ -2507,6 +2507,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             form.full_clean()
             if not form.is_valid():
                 valid = False
+                print(form.errors)
 
         if valid:
             if 'bookingform' in relevant_forms:
@@ -3788,7 +3789,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     @staticmethod
     def build_breadcrumbs(template, cloning=False):
-        if template:
+        if template and template.id:
             return EmailTemplateDetailView.build_breadcrumbs(template) + [
                 {
                     'url': reverse(

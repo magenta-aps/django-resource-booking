@@ -2671,6 +2671,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             Product.TIME_MODE_NONE,
             Product.TIME_MODE_NO_BOOKING
         ):
+            print("wrong time mode")
             return False
 
         # Time controlled products are only bookable if there's a valid
@@ -2682,7 +2683,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 return True
             if eventtime.visit.is_bookable:
                 return True
-
         return False
 
     @property
@@ -3975,7 +3975,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def autosend_inherits(self, template_type):
         s = self.visitautosend_set.filter(
-            template_type=template_type
+            template_type_id=template_type.id
         )
 
         # If no rule specified, always inherit
