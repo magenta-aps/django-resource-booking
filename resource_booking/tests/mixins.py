@@ -6,11 +6,19 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from django.utils.datetime_safe import datetime
 
-from booking.models import Product, EmailTemplate, EmailTemplateType, Visit, \
-    EventTime, ProductAutosend, VisitAutosend
+from booking.models import EmailTemplate
+from booking.models import EmailTemplateType
+from booking.models import EventTime
+from booking.models import Product
+from booking.models import ProductAutosend
+from booking.models import Visit
+from booking.models import VisitAutosend
 from booking.resource_based.models import ResourcePool, ResourceRequirement
-from profile.constants import ADMINISTRATOR, TEACHER, HOST, COORDINATOR, \
-    FACULTY_EDITOR
+from profile.constants import ADMINISTRATOR
+from profile.constants import COORDINATOR
+from profile.constants import FACULTY_EDITOR
+from profile.constants import HOST
+from profile.constants import TEACHER
 from profile.models import UserRole, UserProfile
 
 backports.unittest_mock.install()  # noqa
@@ -209,7 +217,6 @@ class TestMixin(object):
         eventtime.save()
         return visit
 
-
     def create_emailtemplate(
             self,
             key=1,
@@ -253,11 +260,15 @@ class TestMixin(object):
     def create_autosend(self, item, template_type, **kwargs):
         autosend = None
         if isinstance(item, Product):
-            (autosend, created) = ProductAutosend.objects.get_or_create(product=item, template_type=template_type, **kwargs)
+            (autosend, created) = ProductAutosend.objects.get_or_create(
+                product=item, template_type=template_type, **kwargs
+            )
         elif isinstance(item, Visit):
             if 'inherit' not in kwargs:
                 kwargs['inherit'] = False
-            (autosend, created) = VisitAutosend.objects.get_or_create(visit=item, template_type=template_type, **kwargs)
+            (autosend, created) = VisitAutosend.objects.get_or_create(
+                visit=item, template_type=template_type, **kwargs
+            )
         if autosend:
             autosend.enabled = True
             autosend.save()

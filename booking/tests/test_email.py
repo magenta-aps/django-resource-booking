@@ -25,7 +25,6 @@ from resource_booking.tests.mixins import TestMixin
 
 class TestEmail(TestMixin, TestCase):
 
-
     @classmethod
     def setUpClass(cls):
         super(TestEmail, cls).setUpClass()
@@ -51,14 +50,24 @@ class TestEmail(TestMixin, TestCase):
 
     def test_template_list_ui(self):
         self.login("/emailtemplate", self.admin)
-        self.create_emailtemplate(key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED)
+        self.create_emailtemplate(
+            key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+        )
         response = self.client.get("/emailtemplate")
         self.assertTemplateUsed(response, "email/list.html")
         query = pq(response.content)
         items = query("table tbody tr")
-        found = [tuple([cell.text.strip() for cell in query(i).find("td")]) for i in items]
+        found = [
+            tuple([cell.text.strip() for cell in query(i).find("td")])
+            for i in items
+        ]
         self.assertEquals(1, len(found))
-        self.assertEquals(EmailTemplateType.get(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED).name, found[0][0])
+        self.assertEquals(
+            EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            ).name,
+            found[0][0]
+        )
         self.assertEquals("Grundskabelon", found[0][1])
 
     def test_template_create_ui(self):
@@ -93,15 +102,24 @@ class TestEmail(TestMixin, TestCase):
         self.assertEquals(302, response.status_code)
         self.assertEquals("/emailtemplate", response['Location'])
         for (key, value) in form_data.items():
-            self.assertEquals(1, EmailTemplate.objects.filter(**{key: value}).count())
+            self.assertEquals(
+                1, EmailTemplate.objects.filter(**{key: value}).count()
+            )
         template = EmailTemplate.objects.get(**form_data)
-        self.assertEquals(EmailTemplateType.get(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED), template.type)
+        self.assertEquals(
+            EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            ),
+            template.type
+        )
         self.assertEquals(self.unit, template.organizationalunit)
         self.assertEquals('Test subject', template.subject)
         self.assertEquals('Test body', template.body)
 
     def test_template_edit_ui(self):
-        template = self.create_emailtemplate(key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED)
+        template = self.create_emailtemplate(
+            key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+        )
         self.login("/emailtemplate/%d/edit" % template.id, self.admin)
         form_data = {
             'type': EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
@@ -123,19 +141,27 @@ class TestEmail(TestMixin, TestCase):
                     del data[key]
                 else:
                     data[key] = v
-                response = self.client.post("/emailtemplate/%d/edit" % template.id, data)
+                response = self.client.post(
+                    "/emailtemplate/%d/edit" % template.id, data
+                )
                 self.assertEquals(200, response.status_code)
                 query = pq(response.content)
                 errors = query("[name=\"%s\"]" % key) \
                     .closest("div.form-group").find("ul.errorlist li")
                 self.assertEquals(1, len(errors))
-        response = self.client.post("/emailtemplate/%d/edit" % template.id, form_data)
+        response = self.client.post(
+            "/emailtemplate/%d/edit" % template.id, form_data
+        )
         self.assertEquals(302, response.status_code)
         self.assertEquals("/emailtemplate", response['Location'])
         for (key, value) in form_data.items():
-            self.assertEquals(1, EmailTemplate.objects.filter(**{key: value}).count())
+            self.assertEquals(
+                1, EmailTemplate.objects.filter(**{key: value}).count()
+            )
         template = EmailTemplate.objects.get(**form_data)
-        self.assertEquals(EmailTemplateType.get(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED), template.type)
+        self.assertEquals(EmailTemplateType.get(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED), template.type
+        )
         self.assertEquals(self.unit, template.organizationalunit)
         self.assertEquals('Test subject', template.subject)
         self.assertEquals('Test body', template.body)
@@ -166,11 +192,19 @@ class TestEmail(TestMixin, TestCase):
             data
         )
         response_json = json.loads(response.content)
-        self.assertEquals("product.title: Test product title", response_json['subject'].strip())
-        self.assertEquals("product.description: Test product description", response_json['body'].strip())
+        self.assertEquals(
+            "product.title: Test product title",
+            response_json['subject'].strip()
+        )
+        self.assertEquals(
+            "product.description: Test product description",
+            response_json['body'].strip()
+        )
 
     def test_template_clone_ui(self):
-        template = self.create_emailtemplate(key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED)
+        template = self.create_emailtemplate(
+            key=EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+        )
         self.login("/emailtemplate/%d/clone" % template.id, self.admin)
         form_data = {
             'type': EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
@@ -192,18 +226,25 @@ class TestEmail(TestMixin, TestCase):
                     del data[key]
                 else:
                     data[key] = v
-                response = self.client.post("/emailtemplate/%d/clone" % template.id, data)
+                response = self.client.post(
+                    "/emailtemplate/%d/clone" % template.id, data
+                )
                 self.assertEquals(200, response.status_code)
                 query = pq(response.content)
                 errors = query("[name=\"%s\"]" % key) \
                     .closest("div.form-group").find("ul.errorlist li")
                 self.assertEquals(1, len(errors))
-        response = self.client.post("/emailtemplate/%d/clone" % template.id, form_data)
+        response = self.client.post(
+            "/emailtemplate/%d/clone" % template.id, form_data
+        )
         self.assertEquals(302, response.status_code)
         self.assertEquals("/emailtemplate", response['Location'])
 
         template_clone = EmailTemplate.objects.get(**form_data)
-        self.assertEquals(EmailTemplateType.get(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED), template_clone.type)
+        self.assertEquals(EmailTemplateType.get(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED),
+            template_clone.type
+        )
         self.assertEquals(self.unit, template_clone.organizationalunit)
         self.assertEquals('Test subject', template_clone.subject)
         self.assertEquals('Test body', template_clone.body)
@@ -240,7 +281,8 @@ class TestEmail(TestMixin, TestCase):
 
     def test_autosend_visit_host_associated(self):
         from booking.booking_workflows.views import BecomeHostView
-        BecomeHostView.notify_mail_template_type = EmailTemplateType.notify_host__associated
+        BecomeHostView.notify_mail_template_type = \
+            EmailTemplateType.notify_host__associated
         template = self.create_emailtemplate(
             key=EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
             unit=self.unit,
@@ -248,7 +290,7 @@ class TestEmail(TestMixin, TestCase):
             body="This is a test"
         )
         host = self.create_default_host(unit=self.unit)
-        host_resource = HostResource.create(host, self.unit)
+        HostResource.create(host, self.unit)
         product = self.create_product(
             unit=self.unit,
             potential_hosts=host
@@ -267,6 +309,7 @@ class TestEmail(TestMixin, TestCase):
                 "confirm": "confirm"
             }
         )
+        self.assertEquals(200, response.status_code)
         self.assertEquals(1, KUEmailMessage.objects.count() - count_before)
         message = KUEmailMessage.objects.last()
         self.assertEquals("Test association", message.subject.strip())
@@ -278,7 +321,8 @@ class TestEmail(TestMixin, TestCase):
 
     def test_autosend_visit_teacher_associated(self):
         from booking.booking_workflows.views import BecomeTeacherView
-        BecomeTeacherView.notify_mail_template_type = EmailTemplateType.notify_teacher__associated
+        BecomeTeacherView.notify_mail_template_type = \
+            EmailTemplateType.notify_teacher__associated
         template = self.create_emailtemplate(
             key=EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
             unit=self.unit,
@@ -286,7 +330,7 @@ class TestEmail(TestMixin, TestCase):
             body="This is a test"
         )
         teacher = self.create_default_teacher(unit=self.unit)
-        teacher_resource = TeacherResource.create(teacher, self.unit)
+        TeacherResource.create(teacher, self.unit)
         product = self.create_product(
             unit=self.unit,
             potential_teachers=teacher
@@ -305,6 +349,7 @@ class TestEmail(TestMixin, TestCase):
                 "confirm": "confirm"
             }
         )
+        self.assertEquals(200, response.status_code)
         self.assertEquals(1, KUEmailMessage.objects.count() - count_before)
         message = KUEmailMessage.objects.last()
         self.assertEquals("Test association", message.subject.strip())
@@ -314,13 +359,12 @@ class TestEmail(TestMixin, TestCase):
             message.recipients
         )
 
-
     def test_autosend_visit_booking_created(self):
         School.create_defaults()
         teacher = self.create_default_teacher(unit=self.unit)
-        teacher_resource = TeacherResource.create(teacher, self.unit)
+        TeacherResource.create(teacher, self.unit)
         host = self.create_default_host(unit=self.unit)
-        host_resource = HostResource.create(host, self.unit)
+        HostResource.create(host, self.unit)
         product = self.create_product(
             unit=self.unit,
             product_type=Product.STUDENT_FOR_A_DAY,
@@ -416,19 +460,34 @@ class TestEmail(TestMixin, TestCase):
 
         emails = self.get_emails_grouped()
 
-        guest_emails = emails[str(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED)]
+        guest_emails = emails[
+            str(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED)
+        ]
         self.assertEquals(1, len(guest_emails))
-        self.assertEquals("\"Tester Testersen\" <test@example.com>", guest_emails[0].recipients)
+        self.assertEquals(
+            "\"Tester Testersen\" <test@example.com>",
+            guest_emails[0].recipients
+        )
         self.assertEquals("This is a test 1", guest_emails[0].body.strip())
 
-        host_emails = emails[str(EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER)]
+        host_emails = emails[
+            str(EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+        ]
         self.assertEquals(1, len(host_emails))
-        self.assertEquals("\"%s\" <%s>" % (host.get_full_name(), host.email), host_emails[0].recipients)
+        self.assertEquals(
+            "\"%s\" <%s>" % (host.get_full_name(), host.email),
+            host_emails[0].recipients
+        )
         self.assertEquals("This is a test 6", host_emails[0].body.strip())
 
-        teacher_emails = emails[str(EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)]
+        teacher_emails = emails[
+            str(EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
+        ]
         self.assertEquals(1, len(teacher_emails))
-        self.assertEquals("\"%s\" <%s>" % (teacher.get_full_name(), teacher.email), teacher_emails[0].recipients)
+        self.assertEquals(
+            "\"%s\" <%s>" % (teacher.get_full_name(), teacher.email),
+            teacher_emails[0].recipients
+        )
         self.assertEquals("This is a test 5", teacher_emails[0].body.strip())
 
         KUEmailMessage.objects.all().delete()
@@ -438,7 +497,9 @@ class TestEmail(TestMixin, TestCase):
         visit.resources_updated()
 
         emails = self.get_emails_grouped()
-        general_emails = emails[str(EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE)]
+        general_emails = emails[
+            str(EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE)
+        ]
         self.assertEquals(3, len(general_emails))
         recipients = set([email.recipients for email in general_emails])
         self.assertSetEqual(
@@ -449,7 +510,6 @@ class TestEmail(TestMixin, TestCase):
             ]),
             recipients
         )
-
 
     @staticmethod
     def get_emails_grouped():
