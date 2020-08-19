@@ -73,7 +73,9 @@ class TestEmail(TestMixin, TestCase):
     def test_template_create_ui(self):
         self.login("/emailtemplate/create", self.admin)
         form_data = {
-            'type': EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            'type': EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            ).id,
             'organizationalunit': self.unit.id,
             'subject': 'Test subject',
             'body': 'Test body'
@@ -122,7 +124,9 @@ class TestEmail(TestMixin, TestCase):
         )
         self.login("/emailtemplate/%d/edit" % template.id, self.admin)
         form_data = {
-            'type': EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            'type': EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            ).id,
             'organizationalunit': self.unit.id,
             'subject': 'Test subject',
             'body': 'Test body'
@@ -207,7 +211,9 @@ class TestEmail(TestMixin, TestCase):
         )
         self.login("/emailtemplate/%d/clone" % template.id, self.admin)
         form_data = {
-            'type': EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            'type': EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            ).id,
             'organizationalunit': self.unit.id,
             'subject': 'Test subject',
             'body': 'Test body'
@@ -510,14 +516,3 @@ class TestEmail(TestMixin, TestCase):
             ]),
             recipients
         )
-
-    @staticmethod
-    def get_emails_grouped():
-        emails = {}
-        for email in KUEmailMessage.objects.all():
-            key = str(email.template_key)
-            if key not in emails:
-                emails[key] = []
-            sub = emails[key]
-            sub.append(email)
-        return emails

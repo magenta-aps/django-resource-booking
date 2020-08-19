@@ -1985,7 +1985,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         max_digits=10,
         decimal_places=2,
-        verbose_name=_(u'Pris')
+        verbose_name=_(u'Pris'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     gymnasiefag = models.ManyToManyField(
@@ -2099,12 +2100,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     minimum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Mindste antal deltagere')
+        verbose_name=_(u'Mindste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
     maximum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Højeste antal deltagere')
+        verbose_name=_(u'Højeste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     # Waiting lists
@@ -2115,17 +2118,23 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     waiting_list_length = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Antal pladser')
+        verbose_name=_(u'Antal pladser'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_days = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Lukning af venteliste (dage inden besøg)')
+        verbose_name=_(u'Lukning af venteliste (dage inden besøg)'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_hours = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Lukning af venteliste (timer inden besøg)')
+        verbose_name=_(u'Lukning af venteliste (timer inden besøg)'),
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(23)
+        ]
     )
 
     do_show_countdown = models.BooleanField(
@@ -2200,10 +2209,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Antal dage før afholdelse, '
                        u'hvor der lukkes for tilmeldinger'),
         blank=False,
-        null=True
+        null=True,
+        validators=[validators.MinValueValidator(0)]
     )
 
-    booking_max_days_in_future = models.IntegerField(
+    booking_max_days_in_future = models.PositiveIntegerField(
         default=90,
         verbose_name=_(
             u'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'

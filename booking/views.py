@@ -1295,14 +1295,18 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             for sv_text in submitvalue:
                 sv = sv_text.split(",")
                 subject_pk = sv.pop(0)
-                subject = Subject.objects.get(pk=subject_pk)
-                result.append({
-                    'submitvalue': sv_text,
-                    'description': ProductGymnasieFag.display(
-                        subject,
-                        [GymnasieLevel.objects.get(pk=x) for x in sv]
-                    )
-                })
+                try:
+                    subject = Subject.objects.get(pk=subject_pk)
+                    result.append({
+                        'submitvalue': sv_text,
+                        'description': ProductGymnasieFag.display(
+                            subject,
+                            [GymnasieLevel.objects.get(pk=x) for x in sv]
+                        )
+                    })
+                except Subject.DoesNotExist:
+                    # raise ValidationError()
+                    pass
 
         return result
 

@@ -9,6 +9,7 @@ from django.utils.datetime_safe import datetime
 from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
 from booking.models import EventTime
+from booking.models import KUEmailMessage
 from booking.models import Product
 from booking.models import ProductAutosend
 from booking.models import Visit
@@ -36,16 +37,19 @@ class TestMixin(object):
     @classmethod
     def setUpClass(cls):
         super(TestMixin, cls).setUpClass()
-        cls.admin = User.objects.create(username="admin", is_superuser=True)
+        (cls.admin, c) = User.objects.get_or_create(
+            {'is_superuser': True},
+            username="admin"
+        )
         cls.admin.set_password('admin')
         cls.admin.save()
         (role, created) = UserRole.objects.get_or_create(
             {'name': u"Administrator"},
             role=ADMINISTRATOR
         )
-        adminprofile = UserProfile(
+        (adminprofile, c) = UserProfile.objects.get_or_create(
+            {'user_role': role},
             user=cls.admin,
-            user_role=role
         )
         adminprofile.save()
 
@@ -273,3 +277,13 @@ class TestMixin(object):
             autosend.enabled = True
             autosend.save()
         return autosend
+
+    def get_emails_grouped(self):
+        emails = {}
+        for email in KUEmailMessage.objects.all():
+            key = str(email.template_key)
+            if key not in emails:
+                emails[key] = []
+            sub = emails[key]
+            sub.append(email)
+        return emails

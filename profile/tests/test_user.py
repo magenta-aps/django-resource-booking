@@ -19,8 +19,10 @@ class TestUser(TestMixin, TestCase):
         super(TestUser, cls).setUpClass()
         UserRole.create_defaults()
         ResourceType.create_defaults()
-        cls.unittype = OrganizationalUnitType.objects.create(name="Fakultet")
-        cls.unit = OrganizationalUnit.objects.create(
+        (cls.unittype, c) = OrganizationalUnitType.objects.get_or_create(
+            name="Fakultet"
+        )
+        (cls.unit, c) = OrganizationalUnit.objects.get_or_create(
             name="testunit", type=cls.unittype
         )
         cls.admin.userprofile.organizationalunit = cls.unit
