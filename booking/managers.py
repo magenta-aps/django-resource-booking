@@ -209,28 +209,28 @@ class ProductQuerySet(models.QuerySet):
         qs = self.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__created_time").only('pk')
 
-        return qs.order_by("-statistics__created_time")
+        return qs.order_by("-statistics__created_time", "pk")
 
     def get_latest_updated(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__updated_time").only('pk')
 
-        return qs.order_by("-statistics__updated_time")
+        return qs.order_by("-statistics__updated_time", "pk")
 
     def get_latest_displayed(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__updated_time").only('pk')
 
-        return qs.order_by("-statistics__visited_time")
+        return qs.order_by("-statistics__visited_time", "pk")
 
     def get_latest_booked(self, user=None):
         qs = self.filter(
@@ -238,13 +238,13 @@ class ProductQuerySet(models.QuerySet):
         )
 
         if user and not user.is_authenticated():
-            qs = qs.filter_public_bookable().only("pk")
+            qs = qs.filter_public_bookable().distinct().only("pk")
 
         return qs.annotate(
             latest_booking=Max(
                 "eventtime__visit__bookings__statistics__created_time"
             )
-        ).order_by("-latest_booking")
+        ).order_by("-latest_booking", "pk")
 
 
 class SchoolQuerySet(models.QuerySet):
