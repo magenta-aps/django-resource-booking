@@ -1,8 +1,12 @@
 # encoding: utf-8
 import copy
+import re
+import pprint
+from datetime import timedelta
 from decimal import Decimal
 
 from django.test import TestCase
+from django.utils.datetime_safe import datetime
 from pyquery import PyQuery as pq
 
 from booking.forms import AssignmentHelpForm
@@ -13,7 +17,7 @@ from booking.forms import OtherProductForm
 from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
-from booking.models import EmailTemplateType
+from booking.models import EmailTemplateType, Visit
 from booking.models import Locality
 from booking.models import OrganizationalUnit
 from booking.models import OrganizationalUnitType
@@ -21,6 +25,7 @@ from booking.models import Product
 from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import Subject
+from booking.utils import flatten
 from resource_booking.tests.mixins import TestMixin
 
 
@@ -175,7 +180,7 @@ class TestProduct(TestMixin, TestCase):
                 'fail': [None, -3, 'x']
             },
             'booking_max_days_in_future': {
-                'success': [0, 3, 10, 30],
+                'success': [30, 10, 3, 0],
                 'fail': [None, -3, 'x']
             },
             'inquire_enabled': {
@@ -330,6 +335,172 @@ class TestProduct(TestMixin, TestCase):
                                 actual = list(actual.all())
                             self.assertEquals(expected_now, actual, msg)
 
+    def test_display_product_ui__STUDENT_FOR_A_DAY(self):
+        self._test_display_product_ui(
+            Product.STUDENT_FOR_A_DAY,
+            StudentForADayForm
+        )
+
+    def test_display_product_ui__STUDIEPRAKTIK(self):
+        self._test_display_product_ui(
+            Product.STUDIEPRAKTIK,
+            InternshipForm
+        )
+
+    def test_display_product_ui__OPEN_HOUSE(self):
+        self._test_display_product_ui(
+            Product.OPEN_HOUSE,
+            OpenHouseForm
+        )
+
+    def test_display_product_ui__TEACHER_EVENT(self):
+        self._test_display_product_ui(
+            Product.TEACHER_EVENT,
+            TeacherProductForm
+        )
+
+    def test_display_product_ui__GROUP_VISIT(self):
+        self._test_display_product_ui(
+            Product.GROUP_VISIT,
+            ClassProductForm
+        )
+
+    def test_display_product_ui__STUDY_PROJECT(self):
+        self._test_display_product_ui(
+            Product.STUDY_PROJECT,
+            StudyProjectForm
+        )
+
+    def test_display_product_ui__ASSIGNMENT_HELP(self):
+        self._test_display_product_ui(
+            Product.ASSIGNMENT_HELP,
+            AssignmentHelpForm
+        )
+
+    def _test_display_product_ui(self, product_type, form_class):
+        data = {}
+        pp = pprint.PrettyPrinter(indent=4)
+        fields = {
+            key: copy.deepcopy(value)
+            for key, value in self.field_definitions.items()
+            if key in form_class.Meta.fields
+        }
+        m2m = {}
+        for (key, value) in fields.items():
+            if 'success' in value:
+                v = self._unpack_success(value['success'], 0, 1)
+                if type(v) == list:
+                    m2m[key] = v
+                else:
+                    data[key] = v
+        map = Product.time_mode_choice_map
+        data['time_mode'] = Product.TIME_MODE_SPECIFIC \
+            if Product.TIME_MODE_SPECIFIC in map[product_type] \
+            else list(map[product_type])[0]
+        data['state'] = Product.ACTIVE
+
+        product = Product(type=product_type, **data)
+        product.save()
+        for key, value in m2m.items():
+            for v in value:
+                getattr(product, key).add(v)
+
+        start = datetime.utcnow()+timedelta(days=10)
+        end = start+timedelta(hours=1)
+
+        visit = None
+        if data['time_mode'] == Product.TIME_MODE_SPECIFIC:
+            visit = self.create_visit(
+                product=product,
+                start=start,
+                end=end,
+                workflow_status=Visit.WORKFLOW_STATUS_BEING_PLANNED
+            )
+
+        response = self.client.get("/product/%d" % product.id)
+        self.assertEquals(200, response.status_code)
+        query = pq(response.content)
+        self.assertEquals([
+                u'Du er her:',
+                u'Søgning',
+                u"Tilbud #%d - %s" % (product.id, product.title)
+            ], flatten([
+                self._get_text_nodes(el)
+                for el in query("ol.breadcrumb")
+            ]
+        ))
+        title_element = query("h1")
+        self.assertEquals(product.title, title_element.text())
+        self.assertEquals(product.teaser, title_element.next().text())
+        self.assertEquals(
+            product.description, title_element.next().next().text()
+        )
+
+        # expected_duration = tuple([
+        #     x for x in [
+        #         int(x) for x in data['duration'].split(":")
+        #     ] if x > 0
+        # ]) if 'duration' in data else None
+        # print("data:")
+        # pp.pprint(data)
+
+        expected_data = {
+            'hvad': self._get_choices_label(
+                Product.resource_type_choices, product_type
+            ),
+            u'arrangør': unicode(self.unit.name),
+        }
+        if 'maximum_number_of_visitors' in data:
+            expected_data['antal'] = u"Max. %d" % data['maximum_number_of_visitors']
+
+        if data['time_mode'] == Product.TIME_MODE_SPECIFIC:
+            expected_number_of_visitors = u"%d ledige pladser" % data['maximum_number_of_visitors'] \
+                if 'maximum_number_of_visitors' in data \
+                else u'ingen begrænsning'
+            expected_data[u'hvornår'] = u"%s\n%s" % (
+                    visit.eventtime.interval_display,
+                    expected_number_of_visitors
+            )
+        if 'locality' in data:
+            expected_data['hvor'] = '\n'.join([
+                unicode(getattr(data['locality'], x))
+                for x in ['name', 'address_line', 'zip_city']
+                if len(x.strip()) > 0
+            ])
+        options = []
+        if data.get('tour_available'):
+            options.append(u'Rundvisning')
+        if data.get('catering_available'):
+            options.append(u'Forplejning')
+        if data.get('presentation_available'):
+            options.append(u'Oplæg om uddannelse')
+        if data.get('custom_available'):
+            options.append(data.get('custom_name'))
+        if len(options):
+            expected_data['mulighed for'] = '\n'.join(options)
+
+
+
+        expected_data = {unicode(key+":"): value for key, value in expected_data.items()}
+
+        # print("expected:")
+        # pp.pprint(expected_data)
+
+        rightbox_data = {}
+        for item in query(".panel-body .dl-horizontal dt"):
+            key = unicode(item.text).strip().lower()
+            value = []
+            for node in item.itersiblings():
+                if node.tag != 'dd':
+                    break
+                value += self._get_text_nodes(node)
+            rightbox_data[key] = '\n'.join(value)
+
+        # print("actual:")
+        # pp.pprint(rightbox_data)
+        self.assertDictEqual(expected_data, rightbox_data)
+
+
     @staticmethod
     def _unpack_success(data, list_index, tuple_index):
         if type(data) == list:
@@ -350,3 +521,17 @@ class TestProduct(TestMixin, TestCase):
         else:
             data[key] = value
         return data
+
+    @staticmethod
+    def _get_text_nodes(element):
+        return [
+            unicode(x.strip())
+            for x in element.itertext()
+            if len(x.strip()) > 0
+        ]
+
+    @staticmethod
+    def _get_choices_label(choices, value):
+        for (v, label) in choices:
+            if v == value:
+                return label

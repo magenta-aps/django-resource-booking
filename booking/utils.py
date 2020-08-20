@@ -257,7 +257,7 @@ def merge_dicts(*dicts):
 
 def flatten(args):
     flat = []
-    if type(args) in (type(()), type([])):
+    if type(args) in (tuple, list):
         for arg in args:
             flat.extend(flatten(arg))
     else:
