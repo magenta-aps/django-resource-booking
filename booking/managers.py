@@ -238,8 +238,7 @@ class ProductQuerySet(models.QuerySet):
         )
 
         if user and not user.is_authenticated():
-            qs = qs.filter_public_bookable() \
-                .distinct("pk", "latest_booking").only("pk")
+            qs = qs.filter_public_bookable().distinct().only("pk")
 
         return qs.annotate(
             latest_booking=Max(
