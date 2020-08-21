@@ -610,7 +610,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         return breadcrumbs
 
 
-class DeleteUserView(BreadcrumbMixin, DeleteView):
+class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
