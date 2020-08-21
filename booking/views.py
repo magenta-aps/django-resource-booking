@@ -526,9 +526,11 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
                 )
                 # We run a raw query on individual words, ANDed together
                 # and with a wildcard at the end of each word
-                searchexpression = " & ".join(
-                    ["%s:*" % x for x in searchexpression.split()]
-                )
+                searchexpression = " & ".join([
+                    "%s:*" % x.strip()
+                    for x in searchexpression.split()
+                    if len(x)
+                ])
                 query = SearchQuery(searchexpression)
                 qs = self.model.objects.annotate(
                     rank=SearchRank(F('search_vector'), query)

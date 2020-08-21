@@ -2681,7 +2681,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             Product.TIME_MODE_NONE,
             Product.TIME_MODE_NO_BOOKING
         ):
-            print("wrong time mode")
             return False
 
         # Time controlled products are only bookable if there's a valid

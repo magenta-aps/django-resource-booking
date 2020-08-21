@@ -1,11 +1,13 @@
 # encoding: utf-8
 import copy
+import math
 import re
-import pprint
 from datetime import timedelta
 from decimal import Decimal
 
+from django.http import QueryDict
 from django.test import TestCase
+from django.utils.datastructures import MultiValueDict
 from django.utils.datetime_safe import datetime
 from pyquery import PyQuery as pq
 
@@ -241,7 +243,6 @@ class TestProduct(TestMixin, TestCase):
         self._test_create_product_ui(Product.OTHER_OFFERS, OtherProductForm)
 
     def _test_create_product_ui(self, product_type, form_class):
-
         fields = {
             key: copy.deepcopy(value)
             for key, value in self.field_definitions.items()
@@ -379,7 +380,6 @@ class TestProduct(TestMixin, TestCase):
 
     def _test_display_product_ui(self, product_type, form_class):
         data = {}
-        pp = pprint.PrettyPrinter(indent=4)
         fields = {
             key: copy.deepcopy(value)
             for key, value in self.field_definitions.items()
@@ -436,14 +436,6 @@ class TestProduct(TestMixin, TestCase):
             product.description, title_element.next().next().text()
         )
 
-        # expected_duration = tuple([
-        #     x for x in [
-        #         int(x) for x in data['duration'].split(":")
-        #     ] if x > 0
-        # ]) if 'duration' in data else None
-        # print("data:")
-        # pp.pprint(data)
-
         expected_data = {
             'hvad': self._get_choices_label(
                 Product.resource_type_choices, product_type
@@ -451,12 +443,15 @@ class TestProduct(TestMixin, TestCase):
             u'arrangør': unicode(self.unit.name),
         }
         if 'maximum_number_of_visitors' in data:
-            expected_data['antal'] = u"Max. %d" % data['maximum_number_of_visitors']
+            expected_data['antal'] = \
+                u"Max. %d" % data['maximum_number_of_visitors']
 
         if data['time_mode'] == Product.TIME_MODE_SPECIFIC:
-            expected_number_of_visitors = u"%d ledige pladser" % data['maximum_number_of_visitors'] \
-                if 'maximum_number_of_visitors' in data \
-                else u'ingen begrænsning'
+            if 'maximum_number_of_visitors' in data:
+                expected_number_of_visitors = \
+                    u"%d ledige pladser" % data['maximum_number_of_visitors']
+            else:
+                expected_number_of_visitors = u'ingen begrænsning'
             expected_data[u'hvornår'] = u"%s\n%s" % (
                     visit.eventtime.interval_display,
                     expected_number_of_visitors
@@ -479,12 +474,10 @@ class TestProduct(TestMixin, TestCase):
         if len(options):
             expected_data['mulighed for'] = '\n'.join(options)
 
-
-
-        expected_data = {unicode(key+":"): value for key, value in expected_data.items()}
-
-        # print("expected:")
-        # pp.pprint(expected_data)
+        expected_data = {
+            unicode(key+":"): value
+            for key, value in expected_data.items()
+        }
 
         rightbox_data = {}
         for item in query(".panel-body .dl-horizontal dt"):
@@ -496,10 +489,162 @@ class TestProduct(TestMixin, TestCase):
                 value += self._get_text_nodes(node)
             rightbox_data[key] = '\n'.join(value)
 
-        # print("actual:")
-        # pp.pprint(rightbox_data)
         self.assertDictEqual(expected_data, rightbox_data)
 
+    def test_search(self):
+        p1 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.STUDENT_FOR_A_DAY,
+            title=u'Title æ studerende for en dag',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        p2 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.STUDIEPRAKTIK,
+            title=u'Title æ studiepraktik',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        p3 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.OPEN_HOUSE,
+            title=u'Title æ åbent hus',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        p4 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.GROUP_VISIT,
+            title=u'Title æ klassebesøg',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        p5 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.TEACHER_EVENT,
+            title=u'Title æ tilbud til undervisere',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        p6 = self.create_product(
+            unit=self.unit,
+            state=Product.ACTIVE,
+            product_type=Product.ASSIGNMENT_HELP,
+            title=u'Title æ Lektiehjælp',
+            teaser=u'Teaser ø',
+            description=u'Description å'
+        )
+        self._test_search_ui([p1, p2, p3, p4, p5, p6], {'q': u'æ'})
+        self._test_search_ui([p1, p2, p3, p4, p5, p6], {'q': u'Teaser ø'})
+        self._test_search_ui([p1, p2, p3, p4, p5, p6], {'pagesize': 5})
+        self._test_search_ui([p1], {'t': Product.STUDENT_FOR_A_DAY})
+        self._test_search_ui([p2], {'t': Product.STUDIEPRAKTIK})
+        self._test_search_ui([p3], {'t': Product.OPEN_HOUSE})
+        self._test_search_ui([p4], {'t': Product.GROUP_VISIT})
+        self._test_search_ui([p5], {'t': Product.TEACHER_EVENT})
+        self._test_search_ui([p6], {'t': Product.ASSIGNMENT_HELP})
+        self._test_search_ui(
+            [p1, p2, p3], {'t': [
+                Product.STUDENT_FOR_A_DAY,
+                Product.STUDIEPRAKTIK,
+                Product.OPEN_HOUSE
+            ]}
+        )
+
+    def _test_search_ui(self, products, query_params):
+        q = QueryDict('', True)
+        q.update(MultiValueDict({
+            key: self._ensure_list(value)
+            for key, value in query_params.items()
+        }))
+        products_by_id = {product.id: product for product in products}
+        pagesize = query_params.get('pagesize', 10)
+        expected_pages = int(math.ceil(float(len(products)) / float(pagesize)))
+        for page in range(1, expected_pages+1):
+            expected_products = products[(page-1)*pagesize:page*pagesize]
+            q['page'] = page
+            response = self.client.get("/search?%s" % q.urlencode())
+            self.assertEquals(200, response.status_code)
+            query = pq(response.content)
+            self.assertEquals(
+                u"%d resultater matcher din søgning på \"%s\""
+                % (len(products), query_params.get('q', '')),
+                query("h3.results-header").text()
+            )
+            list_items = query("ul.media-list > li")
+            self.assertEquals(len(expected_products), len(list_items))
+            found_ids = set()
+
+            # Check list of results, for each entry, find the entry's product
+            for list_item in list_items:
+                q_list_item = query(list_item)
+                product = None
+                for link in q_list_item.find("h3.media-heading a"):
+                    href = link.get("href")
+                    if href:
+                        m = re.search(r"/(\d+)[/?$]", href)
+                        product_id = int(m.group(1))
+                        if product_id in products_by_id:
+                            product = products_by_id[product_id]
+                            break
+                if product is not None:
+                    # Check the data outputted in the entry against the product
+                    found_ids.add(product.id)
+                    actual = {
+                        'type': self._get_choices_key(
+                            Product.type_choices,
+                            unicode(q_list_item.find(
+                                ".media-body > div.small"
+                            ).text())
+                        ),
+                        'title': "\n".join(flatten([
+                            self._get_text_nodes(node)
+                            for node in q_list_item.find("h3.media-heading")
+                        ])),
+                        'teaser': re.sub(
+                            r'\s+', " ",
+                            q_list_item.find(".media-body > p")
+                            .text().strip(u"\u2026 \n")
+                        )
+                    }
+                    expected = {key: getattr(product, key) for key in actual}
+                    self.assertDictEqual(expected, actual, q_list_item)
+            expected_ids = set([p.id for p in expected_products])
+            self.assertSetEqual(
+                expected_ids, found_ids,
+                "Search result mismatch: Resulting list of products does not "
+                "match expected list. Found: %s, expected: %s"
+                % (found_ids, expected_ids)
+            )
+
+            # Check facet counts
+            for (choices, attribute, container_ref) in [
+                (School.type_choices, 'institution_level', 'div.education'),
+                (Product.resource_type_choices, 'type', 'div.type')
+            ]:
+                counts = {}
+                for key, label in choices:
+                    filter = {attribute: key}
+                    if 't' in query_params and attribute != 'type':
+                        filter['type__in'] = \
+                            self._ensure_list(query_params['t'])
+                    counts[key] = Product.objects.filter(**filter).count()
+
+                labels = query("%s .checkbox label" % container_ref)
+                for label in labels:
+                    text = self._get_text_nodes(label)
+                    key = self._get_choices_key(choices, text[0])
+                    count = counts.get(key, 0)
+                    if count > 0:
+                        self.assertEquals(u"(%d)" % count, text[1])
+                    else:
+                        self.assertEquals(1, len(text))
 
     @staticmethod
     def _unpack_success(data, list_index, tuple_index):
@@ -535,3 +680,9 @@ class TestProduct(TestMixin, TestCase):
         for (v, label) in choices:
             if v == value:
                 return label
+
+    @staticmethod
+    def _get_choices_key(choices, label):
+        for (value, l) in choices:
+            if l == label:
+                return value
