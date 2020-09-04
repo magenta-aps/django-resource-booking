@@ -482,7 +482,8 @@ class UserProfile(models.Model):
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
                 ),
-                is_multi_sub=False
+                is_multi_sub=False,
+                eventtime__product__potentielle_undervisere=self.user
             ).exclude(
                 teachers=self.user
             )
@@ -501,7 +502,8 @@ class UserProfile(models.Model):
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'
                 ),
-                is_multi_sub=False
+                is_multi_sub=False,
+                eventtime__product__potentielle_vaerter=self.user
             ).exclude(
                 hosts=self.user
             )
