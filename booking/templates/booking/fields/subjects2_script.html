@@ -54,7 +54,8 @@
         var removeRow = function() {
             formset.removeRow(
                 total(this),
-                $(this).parents(".form-group")
+                $(this).parents(".form-group"),
+                $(this).closest(".rowcontainer")
             );
             if (window.modal) {
                 modal.updateHeight();
