@@ -1806,12 +1806,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     state = models.IntegerField(choices=state_choices,
                                 verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
-        max_length=60,
+        max_length=80,
         blank=False,
         verbose_name=_(u'Titel')
     )
     teaser = models.TextField(
-        max_length=210,
+        max_length=300,
         blank=False,
         verbose_name=_(u'Teaser')
     )
