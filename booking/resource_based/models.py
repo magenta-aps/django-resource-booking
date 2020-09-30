@@ -1600,6 +1600,12 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         if is_creating:
             self.make_calendar()
 
+    @property
+    def products_qs(self):
+        return Product.objects.filter(
+            resourcerequirement__resource_pool__in=self.resourcepool_set.all()
+        )
+
 
 class UserResource(Resource):
     class Meta:
