@@ -1618,8 +1618,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     @property
     def products_qs(self):
         return Product.objects.filter(
-            resourcerequirement__resource_pool__in=
-            self.resourcepool_set.all()
+            resourcerequirement__resource_pool__in=self.resourcepool_set.all()
         )
 
 
