@@ -295,7 +295,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        profile = self.request.user.userprofile
+        user = self.request.user
+        profile = user.userprofile
         product_types = self.product_types()
 
         assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
@@ -312,10 +313,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(
-                    eventtime__visit__in=profile.potentially_assigned_visits,
-                    type__in=product_types
-                ).distinct().order_by("title"),
+                'queryset': Product.objects.filter(Q(
+                    Q(id__in=user.potentiel_underviser_for_set.all()) |
+                    Q(id__in=profile.get_resource().products_qs)
+                )).distinct().order_by("title"),
                 'limit': limit
             },
             {
@@ -348,7 +349,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_for_hosts(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        profile = self.request.user.userprofile
+        user = self.request.user
+        profile = user.userprofile
         product_types = self.product_types()
 
         assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
@@ -365,9 +367,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(
-                    eventtime__visit__in=profile.potentially_assigned_visits
-                ).distinct().order_by("title"),
+                'queryset': Product.objects.filter(Q(
+                    Q(id__in=user.potentiel_vaert_for_set.all()) |
+                    Q(id__in=profile.get_resource().products_qs)
+                )).distinct().order_by("title"),
                 'limit': limit
             },
             {
