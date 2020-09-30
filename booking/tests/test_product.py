@@ -481,7 +481,9 @@ class TestProduct(TestMixin, TestCase):
 
         rightbox_data = {
             key: '\n'.join(value)
-            for key, value in self.extract_dl(query(".panel-body dl.dl-horizontal"), True).items()
+            for key, value in self.extract_dl(
+                query(".panel-body dl.dl-horizontal"), True
+            ).items()
         }
         self.assertDictEqual(expected_data, rightbox_data)
 

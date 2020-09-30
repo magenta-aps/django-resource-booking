@@ -197,8 +197,8 @@ class TestMixin(object):
         )
 
     def create_default_locality(
-            self, name = 'test_locality', description = 'test_description',
-            address ='test_address', zip_city ='9999 testcity',
+            self, name='test_locality', description='test_description',
+            address='test_address', zip_city='9999 testcity',
             unit=None
     ):
         (locality, c) = Locality.objects.get_or_create(
@@ -331,7 +331,6 @@ class TestMixin(object):
             sub.append(email)
         return emails
 
-
     @staticmethod
     def _unpack_success(data, list_index, tuple_index):
         if type(data) == list:
@@ -386,7 +385,10 @@ class TestMixin(object):
         if node.tag == 'a':
             d['url'] = node.attr("href")
         if node.children:
-            d['children'] = [cls._node_to_dict(child) for child in node.children]
+            d['children'] = [
+                cls._node_to_dict(child)
+                for child in node.children
+            ]
         return d
 
     @classmethod
@@ -399,7 +401,8 @@ class TestMixin(object):
                 if node.tag != 'dd':
                     break
                 # parsednode = ParsedNode(node)
-                # value.append(unicode(parsednode) if text_only else parsednode)
+                # value.append(unicode(parsednode) \
+                #     if text_only else parsednode)
                 # value += cls._get_text_nodes(node)
                 value.append(cls._node_to_dict(node))
             data[key] = value

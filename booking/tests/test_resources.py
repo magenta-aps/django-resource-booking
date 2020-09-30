@@ -1,14 +1,15 @@
 import copy
 
-from booking.models import OrganizationalUnitType, OrganizationalUnit, Resource, \
+from django.test import TestCase
+from pyquery import PyQuery as pq
+
+from booking.models import OrganizationalUnitType, OrganizationalUnit, \
     TeacherResource, HostResource, RoomResource
-from booking.resource_based.forms import EditTeacherResourceForm, \
-    EditItemResourceForm, EditVehicleResourceForm
+from booking.resource_based.forms import EditItemResourceForm, \
+    EditVehicleResourceForm
 from booking.resource_based.models import ResourceType, ResourcePool
 from profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin
-from django.test import TestCase
-from pyquery import PyQuery as pq
 
 
 class TestResources(TestMixin, TestCase):
@@ -63,7 +64,8 @@ class TestResources(TestMixin, TestCase):
 
             name = "TestPool_%s" % resource_type.name
             response = self.client.post(
-                "/resourcepool/create/%d/%d" % (resource_type.id, self.unit.id),
+                "/resourcepool/create/%d/%d" %
+                (resource_type.id, self.unit.id),
                 {'name': name}
             )
             self.assertEquals(302, response.status_code)
@@ -78,7 +80,9 @@ class TestResources(TestMixin, TestCase):
             )
 
     def test_display_resource_pool(self):
-        room = self.create_default_room(locality=self.create_default_locality(unit=self.unit))
+        room = self.create_default_room(
+            locality=self.create_default_locality(unit=self.unit)
+        )
         pool = self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_ROOM,
             self.unit,
@@ -99,7 +103,11 @@ class TestResources(TestMixin, TestCase):
             {
                 u'medlemmer': [room.name],
                 u'anvendes af': [u'Ingen tilbud'],
-                u'type': [ResourceType.objects.get(id=ResourceType.RESOURCE_TYPE_ROOM).name],
+                u'type': [
+                    ResourceType.objects.get(
+                        id=ResourceType.RESOURCE_TYPE_ROOM
+                    ).name
+                ],
                 u'enhed': [self.unit.name],
                 u'navn': [pool.name]
             },
@@ -108,8 +116,10 @@ class TestResources(TestMixin, TestCase):
         )
 
     def test_list_resource_pool(self):
-        room = self.create_default_room(locality=self.create_default_locality(unit=self.unit))
-        pool = self.create_resourcepool(
+        room = self.create_default_room(
+            locality=self.create_default_locality(unit=self.unit)
+        )
+        self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_ROOM,
             self.unit,
             'test_pool',
@@ -132,7 +142,6 @@ class TestResources(TestMixin, TestCase):
             'Handling': {}
         }], data)
 
-
     def test_create_resource_ui_ITEM(self):
         locality = self.create_default_locality(unit=self.unit)
         self._test_create_resource_ui(
@@ -152,7 +161,9 @@ class TestResources(TestMixin, TestCase):
         )
 
     def test_create_resource_TEACHER(self):
-        user = self.create_default_teacher(username="TestTeacher", unit=self.unit)
+        user = self.create_default_teacher(
+            username="TestTeacher", unit=self.unit
+        )
         resources = list(TeacherResource.objects.filter(user=user))
         self.assertEquals(1, len(resources))
         resource = resources[0]
@@ -168,13 +179,17 @@ class TestResources(TestMixin, TestCase):
         self.assertEquals(self.unit, resource.organizationalunit)
 
     def test_create_resource_ROOM(self):
-        room = self.create_default_room(locality=self.create_default_locality(unit=self.unit))
+        room = self.create_default_room(
+            locality=self.create_default_locality(unit=self.unit)
+        )
         resources = list(RoomResource.objects.filter(room=room))
         self.assertEquals(1, len(resources))
         resource = resources[0]
         self.assertEquals(room, resource.room)
 
-    def _test_create_resource_ui(self, resource_type_id, form_class, **form_extra):
+    def _test_create_resource_ui(
+            self, resource_type_id, form_class, **form_extra
+    ):
         resource_type = ResourceType.objects.get(id=resource_type_id)
         self.login("/resource/create", self.admin)
 
@@ -254,7 +269,9 @@ class TestResources(TestMixin, TestCase):
                             self.assertEquals(expected_now, actual, msg)
 
     def test_display_resource(self):
-        room = self.create_default_room(locality=self.create_default_locality(unit=self.unit))
+        room = self.create_default_room(
+            locality=self.create_default_locality(unit=self.unit)
+        )
         resource = room.resource
         pool = self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_ROOM,
