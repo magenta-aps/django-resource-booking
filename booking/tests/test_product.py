@@ -69,12 +69,12 @@ class TestProduct(TestMixin, TestCase):
 
         cls.field_definitions = {
             'title': {
-                'success': ["This is a title", u"Blåbærgrød", 'x'*60],
-                'fail': [None, '', 'x'*61]
+                'success': ["This is a title", u"Blåbærgrød", 'x'*80],
+                'fail': [None, '', 'x'*81]
             },
             'teaser': {
-                'success': ["This is a teaser", u"Æblegrød", 'x'*210],
-                'fail': [None, '', 'x'*211]
+                'success': ["This is a teaser", u"Æblegrød", 'x'*300],
+                'fail': [None, '', 'x'*301]
             },
             'description': {
                 'success': ["This is a description", u"Rødgrød med fløde"],
@@ -479,16 +479,10 @@ class TestProduct(TestMixin, TestCase):
             for key, value in expected_data.items()
         }
 
-        rightbox_data = {}
-        for item in query(".panel-body .dl-horizontal dt"):
-            key = unicode(item.text).strip().lower()
-            value = []
-            for node in item.itersiblings():
-                if node.tag != 'dd':
-                    break
-                value += self._get_text_nodes(node)
-            rightbox_data[key] = '\n'.join(value)
-
+        rightbox_data = {
+            key: '\n'.join(value)
+            for key, value in self.extract_dl(query(".panel-body dl.dl-horizontal"), True).items()
+        }
         self.assertDictEqual(expected_data, rightbox_data)
 
     def test_search(self):
@@ -645,44 +639,3 @@ class TestProduct(TestMixin, TestCase):
                         self.assertEquals(u"(%d)" % count, text[1])
                     else:
                         self.assertEquals(1, len(text))
-
-    @staticmethod
-    def _unpack_success(data, list_index, tuple_index):
-        if type(data) == list:
-            data = data[list_index]
-        if type(data) == tuple:
-            data = data[tuple_index]
-        return data
-
-    @staticmethod
-    def _ensure_list(data):
-        return data if type(data) == list else [data]
-
-    @staticmethod
-    def _apply_value(data, key, value):
-        data = data.copy()
-        if value is None:
-            del data[key]
-        else:
-            data[key] = value
-        return data
-
-    @staticmethod
-    def _get_text_nodes(element):
-        return [
-            unicode(x.strip())
-            for x in element.itertext()
-            if len(x.strip()) > 0
-        ]
-
-    @staticmethod
-    def _get_choices_label(choices, value):
-        for (v, label) in choices:
-            if v == value:
-                return label
-
-    @staticmethod
-    def _get_choices_key(choices, label):
-        for (value, l) in choices:
-            if l == label:
-                return value

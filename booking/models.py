@@ -5167,6 +5167,10 @@ class Room(models.Model):
 
         return return_value
 
+    @property
+    def resource(self):
+        return self.roomresource_set.first()
+
 
 class Region(models.Model):
 

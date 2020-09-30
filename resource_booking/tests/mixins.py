@@ -3,10 +3,11 @@ from datetime import timedelta
 import backports.unittest_mock
 import pytz
 from django.contrib.auth.models import User
+from django.db.models import Model
 from django.test.client import Client
 from django.utils.datetime_safe import datetime
 
-from booking.models import EmailTemplate
+from booking.models import EmailTemplate, Locality, Room, ResourceType
 from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import KUEmailMessage
@@ -24,6 +25,30 @@ from profile.models import UserRole, UserProfile
 
 backports.unittest_mock.install()  # noqa
 from unittest.mock import patch
+
+
+class ParsedNode(object):
+    def __init__(self, el):
+        self.el = el
+
+    def __str__(self):
+        return '\n'.join(TestMixin._get_text_nodes(self.el))
+
+    def __unicode__(self):
+        return u'\n'.join(TestMixin._get_text_nodes(self.el))
+
+    def keys(self):
+        return ['text'] + (['url'] if self.el.find("a") else [])
+
+    def __getitem__(self, key):
+        if key == 'text':
+            return TestMixin._get_text_nodes(self.el)
+        if key == 'url':
+            return self.urls
+
+    @property
+    def urls(self):
+        return [a.prop("href") for a in self.el.find("a")]
 
 
 class TestMixin(object):
@@ -171,6 +196,23 @@ class TestMixin(object):
             unit
         )
 
+    def create_default_locality(
+            self, name = 'test_locality', description = 'test_description',
+            address ='test_address', zip_city ='9999 testcity',
+            unit=None
+    ):
+        (locality, c) = Locality.objects.get_or_create(
+            name=name, description=description,
+            address_line=address, zip_city=zip_city, organizationalunit=unit
+        )
+        return locality
+
+    def create_default_room(
+            self, name="test_room", locality=None
+    ):
+        (room, c) = Room.objects.get_or_create(name=name, locality=locality)
+        return room
+
     def create_product(
             self, unit=None, title="testproduct", teaser="for testing",
             description="this is a test product",
@@ -241,13 +283,14 @@ class TestMixin(object):
         template.save()
         return template
 
-    def create_resourcepool(self, name, type, unit, *resources):
-        resourcepool = ResourcePool(
+    def create_resourcepool(self, type, unit, name='test_pool', *resources):
+        if not isinstance(type, ResourceType):
+            type = ResourceType.objects.get(id=type)
+        (resourcepool, c) = ResourcePool.objects.get_or_create(
             name=name,
             resource_type=type,
             organizationalunit=unit
         )
-        resourcepool.save()
         for resource in resources:
             resourcepool.resources.add(resource)
         return resourcepool
@@ -287,3 +330,89 @@ class TestMixin(object):
             sub = emails[key]
             sub.append(email)
         return emails
+
+
+    @staticmethod
+    def _unpack_success(data, list_index, tuple_index):
+        if type(data) == list:
+            data = data[list_index]
+        if type(data) == tuple:
+            data = data[tuple_index]
+        return data
+
+    @staticmethod
+    def _ensure_list(data):
+        return data if type(data) == list else [data]
+
+    @staticmethod
+    def _apply_value(data, key, value):
+        data = data.copy()
+        if value is None:
+            del data[key]
+        else:
+            data[key] = value
+        return data
+
+    @staticmethod
+    def _get_text_nodes(element):
+        return [
+            unicode(x.strip())
+            for x in element.itertext()
+            if len(x.strip()) > 0
+        ]
+
+    @staticmethod
+    def _get_choices_label(choices, value):
+        for (v, label) in choices:
+            if v == value:
+                return label
+
+    @staticmethod
+    def _get_choices_key(choices, label):
+        for (value, l) in choices:
+            if l == label:
+                return value
+
+    @staticmethod
+    def replace_models_with_pks(data):
+        for (key, value) in data.items():
+            if isinstance(value, Model):
+                data[key] = value.pk
+        return data
+
+    @classmethod
+    def _node_to_dict(cls, node):
+        d = {"text": node.text}
+        if node.tag == 'a':
+            d['url'] = node.attr("href")
+        if node.children:
+            d['children'] = [cls._node_to_dict(child) for child in node.children]
+        return d
+
+    @classmethod
+    def extract_dl(cls, dl, text_only=False):
+        data = {}
+        for item in dl.find("dt"):
+            key = unicode(item.text).strip().lower()
+            value = []
+            for node in item.itersiblings():
+                if node.tag != 'dd':
+                    break
+                # parsednode = ParsedNode(node)
+                # value.append(unicode(parsednode) if text_only else parsednode)
+                # value += cls._get_text_nodes(node)
+                value.append(cls._node_to_dict(node))
+            data[key] = value
+        return data
+
+    @classmethod
+    def extract_table(cls, table):
+        headers = [cell.text for cell in table.find("th, thead td")]
+        return [
+            {
+                # headers[i]: cls._get_text_nodes(cell)
+                headers[i]: cls._node_to_dict(cell)
+                for (i, cell) in enumerate(table.find("tbody td"))
+            }
+            for row in table.find("tbody tr")
+        ]
