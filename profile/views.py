@@ -305,6 +305,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         assigned_qs = profile.all_assigned_visits(
         ).unit_filter(unit_qs).with_product_types(product_types)
 
+        q = Q(id__in=user.potentiel_underviser_for_set.all())
+        if profile.get_resource() is not None:
+            q |= Q(id__in=profile.get_resource().products_qs)
+
         return [
             {
                 'color': self.HEADING_BLUE,
@@ -313,10 +317,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(Q(
-                    Q(id__in=user.potentiel_underviser_for_set.all()) |
-                    Q(id__in=profile.get_resource().products_qs)
-                )).distinct().order_by("title"),
+                'queryset': Product.objects.filter(q)
+                .distinct().order_by("title"),
                 'limit': limit
             },
             {
@@ -359,6 +361,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         assigned_qs = profile.all_assigned_visits().unit_filter(
             unit_qs).with_product_types(product_types)
 
+        q = Q(id__in=user.potentiel_vaert_for_set.all())
+        if profile.get_resource() is not None:
+            q |= Q(id__in=profile.get_resource().products_qs)
+
         return [
             {
                 'color': self.HEADING_BLUE,
@@ -367,10 +373,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(Q(
-                    Q(id__in=user.potentiel_vaert_for_set.all()) |
-                    Q(id__in=profile.get_resource().products_qs)
-                )).distinct().order_by("title"),
+                'queryset': Product.objects.filter(q)
+                .distinct().order_by("title"),
                 'limit': limit
             },
             {
