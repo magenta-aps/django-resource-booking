@@ -131,7 +131,7 @@
             {% endfor %}
         {% endif %}
         {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-            {% if request.user.userprofile.is_teacher and request.user in object.potentielle_undervisere.all %}
+            {% if request.user.userprofile.is_teacher and request.user in object.product.potentielle_undervisere.all %}
                 {% if object.needs_teachers %}
                     {% if request.user in object.teachers.all %}
                         {% trans 'Du er allerede tilknyttet som underviser på dette besøg' %}
@@ -145,7 +145,7 @@
                     <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle undervisere fundet' %}</button>
                 {% endif %}
             {% endif %}
-            {% if request.user.userprofile.is_host and request.user in object.potentielle_vaerter.all %}
+            {% if request.user.userprofile.is_host and request.user in object.product.potentielle_vaerter.all %}
                 {% if object.needs_hosts %}
                     {% if request.user in object.hosts.all %}
                         {% trans 'Du er allerede tilknyttet som vært på dette besøg' %}
