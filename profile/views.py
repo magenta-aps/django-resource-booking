@@ -20,7 +20,7 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 from django.views.generic.list import ListView
 
-import profile.constants
+from profile.constants import NONE, role_to_text
 import profile.models as profile_models
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 from booking.mixins import (
@@ -59,7 +59,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
     def get_template_names(self):
         profile = self.request.user.userprofile
-        if not profile or profile.get_role() == profile.constants.NONE:
+        if not profile or profile.get_role() == NONE:
             return ['profile/profile_new_user.html']
         else:
             return super(ProfileView, self).get_template_names()
@@ -495,7 +495,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     raise AccessDenied(
                         _(u"Du har ikke rettigheder til at redigere brugere "
                           u"med rollen \"%s\""
-                          % profile.constants.role_to_text(object_role))
+                          % role_to_text(object_role))
                     )
             return result
         else:
