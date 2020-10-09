@@ -641,3 +641,27 @@ class TestProduct(TestMixin, TestCase):
                         self.assertEquals(u"(%d)" % count, text[1])
                     else:
                         self.assertEquals(1, len(text))
+
+    def test_assigned_teacher(self):
+        # test assignment of user as potential teacher
+        # test that the user sees the product on his profile page
+        # test what the user sees on the product page
+        pass
+
+    def test_assigned_host(self):
+        # test assignment of user as potential host
+        # test that the user sees the product on his profile page
+        # test what the user sees on the product page
+        pass
+
+    def test_evaluation(self):
+        # set up a product with evaluation
+        # add a booking w/ visit and set workflow so evaluation is sent
+        # test that evaluation mail is sent
+        # test link in evaluation - should perform a redirect to the correct url
+        pass
+
+    def test_email_recipients(self):
+        # setup products with users in different roles
+        # test that get_recipients returns the correct users
+        pass
