@@ -53,3 +53,4 @@ class TestBooking(TestMixin, TestCase):
         # check that booking cancel ui works
         # post cancel form
         # test updated booking object
+        pass

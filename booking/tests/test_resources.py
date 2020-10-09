@@ -296,3 +296,20 @@ class TestResources(TestMixin, TestCase):
             },
             self.extract_dl(query("dl"), True)
         )
+
+    def test_product_calendar(self):
+        # create product
+        # create calendar for product
+        # add calendar time
+        # test calendar ui
+        # test calendar navigation
+        # test calendar time editing
+        pass
+
+    def test_resource_occupied(self):
+        # create resource with calendar
+        # create product with visit
+        # make the resource unavailable at a specific timerange
+        # test that the resource cannot be assigned to the
+        # visit due to being unavailable
+        pass

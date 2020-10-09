@@ -658,10 +658,16 @@ class TestProduct(TestMixin, TestCase):
         # set up a product with evaluation
         # add a booking w/ visit and set workflow so evaluation is sent
         # test that evaluation mail is sent
-        # test link in evaluation - should perform a redirect to the correct url
+        # test link in evaluation
+        #  - should perform a redirect to the correct url
         pass
 
     def test_email_recipients(self):
         # setup products with users in different roles
         # test that get_recipients returns the correct users
+        pass
+
+    def test_front_page(self):
+        # create several products with bookings
+        # test that the products show up on the front page
         pass

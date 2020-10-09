@@ -43,3 +43,10 @@ class TestVisit(TestMixin, TestCase):
         # workflow status
         # comments
         pass
+
+    def test_profile_page(self):
+        # create several products with visits, assigned to different users
+        # test that the visits show up on the profile page
+        # for the relevant users
+        # test the product type filtering
+        pass
