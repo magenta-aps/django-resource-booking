@@ -23,6 +23,7 @@ from django.views.generic.list import ListView
 import profile.constants
 import profile.models as profile_models
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
+
 from booking.mixins import (
     BreadcrumbMixin,
     LoginRequiredMixin,
@@ -44,7 +45,6 @@ from booking.managers import VisitQuerySet
 
 
 import warnings
-import profile.models as profile_models
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -60,7 +60,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
     def get_template_names(self):
         profile = self.request.user.userprofile
-        if not profile or profile.get_role() == NONE:
+        if not profile or profile.get_role() == profile.constants.NONE:
             return ['profile/profile_new_user.html']
         else:
             return super(ProfileView, self).get_template_names()
