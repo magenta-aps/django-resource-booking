@@ -21,7 +21,7 @@ import booking.models as booking_models
 import booking.resource_based.forms as rb_forms
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.mixins import EditorRequriedMixin
+from booking.mixins import EditorRequiredMixin
 from booking.mixins import LoginRequiredMixin
 from booking.resource_based.models import CustomResource
 from booking.resource_based.models import ItemResource, RoomResource
@@ -420,7 +420,7 @@ class CancelledVisitsView(DetailView):
     template_name = 'eventtime/cancelled_visits.html'
 
 
-class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                          FormView):
     template_name = "resource/typeform.html"
     form_class = rb_forms.ResourceTypeForm
@@ -436,7 +436,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'])
+            typeId = int(form.cleaned_data['type'].pk)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(reverse(
@@ -455,7 +455,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         return breadcrumbs
 
 
-class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
+class ResourceDetailView(BreadcrumbMixin, EditorRequiredMixin, TemplateView):
     template_name = "resource/details.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -488,7 +488,7 @@ class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
         return super(ResourceDetailView, self).get_context_data(**context)
 
 
-class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
+class ResourceListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     model = Resource
     template_name = "resource/list.html"
 
@@ -526,7 +526,7 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         }]
 
 
-class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                          UpdateView):
     template_name = "resource/form.html"
     object = None
@@ -618,7 +618,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             self.object.created_by = self.request.user
 
 
-class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                          DeleteView):
     success_url = reverse_lazy('resource-list')
     back_on_success = False
@@ -639,7 +639,7 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         return breadcrumbs
 
 
-class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                              FormView):
     template_name = "resourcepool/typeform.html"
     form_class = rb_forms.ResourcePoolTypeForm
@@ -655,7 +655,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'].id)
+            typeId = int(form.cleaned_data['type'].pk)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(
@@ -676,7 +676,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         return breadcrumbs
 
 
-class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
+class ResourcePoolDetailView(BreadcrumbMixin, EditorRequiredMixin, DetailView):
     template_name = "resourcepool/details.html"
     model = ResourcePool
 
@@ -693,7 +693,7 @@ class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
         return breadcrumbs
 
 
-class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
+class ResourcePoolListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     model = ResourcePool
     template_name = "resourcepool/list.html"
 
@@ -715,7 +715,7 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         }]
 
 
-class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                              UpdateView):
     template_name = "resourcepool/form.html"
     object = None
@@ -805,7 +805,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             self.object.created_by = self.request.user
 
 
-class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                              DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
@@ -909,7 +909,7 @@ class ResourceRequirementConfirmMixin(object):
 
 
 class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
-                                    EditorRequriedMixin, CreateView):
+                                    EditorRequiredMixin, CreateView):
     model = ResourceRequirement
     form_class = rb_forms.EditResourceRequirementForm
     just_preserve_back = True
@@ -979,7 +979,7 @@ class ResourceRequirementCreateConfirmView(
 
 
 class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
-                                    EditorRequriedMixin, UpdateView):
+                                    EditorRequiredMixin, UpdateView):
     model = ResourceRequirement
     form_class = rb_forms.EditResourceRequirementForm
     just_preserve_back = True
@@ -1061,7 +1061,7 @@ class ResourceRequirementUpdateConfirmView(
         return visit.resources_assigned(self.object).count()
 
 
-class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
+class ResourceRequirementListView(BreadcrumbMixin, EditorRequiredMixin,
                                   ListView):
     model = ResourceRequirement
     template_name = "resourcerequirement/list.html"
@@ -1106,7 +1106,7 @@ class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
 
 
 class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
-                                    EditorRequriedMixin, DeleteView):
+                                    EditorRequiredMixin, DeleteView):
     model = ResourceRequirement
     success_url = reverse_lazy('resourcerequirement-list')
     back_on_success = False
@@ -1148,7 +1148,7 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
         return response
 
 
-class VisitResourceEditView(EditorRequriedMixin, BreadcrumbMixin, FormView):
+class VisitResourceEditView(EditorRequiredMixin, BreadcrumbMixin, FormView):
     template_name = "visit/resources.html"
     form_class = rb_forms.EditVisitResourcesForm
 

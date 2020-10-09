@@ -109,20 +109,24 @@
                                 {% trans 'Send venteliste-mail' %}
                             </button>
                             {% endif %}
+                        {% if can_edit %}
                             <label>{% trans 'Vælg:' %}
                                 <span class="input-container" id="move_{{ booking.id }}"></span>
                             </label>
+                        {% endif %}
                         </div>
                     </div>
                 </div>
                 </div>
             {% endfor %}
-            <button type="submit" name="action" value="delete" class="btn btn-danger pull-right" style="margin-left: 0.5em;">{% trans 'Slet valgte' %}</button>
-            {% if object.product.do_create_waiting_list %}
-                {% if listname == 'booking' %}
-                    <button type="submit" name="action" value="enqueue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Flyt valgte til venteliste' %}</button>
-                {% elif listname == 'waiting' %}
-                    <button type="submit" name="action" value="dequeue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Tilmeld valgte' %}</button>
+            {% if can_edit %}
+                <button type="submit" name="action" value="delete" class="btn btn-danger pull-right" style="margin-left: 0.5em;">{% trans 'Slet valgte' %}</button>
+                {% if object.product.do_create_waiting_list %}
+                    {% if listname == 'booking' %}
+                        <button type="submit" name="action" value="enqueue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Flyt valgte til venteliste' %}</button>
+                    {% elif listname == 'waiting' %}
+                        <button type="submit" name="action" value="dequeue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Tilmeld valgte' %}</button>
+                    {% endif %}
                 {% endif %}
             {% endif %}
         </form>

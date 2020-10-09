@@ -39,6 +39,7 @@ from django.views.generic.edit import FormView, ProcessFormView
 
 import booking.models as booking_models
 import booking.urls as urls
+
 from booking.constants import LOGACTION_CREATE
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
@@ -86,7 +87,8 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.mixins import EditorRequriedMixin
+from booking.mixins import SearchEngineMixin
+from booking.mixins import EditorRequiredMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
 from booking.mixins import LoginRequiredMixin
@@ -179,7 +181,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.get_latest_updated(self.request.user),
+                    'queryset': Product.objects.get_latest_updated(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -190,7 +194,9 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.get_latest_booked(self.request.user),
+                    'queryset': Product.objects.get_latest_booked(
+                        self.request.user
+                    ),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -424,7 +430,7 @@ class EmailSuccessView(TemplateView):
     template_name = "email/success.html"
 
 
-class SearchView(BreadcrumbMixin, ListView):
+class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     """Class for handling main search."""
     model = Product
     template_name = "product/searchresult.html"
@@ -442,6 +448,9 @@ class SearchView(BreadcrumbMixin, ListView):
     t_from = None
     t_to = None
     is_public = True
+
+    # Search engine exclusion
+    no_index = True
 
     boolean_choice = (
         (1, _(u'Ja')),
@@ -686,15 +695,6 @@ class SearchView(BreadcrumbMixin, ListView):
 
         return qs
 
-    def annotate(self, qs):
-        # No longer used, annotations are carried out on the result object
-        # list in get_context_data.
-        # qs = qs.annotate(
-        #     eventtime_count=Count('eventtime__pk', distinct=True),
-        #     first_eventtime=Min('eventtime__start')
-        # )
-        return qs
-
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
@@ -832,7 +832,6 @@ class SearchView(BreadcrumbMixin, ListView):
             k: v for k, v in filters.items() if not k.startswith('__')
         }
         qs = qs.filter(*filter_args, **filter_kwargs)
-        qs = self.annotate(qs)
 
         qs = qs.prefetch_related(
             'productgymnasiefag_set', 'productgrundskolefag_set'
@@ -1072,7 +1071,7 @@ class SearchView(BreadcrumbMixin, ListView):
         return size
 
 
-class ProductCustomListView(BreadcrumbMixin, ListView):
+class ProductCustomListView(BreadcrumbMixin, SearchEngineMixin, ListView):
 
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
@@ -1081,14 +1080,15 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
     model = Product
     context_object_name = "results"
     paginate_by = 10
+    canonical_url_params = ['type', 'page', 'pagesize']
 
     def get_queryset(self):
         try:
             listtype = self.request.GET.get("type", "")
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked(self.request.user)
+                return Product.objects.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated(self.request.user)
+                return Product.objects.get_latest_updated(self.request.user)
         except:
             pass
         raise Http404
@@ -1964,8 +1964,9 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         context['EmailTemplate'] = EmailTemplate
 
         if can_edit:
-            context['emails'] = KUEmailMessage\
-                .get_by_instance(self.object).order_by('-created')
+            context['emails'] = KUEmailMessage.objects.get_by_instance(
+                self.object
+            ).order_by('-created')
 
         context.update(kwargs)
 
@@ -2079,10 +2080,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
         self.get_template_type(request)
-        # template_type = EmailTemplateType.get(self.template_key)
-        # if self.object.is_multi_sub and \
-        #         template_type.manual_sending_mpv_enabled:
-        #     self.object = self.object.multi_master
+
         if self.object.is_multiproductvisit:
             self.object = self.object.multiproductvisit
 
@@ -2407,7 +2405,7 @@ class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
         type = request.GET.get('t')
-        items = School.search(query, type)
+        items = School.objects.search(query, type)
         json = {
             'schools': [
                 {
@@ -2517,9 +2515,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 eventtime_pk = relevant_forms['bookingform'].cleaned_data.get(
                     'eventtime', ''
                 )
+                desired_date = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_date', None
+                )
+                desired_time = relevant_forms["bookingform"].cleaned_data.get(
+                    'desired_datetime_time', None
+                )
             else:
                 booking = self.object
                 eventtime_pk = None
+                desired_date = None
+                desired_time = None
 
             if eventtime_pk:
                 eventtime = self.product.eventtime_set.filter(
@@ -2537,7 +2543,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
-                eventtime.make_visit()
+                # if a desired date and time exists, include it on the visit
+                if desired_date is not None and desired_time is not None:
+                    desired_datetime = datetime.combine(
+                        desired_date, desired_time
+                    ).strftime("%d.%m.%Y %H:%M")
+                    eventtime.make_visit(desired_time=desired_datetime)
+                else:
+                    eventtime.make_visit()
                 log_action(
                     self.request.user,
                     eventtime.visit,
@@ -2852,12 +2865,7 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
                 visit.desired_time = \
                     desired_datetime.strftime("%d.%m.%Y %H:%M")
                 visit.save()
-                # if visit.is_multiproductvisit \
-                #       and hasattr(visit, 'eventtime'):
-                #     print("form save: %s" % str(visit.eventtime.start))
-                #     visit.eventtime.start = desired_time
-                #     print("form save: %s" % str(visit.eventtime.start))
-                #     visit.eventtime.save()
+
         if 'bookerform' in forms:
             booking.booker = forms['bookerform'].save()
         booking.save()
@@ -2945,7 +2953,6 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
 
         if bookingform is not None:
             if self.visit.multiproductvisit:
-                print("bookingform.class: %s" % bookingform.__class__.__name__)
                 if 'tmp' in self.request.GET:
                     temp = MultiProductVisitTemp.objects.get(
                         id=self.request.GET['tmp']
@@ -2983,9 +2990,10 @@ class VisitBookingCreateView(AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
+class BookingEditView(BreadcrumbMixin, EditorRequiredMixin, UpdateView):
     template_name = "booking/edit.html"
     model = Booking
+    fields = '__all__'
 
     def get_forms(self, data=None):
         products = self.object.visit.products
@@ -3004,12 +3012,6 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
                 form_class = ClassBookingBaseForm
             except:
                 pass
-
-            # if primary_product.productgymnasiefag_set.count() > 0:
-            #     forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
-            # if primary_product.productgrundskolefag_set.count() > 0:
-            #     forms['grundskolesubjectform'] = \
-            #         BookingGrundskoleSubjectLevelForm(data)
 
         elif type == Product.TEACHER_EVENT:
             try:
@@ -3132,11 +3134,14 @@ class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
         ]
 
 
-class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
+class VisitListView(SearchEngineMixin, LoginRequiredMixin,
+                    BreadcrumbMixin, ListView):
     model = Visit
     template_name = "visit/list.html"
     context_object_name = "results"
     paginate_by = 10
+
+    canonical_url_params = ['qstring', 'page', 'pagesize']
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3150,14 +3155,11 @@ class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             qdict.pop("pagesize")
 
         context["qstring"] = qdict.urlencode()
-
         context['pagesizes'] = [5, 10, 15, 20]
 
         context.update(kwargs)
 
-        return super(VisitListView, self).get_context_data(
-            **context
-        )
+        return super(VisitListView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
         size = self.request.GET.get("pagesize", 10)
@@ -3178,19 +3180,20 @@ class VisitCustomListView(VisitListView):
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
     TYPE_TODAY = "today"
+    canonical_url_params = VisitListView.canonical_url_params + ['type']
 
     def get_queryset(self):
         try:
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_COMPLETED:
-                return Visit.get_recently_held()
+                return Visit.objects.get_recently_held()
             elif listtype == self.TYPE_LATEST_BOOKED:
-                return Visit.get_latest_booked()
+                return Visit.objects.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Visit.get_latest_updated()
+                return Visit.objects.get_latest_updated()
             elif listtype == self.TYPE_TODAY:
-                return Visit.get_todays_visits()
+                return Visit.objects.get_todays_visits()
         except:
             pass
         raise Http404
@@ -3198,7 +3201,7 @@ class VisitCustomListView(VisitListView):
 
 class VisitSearchView(VisitListView):
     template_name = "visit/searchresult.html"
-
+    no_index = True
     form = None
 
     def get_form(self):
@@ -3297,7 +3300,7 @@ class VisitSearchView(VisitListView):
         else:
             unit_qs = OrganizationalUnit.objects.filter(pk=u)
 
-        return Visit.unit_filter(qs, unit_qs)
+        return qs.unit_filter(unit_qs)
 
     def filter_by_school(self, qs):
         form = self.get_form()
@@ -3476,8 +3479,9 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             )
-        context['emails'] = KUEmailMessage.get_by_instance(self.object)\
-            .order_by('-created')
+        context['emails'] = KUEmailMessage.objects.get_by_instance(
+            self.object
+        ).order_by('-created')
 
         context.update(kwargs)
 
@@ -3504,6 +3508,11 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = self.request.user
+        if not user.userprofile.can_edit(self.object):
+            raise AccessDenied(
+                _(u"Du har ikke adgang til at annullere dette besøg")
+            )
         form = self.get_form()
         if form.is_valid():
             self.object.cancelled = True
@@ -3588,7 +3597,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
-
+        context['can_edit'] = user.userprofile.can_edit(self.object)
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
 
@@ -3626,6 +3635,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        user = request.user
         action = request.POST['action']
         listname = request.POST['listname']
 
@@ -3635,7 +3645,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         elif listname == 'waiting':
             form = self.get_waitinglist_form(**request.POST)
         if form is not None:
-            if form.is_valid():
+            if form.is_valid() and user.userprofile.can_edit(self.object):
                 for booking_id in form.cleaned_data['bookings']:
                     booking = Booking.objects.filter(id=booking_id).first()
                     if action == 'delete':
@@ -3803,17 +3813,8 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         'OrganizationalUnit': OrganizationalUnit,
         'Product': Product,
         'Visit': Visit,
-        # 'StudyMaterial': StudyMaterial,
-        # 'Product': Product,
-        # 'Subject': Subject,
-        # 'GymnasieLevel': GymnasieLevel,
-        # 'Room': Room,
-        # 'PostCode': PostCode,
-        # 'School': School,
         'Booking': Booking,
         'Guest': Guest,
-        # 'ProductGymnasieFag': ProductGymnasieFag,
-        # 'ProductGrundskoleFag': ProductGrundskoleFag
     }
 
     object = None
@@ -3856,17 +3857,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             result.append({'text': _(u"Eksempel modtager"), 'value': 'others'})
 
         return result
-
-    def _getObjectJson(self):
-        result = {
-            key: [
-                {'text': str(object), 'value': object.id}
-                for object in type.objects.order_by('id')
-            ]
-            for key, type in EmailTemplateDetailView.classes.items()
-        }
-        # result['Recipient'] = self.get_recipient_choices()
-        return json.dumps(result)
 
     def update_context_with_recipient(self, selected, ctx):
         if selected is None:
@@ -3921,13 +3911,17 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             initial.append({
                 'key': key,
                 'type': className,
-                'value': clazz.objects.order_by('id').first().id
+                'value': clazz.objects.values(
+                    'id'
+                ).order_by(
+                    'id'
+                ).first()['id']
             })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
         context = {
             'form': formset,
-            'objects': self._getObjectJson(),
+            'objects': list(EmailTemplateDetailView.classes.keys()),
             'template': self.object
         }
 
@@ -3971,21 +3965,34 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
     def get_filled_template(self, items):
         context = {}
+        by_type = {}
+        by_value = {}
         for item in items:
-            key = item['key']
             type = item['type']
             value = item['value']
+            if type not in by_type:
+                by_type[type] = []
+            by_type[type].append(item)
+            by_value[unicode(value)] = item
+        for type, items in by_type.items():
             if type in self.classes.keys():
                 clazz = self.classes[type]
+                manager = clazz.objects
+                if hasattr(manager, 'p'):
+                    manager = manager.p()
                 try:
-                    value = clazz.objects.get(pk=value)
+                    objects = manager.filter(
+                        pk__in=[item['value'] for item in items]
+                    )
+                    for object in objects:
+                        item = by_value[unicode(object.pk)]
+                        context[item['key']] = object
                 except clazz.DoesNotExist:
                     pass
             elif type == "Recipient":
-                self.update_context_with_recipient(value, context)
+                for item in items:
+                    self.update_context_with_recipient(item['value'], context)
                 continue
-            context[key] = value
-
         self.extend_context(context)
         return {
             'subject': self.object.expand_subject(context, True),
@@ -4445,7 +4452,7 @@ class MultiProductVisitAddProductView(BackMixin,
         if self.object.workflow_status not in [
             Visit.WORKFLOW_STATUS_BEING_PLANNED
         ]:
-            raise HttpResponseBadRequest(
+            return HttpResponseBadRequest(
                 u'Can only edit visits that are being planned'
             )
         return super(MultiProductVisitAddProductView, self)\
@@ -4673,7 +4680,7 @@ class EvaluationStatisticsView(
 
         unit = data.get("unit")
         if unit is not None:
-            queryset = Visit.unit_filter(queryset, [unit])
+            queryset = queryset.unit_filter([unit])
             has_filter = True
 
         from_date = data.get('from_date')

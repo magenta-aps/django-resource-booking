@@ -60,7 +60,7 @@
 
             {% if can_edit or can_notify %}
                 <div class="booking-actions pull-right">
-                {% if not object.cancelled %}
+                {% if can_edit and not object.cancelled %}
                     <a href="{% url 'booking-cancel' object.id %}" class="btn btn-primary" type="button" id="cancelBooking">
                         {% trans 'Aflys' %}
                     </a>

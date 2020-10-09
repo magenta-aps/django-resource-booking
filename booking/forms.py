@@ -1781,6 +1781,9 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             type = initial['type']
             if type in self.classes:
                 clazz = self.classes[type]
+                manager = clazz.objects
+                if hasattr(manager, 'p'):
+                    manager = manager.p()
                 valuefield = self.fields['value']
                 valuefield.widget = Select(
                     attrs={
@@ -1788,8 +1791,9 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
                                  "emailtemplate-type-%s" % type
                     },
                     choices=[
-                        (object.id, str(object))
-                        for object in clazz.objects.order_by('id')
+                        (object.id, unicode(object))
+                        for object in
+                        manager.order_by('id').reverse()[:200]
                     ]
                 )
             if type == "Recipient":

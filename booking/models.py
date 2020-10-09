@@ -6,7 +6,6 @@ import re
 import uuid
 from datetime import timedelta, datetime, date, time
 
-import djorm_pgfulltext.fields
 from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
@@ -19,15 +18,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
 from django.db import models
-from django.db.models import Count, Case, When
-from django.db.models import F
-from django.db.models import Max
+from django.db.models import Case, When
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
-from django.template import TemplateSyntaxError
 from django.template.base import Template, VariableNode
 from django.template.context import make_context
 from django.template.loader import get_template
@@ -41,44 +37,36 @@ from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from booking.managers import VisitQuerySet
 from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
+from booking.managers import (
+    VisitQuerySet,
+    BookingQuerySet,
+    ProductQuerySet,
+    SchoolQuerySet,
+    KUEmailMessageQuerySet,
+    SurveyXactEvaluationGuestQuerySet
+)
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty
-from booking.utils import CustomStorage
-from booking.utils import INFINITY
-from booking.utils import bool2int
-from booking.utils import flatten
-from booking.utils import full_email
-from booking.utils import get_related_content_types
-from booking.utils import getattr_long
-from booking.utils import html2text
-from booking.utils import merge_dicts
-from booking.utils import prose_list_join
-from booking.utils import prune_list
-from booking.utils import surveyxact_upload
+from booking.utils import (
+    ClassProperty,
+    CustomStorage,
+    bool2int,
+    getattr_long,
+    prune_list,
+    surveyxact_upload,
+    flatten,
+    full_email,
+    get_related_content_types,
+    html2text,
+    INFINITY,
+    merge_dicts,
+    prose_list_join
+)
+
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
-
-
-# TODO: remove this, along with the djorm_pgfulltext dependency.
-class VectorField(djorm_pgfulltext.fields.VectorField):
-    """
-    Customized version of djorm_pgfulltext.fields.VectorField that does
-    not always enable indexes. This is needed since the default index created
-    does not work for large amounts of data.
-    """
-    def __init__(self, *args, **kwargs):
-        kwargs['null'] = True
-        kwargs['default'] = ''
-        kwargs['editable'] = False
-        kwargs['serialize'] = False
-        # Note: Calling the super of super here, since the super
-        # will re-enable kwargs['db_index']
-        super(djorm_pgfulltext.fields.VectorField, self).__init__(
-            *args, **kwargs
-        )
 
 
 class RoomResponsible(models.Model):
@@ -1215,11 +1203,7 @@ class EmailTemplate(models.Model):
             lines.append("{% endautoescape %}")
         lines.append("{% endlanguage %}")
         encapsulated = "\n".join(lines)
-        try:
-            return Template(encapsulated)
-        except TemplateSyntaxError as e:
-            print("Error in mail template. Full text: %s" % encapsulated)
-            raise e
+        return Template(encapsulated)
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False, escape=True):
@@ -1360,6 +1344,9 @@ class KUEmailRecipient(models.Model):
     guest = models.ForeignKey('Guest', blank=True, null=True)
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
 
+    def __str__(self):
+        return "KUEmailRecipient<%s,%s>" % (self.email, self.role_name)
+
     @classmethod
     def create(cls, base=None, recipient_type=None):
         ku_email_recipient = cls()
@@ -1471,6 +1458,8 @@ class KUEmailRecipient(models.Model):
 
 
 class ObjectStatistics(models.Model):
+    class Meta:
+        verbose_name_plural = "object statistics"
 
     created_time = models.DateTimeField(
         blank=False,
@@ -1537,8 +1526,8 @@ class ProductGymnasieFag(models.Model):
 
         # Rest of value list is pks for subject levels
         for x in values:
-            l = GymnasieLevel.objects.get(pk=x)
-            f.level.add(l)
+            level = GymnasieLevel.objects.get(pk=x)
+            f.level.add(level)
 
         return f
 
@@ -1760,6 +1749,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
+    objects = ProductQuerySet.as_manager()
+
     # Product type.
     STUDENT_FOR_A_DAY = 0
     GROUP_VISIT = 1
@@ -1823,12 +1814,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     state = models.IntegerField(choices=state_choices,
                                 verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
-        max_length=60,
+        max_length=80,
         blank=False,
         verbose_name=_(u'Titel')
     )
     teaser = models.TextField(
-        max_length=210,
+        max_length=300,
         blank=False,
         verbose_name=_(u'Teaser')
     )
@@ -2361,17 +2352,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def future_times(self):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
-    @property
-    def cutoff_filter(self):
-        cutoff_before = self.booking_cutoff_before
-        if cutoff_before is None:
-            cutoff_before = timedelta()
-        filter = {'start__gte': timezone.now() + cutoff_before}
-        cutoff_after = self.booking_cutoff_after
-        if cutoff_after is not None:
-            filter['start__lte'] = timezone.now() + cutoff_after
-        return filter
-
     def future_bookable_times(self, use_cutoff=False):
         filter = {'start__gte': timezone.now()}
         if use_cutoff:
@@ -2388,9 +2368,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
-    # in ressource assignment for this product.
+    # in resource assignment for this product.
     # Finds:
-    #  - All potential ressources that can be assigned to this product
+    #  - All potential resources that can be assigned to this product
     #  - All ResourcePools that make use of these resources
     #  - All EventTimes for products that has requirements that uses these
     #    ResourcePools.
@@ -2680,69 +2660,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return True
 
-    @staticmethod
-    def get_latest_created(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed(user=None):
-        qs = Product.objects.filter(statistics__isnull=False)
-
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.order_by('-statistics__visited_time')
-
-    @classmethod
-    def filter_public_bookable(cls, queryset):
-        nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
-        resource_controlled = [
-            Product.TIME_MODE_RESOURCE_CONTROLLED,
-            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
-        ]
-        return queryset.filter(
-            Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
-            Q(
-                # Only stuff that can be booked
-                eventtime__bookable=True,
-                # In the future
-                eventtime__start__gt=timezone.now(),
-                # Only include stuff with bookable states
-                eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
-            ) & Q(
-                # Either not resource controlled
-                (~Q(time_mode__in=resource_controlled)) |
-                # Or resource-controlled with nonblocked eventtimes
-                Q(
-                    time_mode__in=resource_controlled,
-                    eventtime__resource_status__in=nonblocked
-                )
-            )
-        ).filter(state=cls.ACTIVE)
-
     def ensure_statistics(self):
         if self.statistics is None:
             statistics = ObjectStatistics()
@@ -2937,44 +2854,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             )
 
     @property
-    def duration_display(self):
-        if not self.duration:
-            return ""
-        (hours, minutes) = self.duration.split(":")
-        try:
-            hours = int(hours)
-            minutes = int(minutes)
-            parts = []
-            if hours == 1:
-                parts.append(_(u"1 time"))
-            elif hours > 1:
-                parts.append(_(u"%s timer") % hours)
-            if minutes == 1:
-                parts.append(_(u"1 minut"))
-            else:
-                parts.append(_(u"%s minutter") % minutes)
-
-            return _(u" og ").join(parts)
-        except Exception as e:
-            print(e)
-            return ""
-
-    @staticmethod
-    def get_latest_booked(user=None):
-        qs = Product.objects.filter(
-            eventtime__visit__bookings__statistics__created_time__isnull=False
-        )
-
-        if user and not user.is_authenticated():
-            qs = Product.objects.filter(
-                pk__in=Product.filter_public_bookable(qs).only("pk")
-            )
-
-        return qs.annotate(latest_booking=Max(
-            'eventtime__visit__bookings__statistics__created_time'
-        )).order_by("-latest_booking")
-
-    @property
     def room_responsible_users(self):
         return self.roomresponsible.all()
 
@@ -3055,31 +2934,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-    @classmethod
-    # Migrate from old system where guest-suggest-time products was determined
-    # by them not having any visits
-    def migrate_time_mode(cls):
-        for x in cls.objects.filter(time_mode=cls.TIME_MODE_NONE):
-            if x.visit_set.filter(deprecated_bookable=True).count() > 0:
-                x.time_mode = cls.TIME_MODE_SPECIFIC
-            else:
-                x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
-
-            print(u"%s => %s" % (x, x.get_time_mode_display()))
-            x.save()
-
-        # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
-        EventTime.objects.filter(
-            bookable=True,
-            product__time_mode=cls.TIME_MODE_GUEST_SUGGESTED
-        ).update(bookable=False)
-
     def __str__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
 
 
 class Visit(AvailabilityUpdaterMixin, models.Model):
+
+    def __init__(self, *args, **kwargs):
+        super(Visit, self).__init__(*args, **kwargs)
+        self.qs_cache = {}
 
     class Meta:
         verbose_name = _(u"besøg")
@@ -3089,29 +2953,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             GinIndex(fields=['search_vector'])
         ]
 
-    deprecated_product = models.ForeignKey(
-        Product,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-
-    deprecated_start_datetime = models.DateTimeField(
-        verbose_name=_(u'Starttidspunkt'),
-        null=True,
-        blank=True
-    )
-
-    deprecated_end_datetime = models.DateTimeField(
-        null=True,
-        blank=True,
-    )
-
-    # Whether the visit is publicly bookable
-    deprecated_bookable = models.BooleanField(
-        default=False,
-        verbose_name=_(u'Kan bookes')
-    )
+    objects = VisitQuerySet.as_manager()
 
     desired_time = models.CharField(
         null=True,
@@ -3471,12 +3313,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def is_rejected(self):
         return self.workflow_status == Visit.WORKFLOW_STATUS_REJECTED
 
-    @staticmethod
-    def active_qs(qs):
-        return qs.exclude(workflow_status__in=[
-            Visit.WORKFLOW_STATUS_CANCELLED, Visit.WORKFLOW_STATUS_REJECTED
-        ])
-
     def cancel_visit(self):
         self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
 
@@ -3712,11 +3548,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for requirement in self.product.resourcerequirement_set.filter(
             resource_pool__resource_type_id=resource_type
         ):
-            resources = self.visitresource.filter(
+            resources_count = self.visitresource.filter(
                 resource_requirement=requirement
-            )
-            if resources.count() < requirement.required_amount:
-                missing += (requirement.required_amount - resources.count())
+            ).count()
+            if resources_count < requirement.required_amount:
+                missing += (requirement.required_amount - resources_count)
         return missing
 
     @property
@@ -3911,7 +3747,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if exclude_cancelled and exclude_non_cancelled:
             return self.bookings.none()
 
-        qs = self.bookings.all()
+        qs = self.bookings.all().prefetch_related("visit")
 
         if exclude_waiting:  # Only accept non-waiting
             qs = qs.filter(waitinglist_spot=0)
@@ -3999,34 +3835,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    @classmethod
-    def needs_teachers_qs(cls):
-        req_type_key = "__".join([
-            "eventtime",
-            "product",
-            "resourcerequirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        assigned_type_key = "__".join([
-            "visitresource",
-            "resource_requirement",
-            "resource_pool",
-            "resource_type"
-        ])
-        return cls.objects.filter(
-            **{req_type_key: ResourceType.RESOURCE_TYPE_TEACHER}
-        ).filter(
-            Q(**{assigned_type_key: ResourceType.RESOURCE_TYPE_TEACHER}) |
-            Q(visitresource__isnull=True)
-        ).annotate(
-            needed=Sum(
-                'eventtime__product__resourcerequirement__required_amount'
-            ),
-            assigned=Count('visitresource')
-        ).filter(needed__gt=F("assigned"))
-
-    def __str__(self):
+    def __unicode__(self):
         if self.is_multiproductvisit:
             return str(self.multiproductvisit)
         if hasattr(self, 'eventtime'):
@@ -4098,39 +3907,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return " ".join(result)
 
-    @classmethod
-    def being_planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_BEING_PLANNED,
-                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
-                cls.WORKFLOW_STATUS_REJECTED
-            ],
-            **kwargs
-        )
-
-    @classmethod
-    def planned_queryset(cls, **kwargs):
-        return cls.objects.filter(
-            workflow_status__in=[
-                cls.WORKFLOW_STATUS_PLANNED,
-                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                cls.WORKFLOW_STATUS_CONFIRMED,
-                cls.WORKFLOW_STATUS_REMINDED
-            ],
-        ).filter(**kwargs)
-
-    @staticmethod
-    def unit_filter(qs, unit_qs):
-        mpv_qs = MultiProductVisit.objects.filter(
-            subvisit__is_multi_sub=True,
-            subvisit__eventtime__product__organizationalunit__in=unit_qs
-        )
-        return qs.filter(
-            Q(eventtime__product__organizationalunit__in=unit_qs) |
-            Q(multiproductvisit__in=mpv_qs)
-        )
-
     # This is used from booking.signals.update_search_vectors
     def update_searchvector(self):
         old_value = self.extra_search_text or ""
@@ -4147,7 +3923,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
     def save(self, *args, **kwargs):
-        self.update_endtime()
         self.update_last_workflow_change()
         super(Visit, self).save(*args, **kwargs)
 
@@ -4319,16 +4094,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         autosends = self.get_autosends(True, False, False)
         return [autosend.get_name() for autosend in autosends]
 
-    def update_endtime(self):
-        if self.deprecated_start_datetime is not None:
-            product = self.product
-            if product:
-                duration = product.duration_as_timedelta
-                if duration is not None:
-                    self.deprecated_end_datetime = (
-                        self.deprecated_start_datetime + duration
-                    )
-
     def add_room_by_name(self, name):
         product = self.product
         locality = None
@@ -4351,91 +4116,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         self.rooms.add(room)
 
         return room
-
-    @staticmethod
-    def get_latest_created():
-        return Visit.objects.\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Visit.objects.\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Visit.objects.\
-            order_by('-statistics__visited_time')
-
-    @staticmethod
-    def get_latest_booked():
-        return Visit.objects.filter(
-            bookings__isnull=False
-        ).order_by(
-            '-bookings__statistics__created_time'
-        )
-
-    @staticmethod
-    def get_todays_visits():
-        return Visit.get_occurring_on_date(timezone.now())
-
-    @staticmethod
-    def get_starting_on_date(date):
-        return Visit.objects.none()
-        return Visit.objects.filter(
-            eventtime__start__year=date.year,
-            eventtime__start__month=date.month,
-            eventtime__start__day=date.day,
-            is_multi_sub=False
-        ).order_by('eventtime__start')
-
-    @staticmethod
-    def get_occurring_at_time(time):
-        # Return the visits that take place exactly at this time
-        # Meaning they begin before the queried time and end after the time
-        return Visit.objects.filter(
-            eventtime__start__lte=time,
-            eventtime__end__gt=time,
-            is_multi_sub=False
-        )
-
-    @staticmethod
-    def get_occurring_on_date(datetime):
-        # Convert datetime object to date-only for current timezone
-        date = timezone.localtime(datetime).date()
-
-        # A visit happens on a date if it starts before the
-        # end of the day and ends after the beginning of the day
-        min_date = datetime.combine(date, time.min)
-        max_date = datetime.combine(date, time.max)
-
-        return Visit.objects.filter(
-            eventtime__start__lte=max_date,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__gte=min_date) | (
-                Q(eventtime__end__isnull=True) &
-                Q(eventtime__start__gt=min_date)
-            )
-        )
-
-    @staticmethod
-    def get_recently_held(time=None):
-        if not time:
-            time = timezone.now()
-
-        return Visit.objects.filter(
-            workflow_status__in=[
-                Visit.WORKFLOW_STATUS_EXECUTED,
-                Visit.WORKFLOW_STATUS_EVALUATED],
-            eventtime__start__isnull=False,
-            is_multi_sub=False
-        ).filter(
-            Q(eventtime__end__lt=time) | (
-                    Q(eventtime__end__isnull=True) &
-                    Q(eventtime__start__lt=time + timedelta(hours=12))
-            )
-        ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -4565,9 +4245,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             })
         return details
 
-    @property
-    def is_multiproductvisit(self):
-        return hasattr(self, 'multiproductvisit')
+    is_multiproductvisit = models.BooleanField(
+        default=False
+    )
 
     @property
     def real(self):
@@ -4582,28 +4262,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return [self.product]
 
     @property
-    def product_qs(self):
-        return Product.objects.filter(id__in=[x.id for x in self.products])
-
-    @staticmethod
-    def with_product_types(visit_qs, product_types=None):
-        if product_types is None:
-            return visit_qs
-        return (visit_qs.filter(
-            multiproductvisit__isnull=True,
-            eventtime__product__type__in=product_types
-        ) | visit_qs.filter(
-            multiproductvisit__isnull=False,
-            multiproductvisit__subvisit__in=Visit.objects.filter(
-                eventtime__product__type__in=product_types,
-                is_multi_sub=True
-            )
-        )).distinct()
-
-    @property
     def products_unique_address(self):
         addresses = {
-            product.locality.id: product for product in self.products
+            product.locality.id: product
+            for product in self.products
+            if product is not None
         }
         return addresses.values()
 
@@ -4619,11 +4282,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def calender_event_title(self):
-        res = _(u'Besøg #%s') % self.pk
+        output = [_(u'Besøg #%s') % self.pk]
         if self.product:
-            return '%s - %s' % (res, self.product.title)
-        else:
-            return res
+            output.append(" - %s" % self.product.title)
+        teachers = ', '.join([
+            teacher.get_full_name()
+            for teacher in self.teachers.all()
+        ]) if self.teachers.exists() else _("<ingen>")
+        output.append(_(u"\nUndervisere: %s") % teachers)
+        hosts = ', '.join([
+            host.get_full_name()
+            for host in self.hosts.all()
+        ]) if self.hosts.exists() else _("<ingen>")
+        output.append(_(u"\nVærter: %s") % hosts)
+        return ''.join(output)
 
     def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile
@@ -4831,6 +4503,11 @@ class MultiProductVisit(Visit):
         verbose_name=_(u'Besøgsansvarlig')
     )
 
+    def __init__(self, *args, **kwargs):
+        super(MultiProductVisit, self).__init__(*args, **kwargs)
+        self.is_multiproductvisit = True
+        self.qs_cache = {}
+
     @property
     def date_ref(self):
         return timezone.localtime(self.eventtime.start).date() \
@@ -4855,18 +4532,31 @@ class MultiProductVisit(Visit):
     @property
     def subvisits_unordered(self):
         # Faster than ordered, and often we don't need the ordering anyway
-        return Visit.objects.filter(
-            is_multi_sub=True,
-            multi_master=self
-        )
+        if 'subvisits_unordered' not in self.qs_cache:
+            self.qs_cache['subvisits_unordered'] = VisitQuerySet.prefetch(
+                Visit.objects.filter(
+                    is_multi_sub=True,
+                    multi_master=self
+                )
+            )
+            list(self.qs_cache['subvisits_unordered'])
+        return self.qs_cache['subvisits_unordered']
 
     @property
     def subvisits_unordered_noncancelled(self):
-        return Visit.active_qs(self.subvisits_unordered)
+        if 'subvisits_unordered_noncancelled' not in self.qs_cache:
+            self.qs_cache['subvisits_unordered_noncancelled'] = \
+                VisitQuerySet.prefetch(self.subvisits_unordered.active_qs())
+            list(self.qs_cache['subvisits_unordered_noncancelled'])
+        return self.qs_cache['subvisits_unordered_noncancelled']
 
     @property
     def subvisits(self):
-        return self.subvisits_unordered.order_by('multi_priority')
+        if 'subvisits_ordered' not in self.qs_cache:
+            self.qs_cache['subvisits_ordered'] = VisitQuerySet.prefetch(
+                self.subvisits_unordered.order_by('multi_priority')
+            )
+        return self.qs_cache['subvisits_ordered']
 
     @property
     def subvisits_by_time(self):
@@ -5086,7 +4776,8 @@ class MultiProductVisit(Visit):
         if template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
         ]:
             return True
         else:
@@ -5286,7 +4977,6 @@ class MultiProductVisitTemp(models.Model):
         return len(
             set([product.locality for product in self.products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
@@ -5611,6 +5301,8 @@ class School(models.Model):
         verbose_name_plural = _(u'uddannelsesinstitutioner')
         ordering = ["name", "postcode"]
 
+    objects = SchoolQuerySet.as_manager()
+
     name = models.CharField(
         max_length=128,
     )
@@ -5654,19 +5346,6 @@ class School(models.Model):
             return "%s (%d %s)" % \
                    (self.name, self.postcode.number, self.postcode.city)
         return self.name
-
-    @staticmethod
-    def search(query, type=None):
-        query = query.lower()
-        qs = School.objects.filter(name__icontains=query)
-        if type is not None:
-            try:
-                type = int(type)
-                if type in [id for id, title in School.type_choices]:
-                    qs = qs.filter(type=type)
-            except ValueError:
-                pass
-        return qs
 
     @staticmethod
     def create_defaults():
@@ -5925,12 +5604,6 @@ class Guest(models.Model):
         except:
             return 0
 
-    def get_booking(self):
-        try:
-            return self.booking
-        except:
-            return None
-
     def evaluationguest_student(self):
         try:
             return self.surveyxactevaluationguest_set.filter(
@@ -5996,6 +5669,8 @@ class Booking(models.Model):
     class Meta:
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
+
+    objects = BookingQuerySet.as_manager()
 
     booker = models.OneToOneField(Guest)
 
@@ -6141,18 +5816,6 @@ class Booking(models.Model):
             self.booker.as_searchtext(),
             self.notes
         ] if x])
-
-    @staticmethod
-    def get_latest_created():
-        return Booking.objects.order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Booking.objects.order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Booking.objects.order_by('-statistics__visited_time')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -6308,6 +5971,9 @@ class BookingGrundskoleSubjectLevel(models.Model):
 
 class KUEmailMessage(models.Model):
     """Email data for logging purposes."""
+
+    objects = KUEmailMessageQuerySet.as_manager()
+
     created = models.DateTimeField(
         blank=False,
         null=False,
@@ -6566,13 +6232,6 @@ class KUEmailMessage(models.Model):
                 )
                 email.save()
 
-    @staticmethod
-    def get_by_instance(instance):
-        return KUEmailMessage.objects.filter(
-            content_type=ContentType.objects.get_for_model(instance),
-            object_id=instance.id
-        )
-
     @property
     def replies(self):
         return KUEmailMessage.objects.filter(reply_to_message=self)\
@@ -6583,6 +6242,8 @@ class KUEmailMessage(models.Model):
 
     def anonymize(self):
         self.recipients = KUEmailMessage.anonymized
+        self.body = KUEmailMessage.anonymized
+        self.htmlbody = KUEmailMessage.anonymized
         self.save()
 
 
@@ -6719,6 +6380,7 @@ class SurveyXactEvaluation(models.Model):
 
 
 class SurveyXactEvaluationGuest(models.Model):
+    objects = SurveyXactEvaluationGuestQuerySet.as_manager()
 
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
@@ -6756,14 +6418,6 @@ class SurveyXactEvaluationGuest(models.Model):
     shortlink_id = models.CharField(
         max_length=16,
     )
-
-    @staticmethod
-    def filter_status(qs, status):
-        return qs.filter(status=status)
-
-    @staticmethod
-    def filter_visit(qs, visit):
-        qs.filter(guest__booking__visit=visit)
 
     @property
     def link(self):
