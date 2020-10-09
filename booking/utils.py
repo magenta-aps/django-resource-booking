@@ -598,7 +598,7 @@ def surveyxact_anonymize(survey_id, before_datetime):
     if response.status_code == 202:
         return True
     else:
-        print "Failed to anonymize SurveyXact data: %s" % response.text
+        print("Failed to anonymize SurveyXact data: %s" % response.text)
         return False
 
 
