@@ -82,6 +82,7 @@ class TestMixin(object):
         self.client = Client()
 
     def login(self, url, user):
+        self.client.logout()
         response = self.client.get(url)
         self.assertEquals(302, response.status_code)
         self.assertEquals("/profile/login?next=%s" % url, response['Location'])

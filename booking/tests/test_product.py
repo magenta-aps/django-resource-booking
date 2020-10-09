@@ -19,7 +19,7 @@ from booking.forms import OtherProductForm
 from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
-from booking.models import EmailTemplateType, Visit
+from booking.models import EmailTemplateType, Visit, ResourceType
 from booking.models import Locality
 from booking.models import OrganizationalUnit
 from booking.models import OrganizationalUnitType
@@ -28,6 +28,7 @@ from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import Subject
 from booking.utils import flatten
+from profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin
 
 
@@ -642,17 +643,85 @@ class TestProduct(TestMixin, TestCase):
                     else:
                         self.assertEquals(1, len(text))
 
-    def test_assigned_teacher(self):
-        # test assignment of user as potential teacher
-        # test that the user sees the product on his profile page
-        # test what the user sees on the product page
-        pass
+    def test_potential_teacher(self):
+        UserRole.create_defaults()
+        ResourceType.create_defaults()
+        user = self.create_default_teacher(unit=self.unit)
+        product = self.create_product(
+            unit=self.unit,
+            potential_teachers=[user],
+            time_mode=Product.TIME_MODE_SPECIFIC
+        )
+        self.assertTrue(
+            user.id in [u.id for u in product.potential_teachers.all()]
+        )
+        self._test_is_present_on_profile(user, product)
+        product.delete()
 
-    def test_assigned_host(self):
-        # test assignment of user as potential host
-        # test that the user sees the product on his profile page
-        # test what the user sees on the product page
-        pass
+        product = self.create_product(
+            unit=self.unit,
+            time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED
+        )
+        self.assertFalse(
+            user.id in [u.id for u in product.potential_teachers.all()]
+        )
+        pool = self.create_resourcepool(
+            ResourceType.RESOURCE_TYPE_TEACHER,
+            self.unit,
+            'test_pool',
+            user.userprofile.get_resource()
+        )
+        self.create_resourcerequirement(product, pool, 1)
+        self.assertTrue(
+            user.id in [u.id for u in product.potential_teachers.all()]
+        )
+        self._test_is_present_on_profile(user, product)
+
+    def test_potential_host(self):
+        UserRole.create_defaults()
+        ResourceType.create_defaults()
+        user = self.create_default_host(unit=self.unit)
+        product = self.create_product(
+            unit=self.unit,
+            potential_hosts=[user],
+            time_mode=Product.TIME_MODE_SPECIFIC
+        )
+        self.assertTrue(
+            user.id in [u.id for u in product.potential_hosts.all()]
+        )
+        self._test_is_present_on_profile(user, product)
+        product.delete()
+
+        product = self.create_product(
+            unit=self.unit,
+            time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED
+        )
+        self.assertFalse(
+            user.id in [u.id for u in product.potential_hosts.all()]
+        )
+        pool = self.create_resourcepool(
+            ResourceType.RESOURCE_TYPE_HOST,
+            self.unit,
+            'test_pool',
+            user.userprofile.get_resource()
+        )
+        self.create_resourcerequirement(product, pool, 1)
+        self.assertTrue(
+            user.id in [u.id for u in product.potential_hosts.all()]
+        )
+        self._test_is_present_on_profile(user, product)
+
+    def _test_is_present_on_profile(self, user, product):
+        url = "/profile/"
+        self.login(url, user)
+        response = self.client.get(url)
+        self.assertEquals(200, response.status_code)
+        query = pq(response.content)
+        items = query("h3.panel-title")\
+            .closest(".panel").find(".panel-body .list-group-item")
+        self.assertEquals(1, len(items))
+        item = items[0]
+        self.assertEquals(product.title, pq(item).find("h2").text())
 
     def test_evaluation(self):
         # set up a product with evaluation
