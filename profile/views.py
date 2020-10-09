@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 
-import profile.constants
-from booking.models import OrganizationalUnit, Product, Visit, Booking
-from booking.models import EmailTemplateType, KUEmailMessage
-from booking.models import VisitComment
-from booking.utils import UnicodeWriter
-from booking.utils import force_list
 from django.contrib import messages
 from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
@@ -24,31 +18,32 @@ from django.utils.functional import Promise
 from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
+from django.views.generic.list import ListView
 
 import profile.constants
 import profile.models as profile_models
-from booking.mixins import AccessDenied
-from booking.mixins import BreadcrumbMixin
-from booking.mixins import EditorRequiredMixin
-from booking.mixins import LoginRequiredMixin
-from booking.models import Booking
-from booking.models import EmailTemplateType
-from booking.models import KUEmailMessage
-from booking.models import OrganizationalUnit
-from booking.models import Product
-from booking.models import Visit
-from booking.models import VisitComment
+from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
+from booking.mixins import (
+    BreadcrumbMixin,
+    LoginRequiredMixin,
+    AccessDenied,
+    EditorRequiredMixin
+)
+from booking.models import (
+    Booking,
+    EmailTemplateType,
+    KUEmailMessage,
+    OrganizationalUnit,
+    Product,
+    Visit,
+    VisitComment
+)
 from booking.utils import UnicodeWriter, force_list
 from booking.views import VisitCustomListView
-from django.views.generic.list import ListView
-from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import EmailLoginURL
-from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
-from profile.models import HOST, TEACHER
-from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
+from booking.managers import VisitQuerySet
+
 
 import warnings
-import profile.models as profile_models
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -64,7 +59,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
     def get_template_names(self):
         profile = self.request.user.userprofile
-        if not profile or profile.get_role() == NONE:
+        if not profile or profile.get_role() == profile.constants.NONE:
             return ['profile/profile_new_user.html']
         else:
             return super(ProfileView, self).get_template_names()
@@ -99,19 +94,34 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 and product_types != Product.applicable_types:
             context['type'] = product_types[0]
 
-        today_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.get_todays_visits()
-            if visit.real.unit_qs & unit_qs
-        ])
-        today_qs = Visit.with_product_types(today_qs, product_types)
-        today_qs = today_qs.order_by(*self.visit_ordering_asc)
+        unit_visits = Visit.objects.filter(
+            eventtime__product__organizationalunit__in=unit_qs
+        )
+        unit_multivisits = Visit.objects.filter(
+            is_multi_sub=False,
+            id__in=[
+                v['multi_master']
+                for v in unit_visits.filter(
+                    multi_master__isnull=False
+                ).values("multi_master")
+            ]
+        )
+        today_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_todays_visits().filter(
+                Q(multiproductvisit__in=unit_visits) | Q(id__in=unit_visits)
+            ),
+            to_many=["bookings__booker"]
+        )
+        recent_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_recently_held().filter(
+                Q(id__in=unit_visits) |
+                Q(multiproductvisit__in=unit_multivisits)
+            ),
+            to_many=["bookings__booker"]
+        )
 
-        recent_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.get_recently_held()
-            if visit.real.unit_qs & unit_qs
-        ])
-        recent_qs = Visit.with_product_types(recent_qs, product_types)
-        recent_qs = recent_qs.order_by(*self.visit_ordering_desc)
+        recent_qs = recent_qs.with_product_types(
+            product_types).order_by(*self.visit_ordering_desc)
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
@@ -145,7 +155,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_LATEST_COMPLETED
             }
-        }])
+        }
+        ])
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
 
@@ -223,12 +234,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         product_types = self.product_types()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
-        unplanned_qs = Visit.being_planned_queryset(is_multi_sub=False)
+        unplanned_qs = Visit.objects.filter(is_multi_sub=False).being_planned()
         # See also VisitSearchView.filter_by_participants
-        unplanned_qs = Visit.unit_filter(
-            unplanned_qs,
-            unit_qs
-        )
+        unplanned_qs = unplanned_qs.unit_filter(unit_qs)
         unplanned_qs = unplanned_qs.annotate(
             num_participants=(
                 Coalesce(Count("bookings__booker__pk"), 0) +
@@ -238,7 +246,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 )
             )
         ).filter(num_participants__gte=1)
-        unplanned_qs = Visit.with_product_types(unplanned_qs, product_types)
+        unplanned_qs = unplanned_qs.with_product_types(product_types)
 
         unplanned = {
             'color': self.HEADING_RED,
@@ -262,9 +270,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
-        planned_qs = Visit.planned_queryset(is_multi_sub=False)
-        planned_qs = Visit.unit_filter(planned_qs, unit_qs)
-        planned_qs = Visit.with_product_types(planned_qs, product_types)
+        planned_qs = Visit.objects.planned_queryset(is_multi_sub=False)
+        planned_qs = planned_qs.unit_filter(unit_qs)
+        planned_qs = planned_qs.with_product_types(product_types)
 
         planned = {
             'color': self.HEADING_GREEN,
@@ -295,13 +303,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         profile = self.request.user.userprofile
         product_types = self.product_types()
 
-        assignable_qs = profile.can_be_assigned_to_qs
-        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
-        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+        assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
+            unit_qs).with_product_types(product_types)
 
-        assigned_qs = profile.all_assigned_visits()
-        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
-        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
+        assigned_qs = profile.all_assigned_visits(
+        ).unit_filter(unit_qs).with_product_types(product_types)
 
         return [
             {
@@ -350,13 +356,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         profile = self.request.user.userprofile
         product_types = self.product_types()
 
-        assignable_qs = profile.can_be_assigned_to_qs
-        assignable_qs = Visit.unit_filter(assignable_qs, unit_qs)
-        assignable_qs = Visit.with_product_types(assignable_qs, product_types)
+        assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
+            unit_qs).with_product_types(product_types)
 
-        assigned_qs = profile.all_assigned_visits()
-        assigned_qs = Visit.unit_filter(assigned_qs, unit_qs)
-        assigned_qs = Visit.with_product_types(assigned_qs, product_types)
+        assigned_qs = profile.all_assigned_visits().unit_filter(
+            unit_qs).with_product_types(product_types)
 
         return [
             {
@@ -454,7 +458,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
 
         if current_role in EDIT_ROLES:
             if self.request.method == 'POST':
-                if current_role == FACULTY_EDITOR:
+                if current_role == profile_models.FACULTY_EDITOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
@@ -469,7 +473,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                             _(u"Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
-                elif current_role == COORDINATOR:
+                elif current_role == profile_models.COORDINATOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
@@ -525,7 +529,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
 
             # Create
             if not pk:
-                user_profile = UserProfile(
+                user_profile = profile_models.UserProfile(
                     user=user,
                     user_role=user_role,
                     organizationalunit=unit,
@@ -611,7 +615,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         return breadcrumbs
 
 
-class DeleteUserView(BreadcrumbMixin, DeleteView):
+class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
@@ -636,7 +640,7 @@ class DeleteUserView(BreadcrumbMixin, DeleteView):
         return breadcrumbs
 
 
-class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
+class UserListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     model = User
     template_name = 'profile/user_list.html'
     context_object_name = "users"
@@ -692,7 +696,7 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
         context['selected_role'] = self.selected_role
         context['possible_roles'] = [
-            (id, label) for (id, label) in user_role_choices if id != NONE
+            (id, label) for (id, label) in profile_models.user_role_choices if id != NONE
         ]
 
         context.update(kwargs)
@@ -706,7 +710,7 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         }]
 
 
-class UnitListView(EditorRequriedMixin, ListView):
+class UnitListView(EditorRequiredMixin, ListView):
     model = OrganizationalUnit
 
     def get_context_data(self, **kwargs):
@@ -718,7 +722,7 @@ class UnitListView(EditorRequriedMixin, ListView):
         return user.userprofile.get_unit_queryset()
 
 
-class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
+class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
     organizationalunits = []
@@ -777,6 +781,13 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 qs = qs.filter(
                     Q(visit__eventtime__end__lt=to_date) |
                     Q(visit__cancelled_eventtime__end__lt=to_date)
+                )
+            if not from_date and not to_date:
+                qs = qs.filter(
+                    visit__eventtime__start__isnull=True,
+                    visit__cancelled_eventtime__start__isnull=True,
+                    visit__eventtime__end__isnull=True,
+                    visit__cancelled_eventtime__end__isnull=True
                 )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
@@ -940,7 +951,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
 
 
 class EmailLoginView(DetailView):
-    model = EmailLoginURL
+    model = profile_models.EmailLoginURL
     template_name = "profile/email_login.html"
     slug_field = 'uuid'
     expired = False
@@ -992,8 +1003,8 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
-    model = UserProfile
+class EditMyProductsView(EditorRequiredMixin, BreadcrumbMixin, UpdateView):
+    model = profile_models.UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
 
@@ -1029,7 +1040,7 @@ class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
 
 
 class AvailabilityView(LoginRequiredMixin, DetailView):
-    model = UserProfile
+    model = profile_models.UserProfile
     template_name = 'profile/availability.html'
 
     def get_object(self, queryset=None):
@@ -1040,7 +1051,7 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
             # Get the single item from the filtered queryset
             obj = self.model.objects.get(
                 user__pk=self.kwargs.get("user_pk"),
-                user_role__role__in=[TEACHER, HOST]
+                user_role__role__in=[profile_models.TEACHER, profile_models.HOST]
             )
         except self.model.DoesNotExist:
             raise Http404(_("No %(verbose_name)s found matching the query") %
