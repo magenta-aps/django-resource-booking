@@ -371,10 +371,10 @@ class AnonymizeEvaluationsJob(KuCronJob):
         ])
         limit = timezone.now() - timedelta(days=365*2)
         for survey_id in survey_ids:
-            print "Anonymizing survey %d" % survey_id
+            print("Anonymizing survey %d" % survey_id)
             success = surveyxact_anonymize(survey_id, limit)
             if not success:
-                print "Failed anonymizing survey %d" % survey_id
+                print("Failed anonymizing survey %d" % survey_id)
 
 
 class AnonymizeInquirersJob(KuCronJob):
