@@ -20,8 +20,17 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 from django.views.generic.list import ListView
 
-from profile.constants import NONE, role_to_text
-import profile.models as profile_models
+from profile.constants import (
+    NONE,
+    role_to_text,
+    EDIT_ROLES,
+    HOST,
+    TEACHER,
+    FACULTY_EDITOR,
+    COORDINATOR,
+    user_role_choices
+)
+from profile.models import UserRole, UserProfile, EmailLoginURL
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 
 from booking.mixins import (
@@ -221,11 +230,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
-        if role in profile_models.EDIT_ROLES:
+        if role in EDIT_ROLES:
             return self.lists_for_editors()
-        elif role == profile_models.TEACHER:
+        elif role == TEACHER:
             return self.lists_for_teachers()
-        elif role == profile_models.HOST:
+        elif role == HOST:
             return self.lists_for_hosts()
         else:
             return []
@@ -459,7 +468,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
 
         if current_role in EDIT_ROLES:
             if self.request.method == 'POST':
-                if current_role == profile_models.FACULTY_EDITOR:
+                if current_role == FACULTY_EDITOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
@@ -474,7 +483,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                             _(u"Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
-                elif current_role == profile_models.COORDINATOR:
+                elif current_role == COORDINATOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
@@ -530,7 +539,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
 
             # Create
             if not pk:
-                user_profile = profile_models.UserProfile(
+                user_profile = UserProfile(
                     user=user,
                     user_role=user_role,
                     organizationalunit=unit,
@@ -697,7 +706,7 @@ class UserListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
 
         context['selected_role'] = self.selected_role
         context['possible_roles'] = [
-            (id, label) for (id, label) in profile_models.user_role_choices if id != NONE
+            (id, label) for (id, label) in user_role_choices if id != NONE
         ]
 
         context.update(kwargs)
@@ -952,7 +961,7 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
 
 
 class EmailLoginView(DetailView):
-    model = profile_models.EmailLoginURL
+    model = EmailLoginURL
     template_name = "profile/email_login.html"
     slug_field = 'uuid'
     expired = False
@@ -1005,7 +1014,7 @@ class EmailLoginView(DetailView):
 
 
 class EditMyProductsView(EditorRequiredMixin, BreadcrumbMixin, UpdateView):
-    model = profile_models.UserProfile
+    model = UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
 
@@ -1041,7 +1050,7 @@ class EditMyProductsView(EditorRequiredMixin, BreadcrumbMixin, UpdateView):
 
 
 class AvailabilityView(LoginRequiredMixin, DetailView):
-    model = profile_models.UserProfile
+    model = UserProfile
     template_name = 'profile/availability.html'
 
     def get_object(self, queryset=None):
@@ -1052,7 +1061,7 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
             # Get the single item from the filtered queryset
             obj = self.model.objects.get(
                 user__pk=self.kwargs.get("user_pk"),
-                user_role__role__in=[profile_models.TEACHER, profile_models.HOST]
+                user_role__role__in=[TEACHER, HOST]
             )
         except self.model.DoesNotExist:
             raise Http404(_("No %(verbose_name)s found matching the query") %
