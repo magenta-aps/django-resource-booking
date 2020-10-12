@@ -12,7 +12,7 @@ from django.template.defaultfilters import register
 from django.templatetags.static import StaticNode
 from django.utils import six
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from booking.constants import LOGACTION_DISPLAY_MAP
 from booking.models import Guest, BookerResponseNonce
@@ -149,7 +149,8 @@ def timedelta_i18n(value, display="long", sep=", "):
         # display as 0 of the smallest unit
         result.append(words_plural[-1] % 0)
 
-    return sep.join(result)
+    # Force lazy translations to be evaluated with str() before join().
+    return sep.join([str(x) for x in result])
 
 
 @register.filter
