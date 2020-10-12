@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from booking.constants import LOGACTION_DISPLAY_MAP
 from booking.models import Guest, BookerResponseNonce
-from profile.models import EmailLoginURL, UserProfile
+from user_profile.models import EmailLoginURL, UserProfile
 
 
 @register.filter

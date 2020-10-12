@@ -88,7 +88,7 @@ from booking.views import VisitBookingCreateView
 from booking.views import VisitCustomListView
 from booking.views import VisitDetailView
 from booking.views import VisitSearchView
-from profile.views import ListAjaxView
+from user_profile.views import ListAjaxView
 
 calendarevent_kwargs = {
     'related_kwargs_name': 'res'

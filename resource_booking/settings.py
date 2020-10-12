@@ -44,7 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'booking',
-    'profile',
+    'user_profile',
     'recurrence',
     'tinymce',
     'django_cron',
@@ -257,7 +257,7 @@ MAKE_SAML_LOGIN_DEFAULT = False
 # Setup the default login backend so we can override it after loading local
 # saml settings
 AUTHENTICATION_BACKENDS = [
-    'profile.auth.backends.EmailLoginBackend',
+    'user_profile.auth.backends.EmailLoginBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
 

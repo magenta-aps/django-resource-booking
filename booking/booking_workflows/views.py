@@ -36,7 +36,7 @@ from booking.models import TeacherResource
 from booking.models import Visit
 from booking.models import VisitResource
 from booking.views import VisitDetailView
-from profile.models import TEACHER, HOST, EDIT_ROLES
+from user_profile.models import TEACHER, HOST, EDIT_ROLES
 
 
 class VisitBreadcrumbMixin(ContextMixin):

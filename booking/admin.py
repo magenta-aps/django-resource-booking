@@ -7,7 +7,7 @@ from django.db.models.fields.related_descriptors import \
     ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
-from profile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from user_profile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 from . import models as booking_models
 
 EXCLUDE_MODELS = set([
@@ -17,7 +17,7 @@ EXCLUDE_MODELS = set([
 # Important: when changing this, be sure to run the
 # following in a shell on the server:
 #
-# from profile.models import UserProfile
+# from user_profile.models import UserProfile
 # for userprofile in UserProfile.objects.all():
 #     userprofile.update_user_permissions()
 
