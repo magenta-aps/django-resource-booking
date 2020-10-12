@@ -8,6 +8,7 @@ postgresql-server-dev-12
 python3-dev
 python3-virtualenv
 xmlsec1
+postfix
 # Below are Pillow dependencies
 libjpeg-dev
 zlib1g-dev
