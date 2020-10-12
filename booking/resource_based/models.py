@@ -1168,7 +1168,7 @@ class CalendarEventInstance(object):
         )
 
     def __repr__(self):
-        return '%s at 0x%x' % (self.__unicode__(), id(self))
+        return '%s at 0x%x' % (self.__str__(), id(self))
 
 
 class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
