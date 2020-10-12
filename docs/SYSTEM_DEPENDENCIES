@@ -4,8 +4,7 @@ libapache2-mod-wsgi
 libffi-dev
 npm
 postgresql
-postgresql-server-dev-10
-python-dev
-python-virtualenv
-npm
+postgresql-server-dev-12
+python3-dev
+python3-virtualenv
 xmlsec1
