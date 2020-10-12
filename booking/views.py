@@ -3973,7 +3973,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             if type not in by_type:
                 by_type[type] = []
             by_type[type].append(item)
-            by_value[unicode(value)] = item
+            by_value[str(value)] = item
         for type, items in by_type.items():
             if type in self.classes.keys():
                 clazz = self.classes[type]
@@ -3985,7 +3985,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                         pk__in=[item['value'] for item in items]
                     )
                     for object in objects:
-                        item = by_value[unicode(object.pk)]
+                        item = by_value[str(object.pk)]
                         context[item['key']] = object
                 except clazz.DoesNotExist:
                     pass
