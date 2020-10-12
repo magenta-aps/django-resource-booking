@@ -20,7 +20,7 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 from django.views.generic.list import ListView
 
-from profile.constants import (
+from user_profile.constants import (
     NONE,
     role_to_text,
     EDIT_ROLES,
@@ -30,8 +30,8 @@ from profile.constants import (
     COORDINATOR,
     user_role_choices
 )
-from profile.models import UserRole, UserProfile, EmailLoginURL
-from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
+from user_profile.models import UserRole, UserProfile, EmailLoginURL
+from user_profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 
 from booking.mixins import (
     BreadcrumbMixin,

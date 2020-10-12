@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     # Booking URLs:
     url(r'^', include('booking.urls')),
-    url(r'^profile/', include('profile.urls')),
+    url(r'^profile/', include('user_profile.urls')),
     url(r'^hijack/', include('hijack.urls', namespace='hijack')),
 ]
 # Allow setting language explicitly in url

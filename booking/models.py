@@ -62,8 +62,8 @@ from booking.utils import (
     prose_list_join
 )
 
-from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
-from profile.constants import TEACHER, HOST, NONE, get_role_name
+from user_profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+from user_profile.constants import TEACHER, HOST, NONE, get_role_name
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)

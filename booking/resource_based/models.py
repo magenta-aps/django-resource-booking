@@ -21,7 +21,7 @@ from booking.constants import AVAILABLE_SEATS_NO_LIMIT
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
-from profile.constants import TEACHER, HOST, NONE
+from user_profile.constants import TEACHER, HOST, NONE
 
 
 class EventTime(models.Model):
