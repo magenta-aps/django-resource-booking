@@ -1,6 +1,6 @@
 apache2
 gettext
-libapache2-mod-wsgi
+libapache2-mod-wsgi-py3
 libffi-dev
 npm
 postgresql
