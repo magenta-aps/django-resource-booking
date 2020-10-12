@@ -2,10 +2,11 @@ from setuptools import setup, find_packages
 
 version = '0.2'
 
-setup(name='django_resource_booking',
-      version=version,
-      description="Resource booking and allocation for large organizations.",
-      long_description="""
+setup(
+    name="django_resource_booking",
+    version=version,
+    description="Resource booking and allocation for large organizations.",
+    long_description="""
 Resource booking and allocation for large organizations - specifically
 designed for the University of Copenhagen.""",
       classifiers=[],
@@ -19,7 +20,7 @@ designed for the University of Copenhagen.""",
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-          'Django==1.11.20',
+          'Django==1.11.22',
           'flake8==2.5.0',
           'psycopg2-binary',
           'django-npm==1.0.0',
@@ -36,7 +37,7 @@ designed for the University of Copenhagen.""",
           'beautifulsoup4==4.7.1',
           'Pillow==6.0.0',
           'django-extensions==2.1.9',
-          'bpython==0.18'
+          "ipython==7.18.1"
       ],
       entry_points="""
       # -*- Entry points: -*-
