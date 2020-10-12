@@ -674,7 +674,8 @@ class EventTime(models.Model):
             parts.append(_(u"(Besøg: %s)") % self.visit.pk)
         parts.append(self.interval_display)
 
-        return " ".join(parts)
+        # Force lazy translations to be evaluated with str() before join().
+        return " ".join([str(x) for x in parts])
 
     def on_start(self):
         self.has_notified_start = True
