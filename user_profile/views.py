@@ -917,7 +917,7 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
 
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
-                booking.__unicode__(),
+                str(booking),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
                 timetext + time_extra,

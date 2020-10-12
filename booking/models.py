@@ -3835,7 +3835,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    def __unicode__(self):
+    def __str__(self):
         if self.is_multiproductvisit:
             return str(self.multiproductvisit)
         if hasattr(self, 'eventtime'):

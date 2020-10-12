@@ -204,7 +204,7 @@ class AccessDenied(PermissionDenied):
         print(self._text.encode('utf-8'))
         return super(AccessDenied, self).__init__(text, *args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         print(self._text.encode('utf-8'))
         return self._text
 
