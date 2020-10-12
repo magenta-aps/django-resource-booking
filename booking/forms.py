@@ -1790,7 +1790,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
                                  "emailtemplate-type-%s" % type
                     },
                     choices=[
-                        (object.id, unicode(object))
+                        (object.id, str(object))
                         for object in
                         manager.order_by('id').reverse()[:200]
                     ]
