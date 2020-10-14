@@ -5,6 +5,7 @@ import re
 from datetime import timedelta
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.http import QueryDict
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
@@ -19,7 +20,9 @@ from booking.forms import OtherProductForm
 from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
-from booking.models import EmailTemplateType, SurveyXactEvaluationGuest
+from booking.models import EmailTemplateType
+from booking.models import SurveyXactEvaluationGuest
+from booking.models import KUEmailRecipient
 from booking.models import Visit
 from booking.models import ResourceType
 from booking.models import KUEmailMessage
@@ -775,10 +778,10 @@ class TestProduct(TestMixin, TestCase):
         self.assertEquals(evaluation, evalguest.evaluation)
         self.assertDictEqual(
             {u'opl\xe6g': 0, u'l\xe6rere': 0, u'undvm1': '', u'type1': 0,
-             u'ID': 1, u'skole_id': None, u'antal': None, u'rundvis': 0,
+             u'ID': product.id, u'skole_id': None, u'antal': None, u'rundvis': 0,
              u'akt1': u'testproduct', u'niveau': None, u'oenhed1': None,
              u'region': None, u'elever': 0, u'g\xe6st': u'Tester Testerson',
-             u'enhed1': 1, u'postnr': None, u'undvn1': '', u'skole': None,
+             u'enhed1': self.unit.id, u'postnr': None, u'undvn1': '', u'skole': None,
              u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S'),
              u'email': u'test@example.com'},
             evalguest.get_surveyxact_data()
@@ -787,7 +790,131 @@ class TestProduct(TestMixin, TestCase):
     def test_email_recipients(self):
         # setup products with users in different roles
         # test that get_recipients returns the correct users
-        pass
+        EmailTemplateType.set_defaults()
+        ResourceType.create_defaults()
+        UserRole.create_defaults()
+        teacher = self.create_default_teacher(unit=self.unit)
+        host = self.create_default_host(unit=self.unit)
+        coordinator = self.create_default_coordinator(unit=self.unit)
+        roomguy = self.create_default_roomresponsible(unit=self.unit)
+        teacher_pool = self.create_resourcepool(
+            ResourceType.RESOURCE_TYPE_TEACHER,
+            self.unit,
+            'test_teacher_pool',
+            teacher.userprofile.get_resource()
+        )
+        host_pool = self.create_resourcepool(
+            ResourceType.RESOURCE_TYPE_HOST,
+            self.unit,
+            'test_host_pool',
+            teacher.userprofile.get_resource()
+        )
+
+        products = []
+
+        for product_type, label in Product.resource_type_choices:
+            for time_mode in [
+                Product.TIME_MODE_NONE, Product.TIME_MODE_SPECIFIC,
+                Product.TIME_MODE_GUEST_SUGGESTED, Product.TIME_MODE_NO_BOOKING
+            ]:
+                product = self.create_product(
+                    self.unit,
+                    time_mode=time_mode,
+                    potential_teachers=[teacher],
+                    potential_hosts=[host],
+                    state=Product.CREATED,
+                    product_type=product_type
+                )
+                product.tilbudsansvarlig = coordinator
+                product.roomresponsible.add(roomguy)
+                product.save()
+                products.append(product)
+
+        for time_mode in [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]:
+            product = self.create_product(
+                self.unit,
+                time_mode=time_mode,
+                state=Product.CREATED,
+                product_type=product_type
+            )
+            product.tilbudsansvarlig = coordinator
+            product.roomresponsible.add(roomguy)
+            self.create_resourcerequirement(product, teacher_pool, 1)
+            self.create_resourcerequirement(product, host_pool, 1)
+            product.save()
+            #products.append(product)
+
+        expected = {
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED: [
+                (KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE, coordinator)
+            ],
+            EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER: [
+                (KUEmailRecipient.TYPE_TEACHER, teacher)
+            ],
+            EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER: [
+                (KUEmailRecipient.TYPE_HOST, host)
+            ],
+            EmailTemplateType.NOTIFY_HOST__REQ_ROOM: [
+                (KUEmailRecipient.TYPE_ROOM_RESPONSIBLE, roomguy)
+            ],
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE: [
+                (KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE, coordinator),
+                (KUEmailRecipient.TYPE_ROOM_RESPONSIBLE, roomguy)
+            ],
+            EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED: [
+                (KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE, coordinator),
+                (KUEmailRecipient.TYPE_ROOM_RESPONSIBLE, roomguy)
+            ],
+            EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER: [
+                (KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE, coordinator),
+                (KUEmailRecipient.TYPE_ROOM_RESPONSIBLE, roomguy)
+            ],
+            EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE: [
+                (KUEmailRecipient.TYPE_EDITOR, coordinator)
+            ],
+            EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED: [
+                (KUEmailRecipient.TYPE_PRODUCT_RESPONSIBLE, coordinator),
+            ],
+        }
+        expected.update({
+            template_type.key: []
+            for template_type in EmailTemplateType.objects.all()
+            if template_type.key not in expected.keys()
+        })
+
+        def unpack(item):
+            if isinstance(item, User):
+                return (item.get_full_name(), item.email)
+            if isinstance(item, RoomResponsible):
+                return (item.name, item.email)
+
+        for product in products:
+            for template_type_key, expected_recipients in expected.iteritems():
+                actual_recipients = product.get_recipients(
+                    EmailTemplateType.get(template_type_key)
+                )
+                self.assertEquals(
+                    len(expected_recipients), len(actual_recipients),
+                    "Expected number of recipients not "
+                    "matching for template type %d" % template_type_key
+                )
+                expected_recipients = [
+                    (t, unpack(r))
+                    for (t, r) in expected_recipients
+                ]
+                for r in actual_recipients:
+                    self.assertTrue(
+                        (r.type, (r.name, r.email)) in expected_recipients,
+                        "did not expect (%d, (%s, %s)) "
+                        "for template type %d, expected %s" %
+                        (
+                            r.type, r.name, r.email,
+                            template_type_key, str(expected_recipients)
+                        )
+                    )
 
     def test_front_page(self):
         # create several products with bookings

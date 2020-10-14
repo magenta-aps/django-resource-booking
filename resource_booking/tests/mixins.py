@@ -6,16 +6,23 @@ from django.contrib.auth.models import User
 from django.db.models import Model
 from django.utils.datetime_safe import datetime
 
-from booking.models import EmailTemplate, Locality, Room, ResourceType, \
-    SurveyXactEvaluation, Guest, Booking
+from booking.models import Booking
+from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
 from booking.models import EventTime
+from booking.models import Guest
 from booking.models import KUEmailMessage
+from booking.models import Locality
 from booking.models import Product
 from booking.models import ProductAutosend
+from booking.models import ResourceType
+from booking.models import Room
+from booking.models import RoomResponsible
+from booking.models import SurveyXactEvaluation
 from booking.models import Visit
 from booking.models import VisitAutosend
-from booking.resource_based.models import ResourcePool, ResourceRequirement
+from booking.resource_based.models import ResourcePool
+from booking.resource_based.models import ResourceRequirement
 from profile.constants import ADMINISTRATOR
 from profile.constants import COORDINATOR
 from profile.constants import FACULTY_EDITOR
@@ -351,6 +358,17 @@ class TestMixin(object):
         booking.booker = guest
         booking.save()
         return booking
+
+    def create_default_roomresponsible(self,
+                                       name="RoomTester",
+                                       email="room@example.com",
+                                       phone=12345678,
+                                       unit=None
+                                       ):
+        (roomresponsible, c) = RoomResponsible.objects.get_or_create(
+            name=name, email=email, phone=phone, organizationalunit=unit
+        )
+        return roomresponsible
 
     def set_visit_workflow_status(self, visit, *status):
         for s in status:
