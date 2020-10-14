@@ -24,8 +24,7 @@ from profile.constants import TEACHER
 from profile.models import UserRole, UserProfile
 
 backports.unittest_mock.install()  # noqa
-from unittest.mock import patch
-
+from django.test.client import Client
 
 class ParsedNode(object):
     def __init__(self, el):

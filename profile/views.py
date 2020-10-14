@@ -25,8 +25,8 @@ from django.views.generic.list import ListView
 import profile.constants
 import profile.models as profile_models
 from booking.managers import VisitQuerySet
-from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
-    EditorRequiredMixin
+from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied
+from booking.mixins import EditorRequiredMixin
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import VisitComment
