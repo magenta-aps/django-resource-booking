@@ -3984,9 +3984,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def autosend_inherits(self, template_type):
         s = self.visitautosend_set.filter(
-            template_type_id=template_type.id
+            template_type=template_type
         )
-
         # If no rule specified, always inherit
         if s.count() == 0:
             return True
@@ -6533,22 +6532,32 @@ class SurveyXactEvaluationGuest(models.Model):
         self.save()
 
     def send(self, first=True):
+        template_types = []
         if first:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_first_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_first
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
         else:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_second_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_second
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
 
-        sent = self.booking.autosend(template)
+        sent = False
+        for template_type in template_types:
+            if self.booking.autosend(template_type):
+                sent = True
         if sent:
             self.status = new_status
             self.save()

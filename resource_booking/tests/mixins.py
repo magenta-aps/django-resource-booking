@@ -4,10 +4,10 @@ import backports.unittest_mock
 import pytz
 from django.contrib.auth.models import User
 from django.db.models import Model
-from django.test.client import Client
 from django.utils.datetime_safe import datetime
 
-from booking.models import EmailTemplate, Locality, Room, ResourceType
+from booking.models import EmailTemplate, Locality, Room, ResourceType, \
+    SurveyXactEvaluation, Guest, Booking
 from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import KUEmailMessage
@@ -88,12 +88,6 @@ class TestMixin(object):
         self.assertEquals("/profile/login?next=%s" % url, response['Location'])
         # self.client.login(username="admin", password="admin")
         self.client.force_login(user)
-
-    def mock(self, method):
-        patch_object = patch(method)
-        mock_object = patch_object.start()
-        self.addCleanup(patch_object.stop)
-        return mock_object
 
     @staticmethod
     def get_file_contents(filename):
@@ -316,10 +310,69 @@ class TestMixin(object):
             (autosend, created) = VisitAutosend.objects.get_or_create(
                 visit=item, template_type=template_type, **kwargs
             )
+        else:
+            print(item.__class__.__name__)
         if autosend:
             autosend.enabled = True
             autosend.save()
+        print("a")
+        print(autosend)
+        print(item.visitautosend_set.all())
         return autosend
+
+    def create_evaluation(self, product, for_students=False, surveyId=1234):
+        (evaluation, created) = SurveyXactEvaluation.objects.get_or_create(
+            product=product,
+            surveyId=surveyId,
+        )
+        evaluation.for_students = for_students
+        evaluation.for_teachers = not for_students
+        evaluation.save()
+        return evaluation
+
+    def create_guest(self, firstname="Tester", lastname="Testerson",
+                     email="test@example.com", **kwargs):
+        defaults = {'level': Guest.student}
+        defaults.update(kwargs)
+        (guest, created) = Guest.objects.get_or_create(
+            defaults=defaults,
+            firstname=firstname,
+            lastname=lastname,
+            email=email
+        )
+        for key, value in defaults.items():
+            setattr(guest, key, value)
+        guest.save()
+        return guest
+
+    def create_booking(self, visit, guest):
+        booking = Booking()
+        booking.visit = visit
+        booking.booker = guest
+        booking.save()
+        return booking
+
+    def set_visit_workflow_status(self, visit, *status):
+        for s in status:
+
+            if s in [id for (id, label) in visit.possible_status_choices()]:
+                visit.workflow_status = s
+                visit.save()
+            else:
+                raise Exception(
+                    "Invalid workflow state change for visit:"
+                    " %s (%d) => %s (%d)" % (
+                        self._get_choices_label(
+                            Visit.workflow_status_choices,
+                            visit.workflow_status
+                        ),
+                        visit.workflow_status,
+                        self._get_choices_label(
+                            Visit.workflow_status_choices,
+                            s
+                        ), s
+                    )
+                )
 
     def get_emails_grouped(self):
         emails = {}

@@ -19,7 +19,10 @@ from booking.forms import OtherProductForm
 from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
-from booking.models import EmailTemplateType, Visit, ResourceType
+from booking.models import EmailTemplateType, SurveyXactEvaluationGuest
+from booking.models import Visit
+from booking.models import ResourceType
+from booking.models import KUEmailMessage
 from booking.models import Locality
 from booking.models import OrganizationalUnit
 from booking.models import OrganizationalUnitType
@@ -724,12 +727,62 @@ class TestProduct(TestMixin, TestCase):
         self.assertEquals(product.title, pq(item).find("h2").text())
 
     def test_evaluation(self):
-        # set up a product with evaluation
-        # add a booking w/ visit and set workflow so evaluation is sent
-        # test that evaluation mail is sent
-        # test link in evaluation
-        #  - should perform a redirect to the correct url
-        pass
+        EmailTemplateType.set_defaults()
+        template1 = self.create_emailtemplate(
+            key=EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            unit=self.unit,
+            subject="Test evaluation",
+            body="This is a test. "
+                 "Link: {{ recipient.guest.evaluationguest_teacher.link }}"
+        )
+
+        product = self.create_product(
+            unit=self.unit,
+            time_mode=Product.TIME_MODE_SPECIFIC
+        )
+        evaluation = self.create_evaluation(product, surveyId=12345)
+        visit = self.create_visit(
+            product,
+            start=datetime.now() + timedelta(days=3),
+            end=datetime.now() + timedelta(days=3, hours=1)
+        )
+        self.create_autosend(visit, template1.type)
+        booking = self.create_booking(visit, self.create_guest())
+        evaluation.save()
+        self.set_visit_workflow_status(visit, Visit.WORKFLOW_STATUS_PLANNED)
+        # Let visit "expire", so status changes to "executed"
+        # and messages are sent out
+        count_before = KUEmailMessage.objects.count()
+        visit.on_expire()
+
+        self.assertEquals(1, KUEmailMessage.objects.count() - count_before)
+        message = KUEmailMessage.objects.last()
+        self.assertIsNotNone(message)
+        self.assertEquals("Test evaluation", message.subject.strip())
+        self.assertTrue(message.body.strip().startswith("This is a test"))
+        self.assertEquals(
+            "\"%s\" <%s>" % (booking.booker.get_full_name(),
+                             booking.booker.email),
+            message.recipients
+        )
+
+        m = re.search("Link: http://fokusku.dk/e/(.*)", message.body.strip())
+        self.assertIsNotNone(m)
+        shortlink_id = m.group(1)
+        evalguest = SurveyXactEvaluationGuest.objects.get(
+            shortlink_id=shortlink_id,
+        )
+        self.assertEquals(evaluation, evalguest.evaluation)
+        self.assertDictEqual(
+            {u'opl\xe6g': 0, u'l\xe6rere': 0, u'undvm1': '', u'type1': 0,
+             u'ID': 1, u'skole_id': None, u'antal': None, u'rundvis': 0,
+             u'akt1': u'testproduct', u'niveau': None, u'oenhed1': None,
+             u'region': None, u'elever': 0, u'g\xe6st': u'Tester Testerson',
+             u'enhed1': 1, u'postnr': None, u'undvn1': '', u'skole': None,
+             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S'),
+             u'email': u'test@example.com'},
+            evalguest.get_surveyxact_data()
+        )
 
     def test_email_recipients(self):
         # setup products with users in different roles

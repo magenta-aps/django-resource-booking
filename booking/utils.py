@@ -533,6 +533,7 @@ class TemplateSplit(object):
 
 
 def surveyxact_upload(survey_id, data):
+    print("surveyxact_upload", survey_id, data)
     config = settings.SURVEYXACT
     csv_prefix = '\xff\xfe'
     csv_suffix = '\x0a\x00'
@@ -546,7 +547,6 @@ def surveyxact_upload(survey_id, data):
             value = unicode(value)
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
-
     response = requests.post(
         config['url']['upload'],
         headers={

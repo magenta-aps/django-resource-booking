@@ -43,11 +43,6 @@ class TestEmail(TestMixin, TestCase):
         Test autosending wrt products, visits and bookings
         """
 
-    def mock_email(self):
-        self.emailmock = self.mock('booking.models.KUEmailMessage.send_email')
-        self.emailmock.return_value = {
-        }
-
     def test_template_list_ui(self):
         self.login("/emailtemplate", self.admin)
         self.create_emailtemplate(
