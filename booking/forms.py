@@ -21,6 +21,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.dates import MONTHS
 from django.utils.safestring import mark_safe
+from django.utils.text import format_lazy
 from django.utils.translation import ugettext_lazy as _
 
 from booking.constants import AVAILABLE_SEATS_NO_LIMIT
@@ -872,7 +873,7 @@ class BookingForm(forms.ModelForm):
                 )
                 more_reason = product.nonbookable_text(bookability)
                 if more_reason is not None:
-                    reason += more_reason
+                    reason = format_lazy("{}{}", reason, more_reason)
                 raise forms.ValidationError(reason)
         return date
 
