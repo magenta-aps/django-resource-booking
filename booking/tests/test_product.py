@@ -919,4 +919,66 @@ class TestProduct(TestMixin, TestCase):
     def test_front_page(self):
         # create several products with bookings
         # test that the products show up on the front page
-        pass
+        products = []
+        for i in range(1, 6):
+            product = self.create_product(
+                unit=self.unit,
+                title="test %d" % i,
+                time_mode=Product.TIME_MODE_SPECIFIC,
+                state=Product.ACTIVE
+            )
+            start = datetime.now() + timedelta(days=10 + i)
+            visit = self.create_visit(
+                product,
+                start,
+                start + timedelta(hours=1),
+                Visit.WORKFLOW_STATUS_BEING_PLANNED
+            )
+            product.ensure_statistics()
+            products.append(product)
+            booking = self.create_booking(visit, self.create_guest())
+            booking.ensure_statistics()
+
+        self.assertEquals(
+            products,
+            list(Product.objects.filter_public_bookable())
+        )
+
+        rproducts = products[:]
+        rproducts.reverse()
+        response = self.client.get("/")
+        query = pq(response.content)
+        lists = query(".listcontainer > div")
+
+        latest_updated = query(lists[0]).find(".list-group-item")
+        for i, product in enumerate(rproducts):
+            item = query(latest_updated[i])
+            self.assertEquals(
+                "/product/%d" % product.id,
+                item.find("a")[0].get('href')
+            )
+            itemdata = self.extract_ul(item.find("ul"))
+            self.assertEqual(
+                "Type: %s" %
+                self._get_choices_label(Product.type_choices, product.type),
+                re.sub(r"\s+", ' ', itemdata[0]['text'].strip())
+            )
+
+            self.assertEqual(
+                "Dato/tid: %s" % product.eventtime_set.first().interval_display,
+                re.sub(r"\s+", ' ', itemdata[1]['text'].strip())
+            )
+
+        latest_booked = query(lists[1]).find(".list-group-item")
+        for i, product in enumerate(rproducts):
+            item = query(latest_booked[i])
+            self.assertEquals(
+                "/product/%d" % product.id,
+                item.find("a")[0].get('href')
+            )
+            itemdata = self.extract_ul(item.find("ul"))
+            self.assertEqual(
+                "Type: %s" %
+                self._get_choices_label(Product.type_choices, product.type),
+                re.sub(r"\s+", ' ', itemdata[0]['text'].strip())
+            )

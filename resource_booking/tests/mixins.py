@@ -339,16 +339,14 @@ class TestMixin(object):
 
     def create_guest(self, firstname="Tester", lastname="Testerson",
                      email="test@example.com", **kwargs):
-        defaults = {'level': Guest.student}
+        defaults = {
+            'level': Guest.student,
+            'firstname': "Tester",
+            'lastname': "Testerson",
+            'email': "test@example.com"
+        }
         defaults.update(kwargs)
-        (guest, created) = Guest.objects.get_or_create(
-            defaults=defaults,
-            firstname=firstname,
-            lastname=lastname,
-            email=email
-        )
-        for key, value in defaults.items():
-            setattr(guest, key, value)
+        guest = Guest(**defaults)
         guest.save()
         return guest
 
@@ -455,10 +453,11 @@ class TestMixin(object):
         d = {"text": node.text}
         if node.tag == 'a':
             d['url'] = node.attr("href")
-        if node.children:
+        children = getattr(node, 'children', None) or (hasattr(node, 'getchildren') and node.getchildren()) or []
+        if children:
             d['children'] = [
                 cls._node_to_dict(child)
-                for child in node.children
+                for child in children
             ]
         return d
 
@@ -477,6 +476,13 @@ class TestMixin(object):
                 # value += cls._get_text_nodes(node)
                 value.append(cls._node_to_dict(node))
             data[key] = value
+        return data
+
+    @classmethod
+    def extract_ul(cls, ul):
+        data = []
+        for node in ul.find("li"):
+            data.append(cls._node_to_dict(node))
         return data
 
     @classmethod
