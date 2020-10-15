@@ -450,6 +450,7 @@ class TestMixin(object):
 
     @classmethod
     def _node_to_dict(cls, node):
+        print(type(node), dir(node))
         d = {"text": node.text}
         if node.tag == 'a':
             d['url'] = node.attr("href")

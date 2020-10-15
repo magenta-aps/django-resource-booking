@@ -778,10 +778,11 @@ class TestProduct(TestMixin, TestCase):
         self.assertEquals(evaluation, evalguest.evaluation)
         self.assertDictEqual(
             {u'opl\xe6g': 0, u'l\xe6rere': 0, u'undvm1': '', u'type1': 0,
-             u'ID': product.id, u'skole_id': None, u'antal': None, u'rundvis': 0,
-             u'akt1': u'testproduct', u'niveau': None, u'oenhed1': None,
-             u'region': None, u'elever': 0, u'g\xe6st': u'Tester Testerson',
-             u'enhed1': self.unit.id, u'postnr': None, u'undvn1': '', u'skole': None,
+             u'ID': product.id, u'skole_id': None, u'antal': None,
+             u'rundvis': 0, u'akt1': u'testproduct', u'niveau': None,
+             u'oenhed1': None, u'region': None, u'elever': 0,
+             u'g\xe6st': u'Tester Testerson', u'enhed1': self.unit.id,
+             u'postnr': None, u'undvn1': '', u'skole': None,
              u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S'),
              u'email': u'test@example.com'},
             evalguest.get_surveyxact_data()
@@ -950,9 +951,20 @@ class TestProduct(TestMixin, TestCase):
         query = pq(response.content)
         lists = query(".listcontainer > div")
 
-        latest_updated = query(lists[0]).find(".list-group-item")
-        for i, product in enumerate(rproducts):
-            item = query(latest_updated[i])
+        self._check_frontpage_produt_list(
+            query,
+            query(lists[0]).find(".list-group-item"),
+            rproducts
+        )
+        self._check_frontpage_produt_list(
+            query,
+            query(lists[1]).find(".list-group-item"),
+            rproducts
+        )
+
+    def _check_frontpage_produt_list(self, query, elements, products):
+        for i, product in enumerate(products):
+            item = query(elements[i])
             self.assertEquals(
                 "/product/%d" % product.id,
                 item.find("a")[0].get('href')
@@ -963,22 +975,7 @@ class TestProduct(TestMixin, TestCase):
                 self._get_choices_label(Product.type_choices, product.type),
                 re.sub(r"\s+", ' ', itemdata[0]['text'].strip())
             )
-
             self.assertEqual(
                 "Dato/tid: %s" % product.eventtime_set.first().interval_display,
                 re.sub(r"\s+", ' ', itemdata[1]['text'].strip())
-            )
-
-        latest_booked = query(lists[1]).find(".list-group-item")
-        for i, product in enumerate(rproducts):
-            item = query(latest_booked[i])
-            self.assertEquals(
-                "/product/%d" % product.id,
-                item.find("a")[0].get('href')
-            )
-            itemdata = self.extract_ul(item.find("ul"))
-            self.assertEqual(
-                "Type: %s" %
-                self._get_choices_label(Product.type_choices, product.type),
-                re.sub(r"\s+", ' ', itemdata[0]['text'].strip())
             )
