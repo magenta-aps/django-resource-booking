@@ -2513,7 +2513,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             form.full_clean()
             if not form.is_valid():
                 valid = False
-                print(form.errors)
 
         if valid:
             if 'bookingform' in relevant_forms:

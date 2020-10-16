@@ -35,7 +35,7 @@ from booking.models import School
 from booking.models import Subject
 from booking.utils import flatten
 from profile.models import UserRole
-from resource_booking.tests.mixins import TestMixin
+from resource_booking.tests.mixins import TestMixin, ParsedNode
 
 
 class TestProduct(TestMixin, TestCase):
@@ -432,7 +432,7 @@ class TestProduct(TestMixin, TestCase):
                 u'Søgning',
                 u"Tilbud #%d - %s" % (product.id, product.title)
             ], flatten([
-                self._get_text_nodes(el)
+                ParsedNode._get_text_nodes(el)
                 for el in query("ol.breadcrumb")
             ]
         ))
@@ -487,10 +487,9 @@ class TestProduct(TestMixin, TestCase):
         }
 
         rightbox_data = {
-            key: '\n'.join(value)
-            for key, value in self.extract_dl(
-                query(".panel-body dl.dl-horizontal"), True
-            ).items()
+            key: '\n'.join([v for v in value])
+            for key, value in ParsedNode(query(".panel-body dl.dl-horizontal"))
+                .extract_dl(True).iteritems()
         }
         self.assertDictEqual(expected_data, rightbox_data)
 
@@ -607,7 +606,7 @@ class TestProduct(TestMixin, TestCase):
                             ).text())
                         ),
                         'title': "\n".join(flatten([
-                            self._get_text_nodes(node)
+                            ParsedNode._get_text_nodes(node)
                             for node in q_list_item.find("h3.media-heading")
                         ])),
                         'teaser': re.sub(
@@ -641,7 +640,7 @@ class TestProduct(TestMixin, TestCase):
 
                 labels = query("%s .checkbox label" % container_ref)
                 for label in labels:
-                    text = self._get_text_nodes(label)
+                    text = ParsedNode._get_text_nodes(label)
                     key = self._get_choices_key(choices, text[0])
                     count = counts.get(key, 0)
                     if count > 0:
@@ -951,25 +950,26 @@ class TestProduct(TestMixin, TestCase):
         query = pq(response.content)
         lists = query(".listcontainer > div")
 
-        self._check_frontpage_produt_list(
+        self._check_frontpage_product_list(
             query,
             query(lists[0]).find(".list-group-item"),
             rproducts
         )
-        self._check_frontpage_produt_list(
+        self._check_frontpage_product_list(
             query,
             query(lists[1]).find(".list-group-item"),
             rproducts
         )
 
-    def _check_frontpage_produt_list(self, query, elements, products):
+    def _check_frontpage_product_list(self, query, elements, products):
         for i, product in enumerate(products):
             item = query(elements[i])
             self.assertEquals(
                 "/product/%d" % product.id,
                 item.find("a")[0].get('href')
             )
-            itemdata = self.extract_ul(item.find("ul"))
+            itemdata = ParsedNode(item.find("ul")).extract_ul()
+            self.assertGreater(len(itemdata), 0)
             self.assertEqual(
                 "Type: %s" %
                 self._get_choices_label(Product.type_choices, product.type),

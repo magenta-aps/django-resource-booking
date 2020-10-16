@@ -5,6 +5,7 @@ import pytz
 from django.contrib.auth.models import User
 from django.db.models import Model
 from django.utils.datetime_safe import datetime
+from pyquery import PyQuery
 
 from booking.models import Booking
 from booking.models import EmailTemplate
@@ -35,26 +36,105 @@ from django.test.client import Client
 
 class ParsedNode(object):
     def __init__(self, el):
+        if isinstance(el, PyQuery):
+            el = el[0]
         self.el = el
 
     def __str__(self):
-        return '\n'.join(TestMixin._get_text_nodes(self.el))
+        return '\n'.join(self._get_text_nodes(self.el))
 
     def __unicode__(self):
-        return u'\n'.join(TestMixin._get_text_nodes(self.el))
+        return u'\n'.join(self._get_text_nodes(self.el))
 
     def keys(self):
         return ['text'] + (['url'] if self.el.find("a") else [])
 
     def __getitem__(self, key):
         if key == 'text':
-            return TestMixin._get_text_nodes(self.el)
+            return self._get_text_nodes(self.el)
         if key == 'url':
             return self.urls
 
     @property
     def urls(self):
         return [a.prop("href") for a in self.el.find("a")]
+
+    @property
+    def text(self):
+        return '\n'.join([
+            x.strip() for x in self.el.itertext() if x
+        ]).strip()
+
+    @property
+    def tag(self):
+        return self.el.tag
+
+    def attr(self, key):
+        return self.el.get(key)
+
+    @property
+    def children(self):
+        return [ParsedNode(n) for n in self.el.getchildren()]
+
+    @staticmethod
+    def _get_text_nodes(element):
+        return [
+            unicode(x.strip())
+            for x in element.itertext()
+            if len(x.strip()) > 0
+        ]
+
+    def dict(self):
+        d = {
+            "text": self.text.strip()
+            if self.text else None
+        }
+        if self.tag == 'a':
+            d['url'] = self.attr("href")
+        children = self.children
+        if children:
+            d['children'] = [
+                child.dict()
+                for child in children
+            ]
+        return d
+
+    def extract_dl(self, text_only=False, as_dicts=True):
+        data = {}
+        for item in self.el.cssselect("dt"):
+            key = unicode(item.text).strip().lower()
+            value = []
+            for node in item.itersiblings():
+                if node.tag != 'dd':
+                    break
+                parsednode = ParsedNode(node)
+                if text_only:
+                    value.append(parsednode.text)
+                elif as_dicts:
+                    value.append(parsednode.dict())
+                else:
+                    value.append(parsednode)
+            data[key] = value
+        return data
+
+    def extract_ul(self, as_dict=True):
+        data = []
+        for node in self.el.cssselect("li"):
+            parsednode = ParsedNode(node)
+            data.append(parsednode.dict() if as_dict else parsednode)
+        return data
+
+    @classmethod
+    def extract_table(self):
+        headers = [cell.text for cell in self.el.find("th, thead td")]
+        return [
+            {
+                # headers[i]: cls._get_text_nodes(cell)
+                headers[i]: self._node_to_dict(cell)
+                for (i, cell) in enumerate(row.find("td"))
+            }
+            for row in self.el.find("tbody tr")
+        ]
 
 
 class TestMixin(object):
@@ -322,9 +402,6 @@ class TestMixin(object):
         if autosend:
             autosend.enabled = True
             autosend.save()
-        print("a")
-        print(autosend)
-        print(item.visitautosend_set.all())
         return autosend
 
     def create_evaluation(self, product, for_students=False, surveyId=1234):
@@ -422,14 +499,6 @@ class TestMixin(object):
         return data
 
     @staticmethod
-    def _get_text_nodes(element):
-        return [
-            unicode(x.strip())
-            for x in element.itertext()
-            if len(x.strip()) > 0
-        ]
-
-    @staticmethod
     def _get_choices_label(choices, value):
         for (v, label) in choices:
             if v == value:
@@ -447,53 +516,3 @@ class TestMixin(object):
             if isinstance(value, Model):
                 data[key] = value.pk
         return data
-
-    @classmethod
-    def _node_to_dict(cls, node):
-        print(type(node), dir(node))
-        d = {"text": node.text}
-        if node.tag == 'a':
-            d['url'] = node.attr("href")
-        children = getattr(node, 'children', None) or (hasattr(node, 'getchildren') and node.getchildren()) or []
-        if children:
-            d['children'] = [
-                cls._node_to_dict(child)
-                for child in children
-            ]
-        return d
-
-    @classmethod
-    def extract_dl(cls, dl, text_only=False):
-        data = {}
-        for item in dl.find("dt"):
-            key = unicode(item.text).strip().lower()
-            value = []
-            for node in item.itersiblings():
-                if node.tag != 'dd':
-                    break
-                # parsednode = ParsedNode(node)
-                # value.append(unicode(parsednode) \
-                #     if text_only else parsednode)
-                # value += cls._get_text_nodes(node)
-                value.append(cls._node_to_dict(node))
-            data[key] = value
-        return data
-
-    @classmethod
-    def extract_ul(cls, ul):
-        data = []
-        for node in ul.find("li"):
-            data.append(cls._node_to_dict(node))
-        return data
-
-    @classmethod
-    def extract_table(cls, table):
-        headers = [cell.text for cell in table.find("th, thead td")]
-        return [
-            {
-                # headers[i]: cls._get_text_nodes(cell)
-                headers[i]: cls._node_to_dict(cell)
-                for (i, cell) in enumerate(table.find("tbody td"))
-            }
-            for row in table.find("tbody tr")
-        ]

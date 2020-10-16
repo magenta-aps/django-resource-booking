@@ -9,7 +9,7 @@ from booking.resource_based.forms import EditItemResourceForm, \
     EditVehicleResourceForm
 from booking.resource_based.models import ResourceType, ResourcePool
 from profile.models import UserRole
-from resource_booking.tests.mixins import TestMixin
+from resource_booking.tests.mixins import TestMixin, ParsedNode
 
 
 class TestResources(TestMixin, TestCase):
@@ -97,8 +97,7 @@ class TestResources(TestMixin, TestCase):
         headers = query("h1")
         self.assertEquals(1, len(headers))
         self.assertEquals(pool.name, headers[0].text)
-        data = self.extract_dl(query("dl"), True)
-        print(data)
+        data = ParsedNode(query("dl")).extract_dl(True)
         self.assertDictEqual(
             {
                 u'medlemmer': [room.name],
@@ -130,10 +129,7 @@ class TestResources(TestMixin, TestCase):
         response = self.client.get(url)
         self.assertEquals(200, response.status_code)
         query = pq(response.content)
-        print(response.content)
-        list_items = query("table")
-        data = self.extract_table(list_items)
-        print(data)
+        data = ParsedNode(query("table")).extract_table()
         self.assertEquals(1, len(data))
         self.assertEquals([{
             'Antal medlemmer': {'text': '1'},
@@ -294,7 +290,7 @@ class TestResources(TestMixin, TestCase):
                 u'enhed': [self.unit.name],
                 u'navn': [room.name]
             },
-            self.extract_dl(query("dl"), True)
+            ParsedNode(query("dl")).extract_dl(True)
         )
 
     def test_product_calendar(self):

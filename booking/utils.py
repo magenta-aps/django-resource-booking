@@ -533,7 +533,6 @@ class TemplateSplit(object):
 
 
 def surveyxact_upload(survey_id, data):
-    print("surveyxact_upload", survey_id, data)
     config = settings.SURVEYXACT
     csv_prefix = '\xff\xfe'
     csv_suffix = '\x0a\x00'
