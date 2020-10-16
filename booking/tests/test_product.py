@@ -488,8 +488,9 @@ class TestProduct(TestMixin, TestCase):
 
         rightbox_data = {
             key: '\n'.join([v for v in value])
-            for key, value in ParsedNode(query(".panel-body dl.dl-horizontal"))
-                .extract_dl(True).iteritems()
+            for key, value in ParsedNode(
+                query(".panel-body dl.dl-horizontal")
+            ).extract_dl(True).iteritems()
         }
         self.assertDictEqual(expected_data, rightbox_data)
 
@@ -845,7 +846,7 @@ class TestProduct(TestMixin, TestCase):
             self.create_resourcerequirement(product, teacher_pool, 1)
             self.create_resourcerequirement(product, host_pool, 1)
             product.save()
-            #products.append(product)
+            #  products.append(product)
 
         expected = {
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED: [
@@ -976,6 +977,7 @@ class TestProduct(TestMixin, TestCase):
                 re.sub(r"\s+", ' ', itemdata[0]['text'].strip())
             )
             self.assertEqual(
-                "Dato/tid: %s" % product.eventtime_set.first().interval_display,
+                "Dato/tid: %s" %
+                product.eventtime_set.first().interval_display,
                 re.sub(r"\s+", ' ', itemdata[1]['text'].strip())
             )

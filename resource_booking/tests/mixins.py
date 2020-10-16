@@ -34,6 +34,7 @@ from profile.models import UserRole, UserProfile
 backports.unittest_mock.install()  # noqa
 from django.test.client import Client
 
+
 class ParsedNode(object):
     def __init__(self, el):
         if isinstance(el, PyQuery):
@@ -84,6 +85,9 @@ class ParsedNode(object):
             if len(x.strip()) > 0
         ]
 
+    def find(self, selector):
+        return self.el.cssselect(selector)
+
     def dict(self):
         d = {
             "text": self.text.strip()
@@ -101,7 +105,7 @@ class ParsedNode(object):
 
     def extract_dl(self, text_only=False, as_dicts=True):
         data = {}
-        for item in self.el.cssselect("dt"):
+        for item in self.find("dt"):
             key = unicode(item.text).strip().lower()
             value = []
             for node in item.itersiblings():
@@ -119,21 +123,19 @@ class ParsedNode(object):
 
     def extract_ul(self, as_dict=True):
         data = []
-        for node in self.el.cssselect("li"):
+        for node in self.find("li"):
             parsednode = ParsedNode(node)
             data.append(parsednode.dict() if as_dict else parsednode)
         return data
 
-    @classmethod
     def extract_table(self):
-        headers = [cell.text for cell in self.el.find("th, thead td")]
+        headers = [cell.text for cell in self.find("th, thead td")]
         return [
             {
-                # headers[i]: cls._get_text_nodes(cell)
-                headers[i]: self._node_to_dict(cell)
-                for (i, cell) in enumerate(row.find("td"))
+                headers[i]: ParsedNode(cell).dict()
+                for (i, cell) in enumerate(row.cssselect("td"))
             }
-            for row in self.el.find("tbody tr")
+            for row in self.find("tbody tr")
         ]
 
 

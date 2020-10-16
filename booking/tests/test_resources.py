@@ -1,3 +1,4 @@
+# encoding: utf-8
 import copy
 
 from django.test import TestCase
@@ -118,7 +119,7 @@ class TestResources(TestMixin, TestCase):
         room = self.create_default_room(
             locality=self.create_default_locality(unit=self.unit)
         )
-        self.create_resourcepool(
+        pool = self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_ROOM,
             self.unit,
             'test_pool',
@@ -132,10 +133,31 @@ class TestResources(TestMixin, TestCase):
         data = ParsedNode(query("table")).extract_table()
         self.assertEquals(1, len(data))
         self.assertEquals([{
+            'Navn': {
+                'text': 'test_pool',
+                'children': [{
+                    'text': 'test_pool',
+                    'url': "/resourcepool/%d" % pool.id
+                }]
+            },
             'Antal medlemmer': {'text': '1'},
             'Type': {'text': 'Lokale'},
             'Enhed': {'text': 'testunit'},
-            'Handling': {}
+            'Handling': {
+                'text': u'Redigér\n\nSlet',
+                'children': [
+                    {
+                        'url': "/resourcepool/%d/edit?back=/resourcepool/" %
+                               pool.id,
+                        'text': u'Redig\xe9r'
+                    },
+                    {
+                        'url': "/resourcepool/%d/delete?back=/resourcepool/" %
+                               pool.id,
+                        'text': 'Slet'
+                    }
+                ]
+            }
         }], data)
 
     def test_create_resource_ui_ITEM(self):
