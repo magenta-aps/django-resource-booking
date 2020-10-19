@@ -46,7 +46,7 @@ class ManageTimesView(BreadcrumbMixin, DetailView):
         )
         breadcrumbs.append({
             'url': reverse('manage-times', args=[object.id]),
-            'text': _(u'Administrér tidspunkter')
+            'text': _('Administrér tidspunkter')
         })
         return breadcrumbs
 
@@ -144,7 +144,7 @@ class CreateTimeView(BreadcrumbMixin, CreateView):
         breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
         breadcrumbs.append({
             'url': reverse('create-time', args=[object.id]),
-            'text': _(u'Opret tidspunkt')
+            'text': _('Opret tidspunkt')
         })
         return breadcrumbs
 
@@ -236,7 +236,7 @@ class CreateTimesFromRulesView(BreadcrumbMixin, FormView):
         breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
         breadcrumbs.append({
             'url': reverse('times-from-rules', args=[object.id]),
-            'text': _(u'Opret tidspunkt ud fra regler')
+            'text': _('Opret tidspunkt ud fra regler')
         })
         return breadcrumbs
 
@@ -294,7 +294,7 @@ class EditTimeView(BreadcrumbMixin, UpdateView):
         )
         breadcrumbs.append({
             'url': reverse('edit-time', args=[object.product.id, object.id]),
-            'text': _(u'Redigér tidspunkt')
+            'text': _('Redigér tidspunkt')
         })
         return breadcrumbs
 
@@ -359,7 +359,7 @@ class DeleteTimesView(BreadcrumbMixin, TemplateView):
     def build_breadcrumbs(object, request):
         breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
         breadcrumbs.append({
-            'text': _(u'Slet tidspunkter')
+            'text': _('Slet tidspunkter')
         })
         return breadcrumbs
 
@@ -388,7 +388,7 @@ class TimeDetailsView(BreadcrumbMixin, DetailView):
                 self.request.user,
                 self.object.visit,
                 booking.constants.LOGACTION_CREATE,
-                _(u'Besøg oprettet')
+                _('Besøg oprettet')
             )
 
             return redirect(self.get_success_url())
@@ -410,7 +410,7 @@ class TimeDetailsView(BreadcrumbMixin, DetailView):
         )
         breadcrumbs.append({
             'url': reverse('time-view', args=[object.product.id, object.id]),
-            'text': _(u'Opret besøg for tidspunkt')
+            'text': _('Opret besøg for tidspunkt')
         })
         return breadcrumbs
 
@@ -451,7 +451,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     @staticmethod
     def build_breadcrumbs():
         breadcrumbs = ResourceListView.build_breadcrumbs()
-        breadcrumbs.append({'text': _(u'Opret ressource')})
+        breadcrumbs.append({'text': _('Opret ressource')})
         return breadcrumbs
 
 
@@ -522,7 +522,7 @@ class ResourceListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     def build_breadcrumbs():
         return [{
             'url': reverse('resource-list'),
-            'text': _(u'Administrér ressourcer')
+            'text': _('Administrér ressourcer')
         }]
 
 
@@ -575,10 +575,10 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     def build_breadcrumbs(resource):
         if resource.pk:
             breadcrumbs = ResourceDetailView.build_breadcrumbs(resource)
-            breadcrumbs.append({'text': _(u'Redigér')})
+            breadcrumbs.append({'text': _('Redigér')})
         else:
             breadcrumbs = ResourceListView.build_breadcrumbs()
-            breadcrumbs.append({'text': _(u'Opret ressource')})
+            breadcrumbs.append({'text': _('Opret ressource')})
         return breadcrumbs
 
     def get_context_data(self, **kwargs):
@@ -635,7 +635,7 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     @staticmethod
     def build_breadcrumbs(resource):
         breadcrumbs = ResourceDetailView.build_breadcrumbs(resource)
-        breadcrumbs.append({'text': _(u'Slet')})
+        breadcrumbs.append({'text': _('Slet')})
         return breadcrumbs
 
 
@@ -672,7 +672,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     @staticmethod
     def build_breadcrumbs():
         breadcrumbs = ResourcePoolListView.build_breadcrumbs()
-        breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
+        breadcrumbs.append({'text': _('Opret ressourcegruppe')})
         return breadcrumbs
 
 
@@ -711,7 +711,7 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
     def build_breadcrumbs():
         return [{
             'url': reverse('resource-list'),
-            'text': _(u'Administrér ressourcegrupper')
+            'text': _('Administrér ressourcegrupper')
         }]
 
 
@@ -764,10 +764,10 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     def build_breadcrumbs(resource):
         if resource.pk:
             breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
-            breadcrumbs.append({'text': _(u'Redigér')})
+            breadcrumbs.append({'text': _('Redigér')})
         else:
             breadcrumbs = ResourcePoolListView.build_breadcrumbs()
-            breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
+            breadcrumbs.append({'text': _('Opret ressourcegruppe')})
         return breadcrumbs
 
     def get_context_data(self, **kwargs):
@@ -838,7 +838,7 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
     @staticmethod
     def build_breadcrumbs(resource):
         breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
-        breadcrumbs.append({'text': _(u'Slet')})
+        breadcrumbs.append({'text': _('Slet')})
         return breadcrumbs
 
 
@@ -966,7 +966,7 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
             product, request
         )
         breadcrumbs.append({
-            'text': _(u'Opret ressourcebehov'),
+            'text': _('Opret ressourcebehov'),
             'url': reverse('resourcerequirement-create', args=[product.id])
         })
         return breadcrumbs
@@ -1043,7 +1043,7 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
             object.product, request
         )
         breadcrumbs.append({
-            'text': _(u'Redigér ressourcebehov'),
+            'text': _('Redigér ressourcebehov'),
             'url': reverse(
                 'resourcerequirement-edit', args=[object.product.id, object.id]
             )
@@ -1097,7 +1097,7 @@ class ResourceRequirementListView(BreadcrumbMixin, EditorRequiredMixin,
             product, request
         )
         breadcrumbs.append({
-            'text': _(u'Ressourcebehov'),
+            'text': _('Ressourcebehov'),
             'url': reverse(
                 'resourcerequirement-list', args=[product.id]
             )
@@ -1129,7 +1129,7 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
             object.product, request
         )
         breadcrumbs.append({
-            'text': _(u'Slet ressourcebehov'),
+            'text': _('Slet ressourcebehov'),
             'url': reverse(
                 'resourcerequirement-delete', args=[
                     object.product.id, object.id
@@ -1196,7 +1196,7 @@ class VisitResourceEditView(EditorRequiredMixin, BreadcrumbMixin, FormView):
         breadcrumbs = booking.views.VisitDetailView.build_breadcrumbs(object)
         breadcrumbs.append({
             'url': reverse('visit-resources-edit', args=[object.pk]),
-            'text': _(u'Redigér ressourcer')
+            'text': _('Redigér ressourcer')
         })
         return breadcrumbs
 
@@ -1404,7 +1404,7 @@ class CalendarView(
                 CalRelatedMixin.reverseurl_base(object),
                 args=[object.pk]
             ),
-            'text': _(u'Kalender')
+            'text': _('Kalender')
         })
         return breadcrumbs
 
@@ -1451,7 +1451,7 @@ class CalendarDeleteView(
                 CalRelatedMixin.reverseurl_base(object) + '-delete',
                 args=[object.pk]
             ),
-            'text': _(u'Slet')
+            'text': _('Slet')
         })
         return breadcrumbs
 
@@ -1542,7 +1542,7 @@ class CalendarEventCreateView(
                 CalRelatedMixin.reverseurl_base(object) + '-event-create',
                 args=[object.pk]
             ),
-            'text': _(u'Opret tid')
+            'text': _('Opret tid')
         })
         return breadcrumbs
 
@@ -1612,7 +1612,7 @@ class CalendarEventUpdateView(
                 CalRelatedMixin.reverseurl_base(object) + '-event-edit',
                 args=[object.pk, event.pk]
             ),
-            'text': _(u'Redigér tid')
+            'text': _('Redigér tid')
         })
         return breadcrumbs
 
@@ -1650,6 +1650,6 @@ class CalendarEventDeleteView(
                 CalRelatedMixin.reverseurl_base(object) + '-event-delete',
                 args=[object.pk, event.pk]
             ),
-            'text': _(u'Slet tid')
+            'text': _('Slet tid')
         })
         return breadcrumbs

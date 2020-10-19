@@ -49,23 +49,23 @@ from .fields import OrderedModelMultipleChoiceField
 class AdminProductSearchForm(forms.Form):
 
     q = forms.CharField(
-        label=_(u'Fritekst'),
+        label=_('Fritekst'),
         max_length=60,
         required=False
     )
 
     s = forms.ChoiceField(
-        label=_(u'Status'),
-        choices=(('', _(u'[Vælg status]')),) + Product.state_choices,
+        label=_('Status'),
+        choices=(('', _('[Vælg status]')),) + Product.state_choices,
         required=False
     )
 
     e = forms.ChoiceField(
-        label=_(u'Tilbud er aktivt'),
+        label=_('Tilbud er aktivt'),
         choices=(
-            (None, _(u'[Vælg]')),
-            (1, _(u'Ja')),
-            (0, _(u'Nej')),
+            (None, _('[Vælg]')),
+            (1, _('Ja')),
+            (0, _('Nej')),
         ),
         required=False
     )
@@ -74,11 +74,11 @@ class AdminProductSearchForm(forms.Form):
     IS_NOT_VISIT = 2
 
     v = forms.ChoiceField(
-        label=_(u'Besøg / ikke besøg'),
+        label=_('Besøg / ikke besøg'),
         choices=(
-            (None, _(u'[Vælg]')),
-            (IS_VISIT, _(u'Tilbud med besøg')),
-            (IS_NOT_VISIT, _(u'Tilbud uden besøg')),
+            (None, _('[Vælg]')),
+            (IS_VISIT, _('Tilbud med besøg')),
+            (IS_NOT_VISIT, _('Tilbud uden besøg')),
         ),
         required=False
     )
@@ -87,11 +87,11 @@ class AdminProductSearchForm(forms.Form):
     HAS_NO_BOOKINGS = 2
 
     b = forms.ChoiceField(
-        label=_(u'Bookinger'),
+        label=_('Bookinger'),
         choices=(
-            (None, _(u'[Vælg]')),
-            (HAS_BOOKINGS, _(u'Tilbud der har bookinger')),
-            (HAS_NO_BOOKINGS, _(u'Tilbud der ikke har bookinger')),
+            (None, _('[Vælg]')),
+            (HAS_BOOKINGS, _('Tilbud der har bookinger')),
+            (HAS_NO_BOOKINGS, _('Tilbud der ikke har bookinger')),
         ),
         required=False
     )
@@ -101,17 +101,17 @@ class AdminProductSearchForm(forms.Form):
     MY_UNITS = -3
 
     u = forms.ChoiceField(
-        label=_(u'Enhed'),
+        label=_('Enhed'),
         required=False
     )
 
     to_date = forms.DateField(
-        label=_(u'Dato til'),
+        label=_('Dato til'),
         required=False
     )
 
     from_date = forms.DateField(
-        label=_(u'Dato fra'),
+        label=_('Dato fra'),
         required=False
     )
 
@@ -144,12 +144,12 @@ class AdminProductSearchForm(forms.Form):
 
     def get_unit_choices(self):
         choices = [
-            (None, _(u'[Vælg]')),
-            (self.MY_UNIT, _(u'Tilbud under min enhed')),
-            (self.MY_FACULTY, _(u'Tilbud under mit fakultet')),
+            (None, _('[Vælg]')),
+            (self.MY_UNIT, _('Tilbud under min enhed')),
+            (self.MY_FACULTY, _('Tilbud under mit fakultet')),
             (
                 self.MY_UNITS,
-                _(u'Tilbud under alle enheder jeg kan administrere')
+                _('Tilbud under alle enheder jeg kan administrere')
             ),
             (None, '======'),
         ]
@@ -169,20 +169,20 @@ class AdminProductSearchForm(forms.Form):
 
 class VisitSearchForm(forms.Form):
     q = forms.CharField(
-        label=_(u'Fritekst'),
+        label=_('Fritekst'),
         max_length=60,
         required=False
     )
 
     t = forms.CharField(
-        label=_(u'Tilbuds-ID'),
+        label=_('Tilbuds-ID'),
         max_length=10,
         required=False,
         widget=forms.widgets.NumberInput
     )
 
     b = forms.CharField(
-        label=_(u'Besøgs-ID'),
+        label=_('Besøgs-ID'),
         max_length=10,
         required=False,
         widget=forms.widgets.NumberInput
@@ -193,19 +193,19 @@ class VisitSearchForm(forms.Form):
     MY_UNITS = -3
 
     u = forms.ChoiceField(
-        label=_(u'Enhed'),
+        label=_('Enhed'),
         required=False
     )
 
     s = forms.ModelChoiceField(
-        label=_(u'Skole/Gymnasium'),
+        label=_('Skole/Gymnasium'),
         required=False,
         widget=forms.widgets.Select,
         queryset=School.objects.all()
     )
 
     l = CustomModelChoiceField(
-        label=_(u'Underviser'),
+        label=_('Underviser'),
         required=False,
         widget=forms.widgets.Select,
         queryset=User.objects.filter(userprofile__user_role__role=TEACHER),
@@ -213,7 +213,7 @@ class VisitSearchForm(forms.Form):
     )
 
     h = CustomModelChoiceField(
-        label=_(u'Vært'),
+        label=_('Vært'),
         required=False,
         widget=forms.widgets.Select,
         queryset=User.objects.filter(userprofile__user_role__role=HOST),
@@ -221,7 +221,7 @@ class VisitSearchForm(forms.Form):
     )
 
     c = CustomModelChoiceField(
-        label=_(u'Koordinator'),
+        label=_('Koordinator'),
         required=False,
         widget=forms.widgets.Select,
         queryset=User.objects.filter(
@@ -234,42 +234,42 @@ class VisitSearchForm(forms.Form):
     WORKFLOW_STATUS_READY = -2
 
     w = forms.ChoiceField(
-        label=_(u'Status'),
+        label=_('Status'),
         choices=(
-            ('', _(u'Alle')),
-            (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
-            (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
-            ('', u'====='),
+            ('', _('Alle')),
+            (WORKFLOW_STATUS_PENDING, _('Alle ikke-planlagte')),
+            (WORKFLOW_STATUS_READY, _('Alle planlagte')),
+            ('', '====='),
         ) + Visit.workflow_status_choices,
         required=False
     )
 
     participant_choices = (
-        ('', _(u'[Vælg]')),
+        ('', _('[Vælg]')),
         (1, 1),
         (5, 5),
     ) + tuple((x, x) for x in range(10, 60, 10))
 
     p_min = forms.ChoiceField(
-        label=_(u'Minimum antal deltagere'),
+        label=_('Minimum antal deltagere'),
         choices=participant_choices,
         required=False
     )
 
     p_max = forms.ChoiceField(
-        label=_(u'Maksimum antal deltagere'),
+        label=_('Maksimum antal deltagere'),
         choices=participant_choices,
         required=False
     )
 
     from_date = forms.DateField(
-        label=_(u'Dato fra'),
+        label=_('Dato fra'),
         input_formats=['%d-%m-%Y'],
         required=False
     )
 
     to_date = forms.DateField(
-        label=_(u'Dato til'),
+        label=_('Dato til'),
         input_formats=['%d-%m-%Y'],
         required=False
     )
@@ -305,12 +305,12 @@ class VisitSearchForm(forms.Form):
 
     def get_unit_choices(self):
         choices = [
-            (None, _(u'[Vælg]')),
-            (self.MY_UNIT, _(u'Tilbud under min enhed')),
-            (self.MY_FACULTY, _(u'Tilbud under mit fakultet')),
+            (None, _('[Vælg]')),
+            (self.MY_UNIT, _('Tilbud under min enhed')),
+            (self.MY_FACULTY, _('Tilbud under mit fakultet')),
             (
                 self.MY_UNITS,
-                _(u'Tilbud under alle enheder jeg kan administrere')
+                _('Tilbud under alle enheder jeg kan administrere')
             ),
             (None, '======'),
         ]
@@ -493,32 +493,32 @@ class ProductForm(forms.ModelForm):
 
         if 'duration' in self.fields:
             self.fields['duration'].choices = [
-                ('00:00', _(u'Ingen')), ('00:15', _(u'15 minutter')),
-                ('00:30', _(u'30 minutter')), ('00:45', _(u'45 minutter')),
-                ('01:00', _(u'1 time')), ('01:15', _(u'1 time, 15 minutter')),
-                ('01:30', _(u'1 time, 30 minutter')),
-                ('01:45', _(u'1 time, 45 minutter')),
-                ('02:00', _(u'2 timer')),
-                ('02:30', _(u'2 timer, 30 minutter')),
-                ('03:00', _(u'3 timer')),
-                ('03:30', _(u'3 timer, 30 minutter')),
-                ('04:00', _(u'4 timer')),
-                ('04:30', _(u'4 timer, 30 minutter')),
-                ('05:00', _(u'5 timer')),
-                ('05:30', _(u'5 timer, 30 minutter')),
-                ('06:00', _(u'6 timer')),
-                ('06:30', _(u'6 timer, 30 minutter')),
-                ('07:00', _(u'7 timer')),
-                ('07:30', _(u'7 timer, 30 minutter')),
-                ('08:00', _(u'8 timer')),
-                ('08:30', _(u'8 timer, 30 minutter')),
-                ('09:00', _(u'9 timer')),
-                ('09:30', _(u'9 timer, 30 minutter')),
-                ('10:00', _(u'10 timer')), ('11:00', _(u'11 timer')),
-                ('12:00', _(u'12 timer')), ('13:00', _(u'13 timer')),
-                ('14:00', _(u'14 timer')), ('15:00', _(u'15 timer')),
-                ('20:00', _(u'20 timer')), ('24:00', _(u'24 timer')),
-                ('36:00', _(u'36 timer')), ('48:00', _(u'48 timer'))
+                ('00:00', _('Ingen')), ('00:15', _('15 minutter')),
+                ('00:30', _('30 minutter')), ('00:45', _('45 minutter')),
+                ('01:00', _('1 time')), ('01:15', _('1 time, 15 minutter')),
+                ('01:30', _('1 time, 30 minutter')),
+                ('01:45', _('1 time, 45 minutter')),
+                ('02:00', _('2 timer')),
+                ('02:30', _('2 timer, 30 minutter')),
+                ('03:00', _('3 timer')),
+                ('03:30', _('3 timer, 30 minutter')),
+                ('04:00', _('4 timer')),
+                ('04:30', _('4 timer, 30 minutter')),
+                ('05:00', _('5 timer')),
+                ('05:30', _('5 timer, 30 minutter')),
+                ('06:00', _('6 timer')),
+                ('06:30', _('6 timer, 30 minutter')),
+                ('07:00', _('7 timer')),
+                ('07:30', _('7 timer, 30 minutter')),
+                ('08:00', _('8 timer')),
+                ('08:30', _('8 timer, 30 minutter')),
+                ('09:00', _('9 timer')),
+                ('09:30', _('9 timer, 30 minutter')),
+                ('10:00', _('10 timer')), ('11:00', _('11 timer')),
+                ('12:00', _('12 timer')), ('13:00', _('13 timer')),
+                ('14:00', _('14 timer')), ('15:00', _('15 timer')),
+                ('20:00', _('20 timer')), ('24:00', _('24 timer')),
+                ('36:00', _('36 timer')), ('48:00', _('48 timer'))
             ]
 
         if 'tilbudsansvarlig' in self.fields:
@@ -557,12 +557,12 @@ class ProductForm(forms.ModelForm):
         max_visitors = cleaned_data.get('maximum_number_of_visitors')
         if min_visitors is not None and max_visitors is not None and \
            min_visitors > max_visitors:
-            min_error_msg = _(u"The minimum numbers of visitors " +
-                              u"must not be larger than " +
-                              u"the maximum number of visitors")
-            max_error_msg = _(u"The maximum numbers of visitors " +
-                              u"must not be smaller than " +
-                              u"the minimum number of visitors")
+            min_error_msg = _("The minimum numbers of visitors " +
+                              "must not be larger than " +
+                              "the maximum number of visitors")
+            max_error_msg = _("The maximum numbers of visitors " +
+                              "must not be smaller than " +
+                              "the minimum number of visitors")
             self.add_error('minimum_number_of_visitors', min_error_msg)
             self.add_error('maximum_number_of_visitors', max_error_msg)
             raise forms.ValidationError(min_error_msg)
@@ -725,15 +725,15 @@ class ProductAutosendForm(forms.ModelForm):
                 EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
                 EmailTemplateType.NOTIFY_GUEST_REMINDER
             ]:
-                self.fields['days'].help_text = _(u'Notifikation vil blive '
-                                                  u'afsendt dette antal dage '
-                                                  u'før besøget')
+                self.fields['days'].help_text = _('Notifikation vil blive '
+                                                  'afsendt dette antal dage '
+                                                  'før besøget')
             elif template_type.key == \
                     EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
-                self.fields['days'].help_text = _(u'Notifikation vil blive '
-                                                  u'afsendt dette antal dage '
-                                                  u'efter første booking er '
-                                                  u'foretaget')
+                self.fields['days'].help_text = _('Notifikation vil blive '
+                                                  'afsendt dette antal dage '
+                                                  'efter første booking er '
+                                                  'foretaget')
 
     @property
     def template_type(self):
@@ -839,7 +839,7 @@ class BookingForm(forms.ModelForm):
 
     eventtime = VisitEventTimeField(
         required=False,
-        label=_(u"Tidspunkt"),
+        label=_("Tidspunkt"),
         choices=(),
         widget=Select(attrs={
             'class': 'form-control'
@@ -868,8 +868,8 @@ class BookingForm(forms.ModelForm):
             bookability = product.is_bookable(date, return_reason=True)
             if bookability is not True:
                 reason = _(
-                    u'Det er desværre ikke muligt at bestille '
-                    u'besøget på den valgte dato.\n'
+                    'Det er desværre ikke muligt at bestille '
+                    'besøget på den valgte dato.\n'
                 )
                 more_reason = product.nonbookable_text(bookability)
                 if more_reason is not None:
@@ -881,7 +881,7 @@ class BookingForm(forms.ModelForm):
         model = Booking
         fields = ['eventtime', 'notes']
         labels = {
-            'eventtime': _(u"Tidspunkt")
+            'eventtime': _("Tidspunkt")
         },
         widgets = {
             'notes': Textarea(attrs={
@@ -1005,19 +1005,19 @@ class BookerForm(forms.ModelForm):
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Fornavn')}
+                       'placeholder': _('Fornavn')}
             ),
             'lastname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Efternavn')}
+                       'placeholder': _('Efternavn')}
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'E-mail')}
+                       'placeholder': _('E-mail')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Telefonnummer'),
+                       'placeholder': _('Telefonnummer'),
                        'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'line': Select(
@@ -1038,7 +1038,7 @@ class BookerForm(forms.ModelForm):
         widget=TextInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Gentag e-mail'),
+                'placeholder': _('Gentag e-mail'),
                 'autocomplete': 'off',
                 'disablepaste': 'true'
             }
@@ -1056,7 +1056,7 @@ class BookerForm(forms.ModelForm):
     postcode = forms.IntegerField(
         widget=NumberInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Postnummer'),
+                   'placeholder': _('Postnummer'),
                    'min': '1000', 'max': '9999'}
         ),
         required=False
@@ -1064,7 +1064,7 @@ class BookerForm(forms.ModelForm):
     city = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'By')}
+                   'placeholder': _('By')}
         ),
         required=False
     )
@@ -1084,18 +1084,18 @@ class BookerForm(forms.ModelForm):
 
         if len(products) > 1:
             attendeecount_widget.attrs['data-validation-number-min-message'] =\
-                _(u"Der der kræves mindst %d "
-                  u"deltagere på at af de besøg du har valgt.")
+                _("Der der kræves mindst %d "
+                  "deltagere på at af de besøg du har valgt.")
             attendeecount_widget.attrs['data-validation-number-max-message'] =\
-                _(u"Der er max plads til %d "
-                  u"deltagere på et af de besøg du har valgt.")
+                _("Der er max plads til %d "
+                  "deltagere på et af de besøg du har valgt.")
         else:
             attendeecount_widget.attrs['data-validation-number-min-message'] =\
-                _(u"Der der kræves mindst %d "
-                  u"deltagere på det besøg du har valgt.")
+                _("Der der kræves mindst %d "
+                  "deltagere på det besøg du har valgt.")
             attendeecount_widget.attrs['data-validation-number-max-message'] =\
-                _(u"Der er max plads til %d "
-                  u"deltagere på det besøg du har valgt.")
+                _("Der er max plads til %d "
+                  "deltagere på det besøg du har valgt.")
 
         if len(products) > 0:
             min_visitors = [
@@ -1161,17 +1161,17 @@ class BookerForm(forms.ModelForm):
             try:
                 PostCode.objects.get(number=postcode)
             except:
-                raise forms.ValidationError(_(u'Ukendt postnummer'))
+                raise forms.ValidationError(_('Ukendt postnummer'))
         return postcode
 
     def clean_school(self):
         school = self.cleaned_data.get('school')
         if School.objects.filter(name=school).count() == 0:
             raise forms.ValidationError(
-                _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
-                  u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
-                  u'kommer frem på listen, kontakt da fokussupport@adm.ku.dk '
-                  u'for at få hjælp til tilmelding.')
+                _('Du skal vælge skole/gymnasium fra listen for at kunne '
+                  'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
+                  'kommer frem på listen, kontakt da fokussupport@adm.ku.dk '
+                  'for at få hjælp til tilmelding.')
             )
         return school
 
@@ -1179,8 +1179,8 @@ class BookerForm(forms.ModelForm):
         consent = self.cleaned_data.get('consent', False)
         if not consent:
             raise forms.ValidationError(
-                _(u'Du skal give samtykke til at vi bruger og opbevarer dine'
-                    u' personoplysninger før vi kan modtage dine data.')
+                _('Du skal give samtykke til at vi bruger og opbevarer dine'
+                    ' personoplysninger før vi kan modtage dine data.')
             )
         return True
 
@@ -1196,7 +1196,7 @@ class BookerForm(forms.ModelForm):
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
             error = forms.ValidationError(
-                _(u"Indtast den samme e-mail i begge felter")
+                _("Indtast den samme e-mail i begge felter")
             )
             self.add_error('repeatemail', error)
         return cleaned_data
@@ -1248,19 +1248,19 @@ class EditBookerForm(forms.ModelForm):
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Fornavn')}
+                       'placeholder': _('Fornavn')}
             ),
             'lastname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Efternavn')}
+                       'placeholder': _('Efternavn')}
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'E-mail')}
+                       'placeholder': _('E-mail')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Telefonnummer'),
+                       'placeholder': _('Telefonnummer'),
                        'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'attendee_count': NumberInput(
@@ -1286,7 +1286,7 @@ class EditBookerForm(forms.ModelForm):
     postcode = forms.IntegerField(
         widget=NumberInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Postnummer'),
+                   'placeholder': _('Postnummer'),
                    'min': '1000', 'max': '9999'}
         ),
         required=False
@@ -1294,7 +1294,7 @@ class EditBookerForm(forms.ModelForm):
     city = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'By')}
+                   'placeholder': _('By')}
         ),
         required=False
     )
@@ -1328,7 +1328,7 @@ class EditBookerForm(forms.ModelForm):
         school = self.cleaned_data.get('school')
         if School.objects.filter(name=school).count() == 0:
             raise forms.ValidationError(
-                _(u'Skole ikke fundet')
+                _('Skole ikke fundet')
             )
         return school
 
@@ -1338,7 +1338,7 @@ class EditBookerForm(forms.ModelForm):
             try:
                 PostCode.objects.get(number=postcode)
             except:
-                raise forms.ValidationError(_(u'Ukendt postnummer'))
+                raise forms.ValidationError(_('Ukendt postnummer'))
         return postcode
 
     def save(self, commit=True):
@@ -1558,56 +1558,56 @@ class EmailTemplateForm(forms.ModelForm):
 
     subject_guest = forms.CharField(
         widget=TextInput(**field_attrs),
-        label=_(u'Emne til gæster'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Emne til andre" blive sendt i stedet'),
+        label=_('Emne til gæster'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Emne til andre" blive sendt i stedet'),
         required=False
     )
     body_guest = forms.CharField(
         widget=Textarea(**area_attrs),
-        label=_(u'Tekst til gæster'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Tekst til andre" blive sendt i stedet'),
+        label=_('Tekst til gæster'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Tekst til andre" blive sendt i stedet'),
         required=False
     )
     subject_teacher = forms.CharField(
         widget=TextInput(**field_attrs),
-        label=_(u'Emne til undervisere'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Emne til andre" blive sendt i stedet'),
+        label=_('Emne til undervisere'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Emne til andre" blive sendt i stedet'),
         required=False
     )
     body_teacher = forms.CharField(
         widget=Textarea(**area_attrs),
-        label=_(u'Tekst til undervisere'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Tekst til andre" blive sendt i stedet'),
+        label=_('Tekst til undervisere'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Tekst til andre" blive sendt i stedet'),
         required=False
     )
     subject_host = forms.CharField(
         widget=TextInput(**field_attrs),
-        label=_(u'Emne til værter'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Emne til andre" blive sendt i stedet'),
+        label=_('Emne til værter'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Emne til andre" blive sendt i stedet'),
         required=False
     )
     body_host = forms.CharField(
         widget=Textarea(**area_attrs),
-        label=_(u'Tekst til værter'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Tekst til andre" blive sendt i stedet'),
+        label=_('Tekst til værter'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Tekst til andre" blive sendt i stedet'),
         required=False
     )
     subject_other = forms.CharField(
         widget=TextInput(**field_attrs),
-        label=_(u'Emne til andre'),
-        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
-                    u'"Emne til andre" blive sendt i stedet'),
+        label=_('Emne til andre'),
+        help_text=_('Hvis feltet er tomt, vil indholdet af '
+                    '"Emne til andre" blive sendt i stedet'),
         required=False
     )
     body_other = forms.CharField(
         widget=Textarea(**area_attrs),
-        label=_(u'Tekst til andre'),
+        label=_('Tekst til andre'),
         required=False
     )
 
@@ -1681,7 +1681,7 @@ class EmailTemplateForm(forms.ModelForm):
             EmailTemplate._expand(body, {}, True)
         except TemplateSyntaxError as e:
             raise forms.ValidationError(
-                _(u'Syntaksfejl i skabelon: ') + "\n%s" % e.message
+                _('Syntaksfejl i skabelon: ') + "\n%s" % e.message
             )
         return body
 
@@ -1819,7 +1819,7 @@ class BaseEmailComposeForm(forms.Form):
     body = forms.CharField(
         max_length=65584,
         widget=Textarea(attrs={'class': 'form-control'}),
-        label=_(u'Tekst')
+        label=_('Tekst')
     )
 
 
@@ -1830,12 +1830,12 @@ class EmailComposeForm(BaseEmailComposeForm):
         super(EmailComposeForm, self).__init__(*args, **kwargs)
 
     recipients = ExtensibleMultipleChoiceField(
-        label=_(u'Modtagere'),
+        label=_('Modtagere'),
         widget=CheckboxSelectMultiple
     )
 
     subject = forms.CharField(
-        label=_(u'Emne'),
+        label=_('Emne'),
         widget=TextInput(attrs={
             'class': 'form-control'
         })
@@ -1865,31 +1865,31 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
 
     name = forms.CharField(
         max_length=100,
-        label=_(u'Navn'),
+        label=_('Navn'),
         widget=TextInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Dit navn')
+                'placeholder': _('Dit navn')
             }
         )
     )
 
     email = forms.EmailField(
-        label=_(u'E-mail'),
+        label=_('E-mail'),
         widget=EmailInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Din e-mail')
+                'placeholder': _('Din e-mail')
             }
         )
     )
 
     phone = forms.CharField(
-        label=_(u'Telefon'),
+        label=_('Telefon'),
         widget=TextInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Dit telefonnummer'),
+                'placeholder': _('Dit telefonnummer'),
                 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
             },
         ),
@@ -1897,7 +1897,7 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
     )
 
     consent = forms.BooleanField(
-        label=_(u'Samtykke'),
+        label=_('Samtykke'),
         widget=CheckboxInput(),
         required=True
     )
@@ -1905,7 +1905,7 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
 
 class EmailReplyForm(forms.Form):
     reply = forms.CharField(
-        label=_(u'Mit svar'),
+        label=_('Mit svar'),
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=True
     )
@@ -1920,7 +1920,7 @@ class BookingListForm(forms.Form):
 class AcceptBookingForm(forms.Form):
     comment = forms.CharField(
         widget=forms.Textarea,
-        label=_(u'Kommentar'),
+        label=_('Kommentar'),
         required=False
     )
 
@@ -1929,12 +1929,12 @@ class EvaluationOverviewForm(forms.Form):
     user = None
 
     organizationalunit = forms.MultipleChoiceField(
-        label=_(u'Afgræns ud fra enhed(er)'),
+        label=_('Afgræns ud fra enhed(er)'),
         required=False,
     )
 
     limit_to_personal = forms.BooleanField(
-        label=_(u'Begræns til besøg jeg personligt er involveret i'),
+        label=_('Begræns til besøg jeg personligt er involveret i'),
         required=False
     )
 
@@ -1960,7 +1960,7 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
             'baseproduct': HiddenInput()
         }
         labels = {
-            'date': _(u'Vælg dato')
+            'date': _('Vælg dato')
         }
 
     def __init__(self, *args, **kwargs):
@@ -1974,8 +1974,8 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
             bookability = product.is_bookable(date, return_reason=False)
             if bookability is not True:
                 reason = _(
-                    u'Det er desværre ikke muligt at bestille '
-                    u'besøget på den valgte dato.\n'
+                    'Det er desværre ikke muligt at bestille '
+                    'besøget på den valgte dato.\n'
                 )
                 more_reason = product.nonbookable_text(bookability)
                 if more_reason is not None:
@@ -1991,7 +1991,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
     products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
         widget=OrderedMultipleHiddenChooser(),
-        error_messages={'required': _(u"Der er ikke valgt nogen besøg")}
+        error_messages={'required': _("Der er ikke valgt nogen besøg")}
     )
 
     class Meta:
@@ -2009,14 +2009,14 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
     def clean_products(self):
         products = self.cleaned_data[self.products_key]
         if len(products) == 0:
-            raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
+            raise forms.ValidationError(_("Der er ikke valgt nogen besøg"))
         common_institution = binary_and([
             product.institution_level for product in products
         ])
         if common_institution == 0:
             raise forms.ValidationError(
-                _(u"Nogle af de valgte besøg henvender sig kun til "
-                  u"grundskoleklasser og andre kun til gymnasieklasser"),
+                _("Nogle af de valgte besøg henvender sig kun til "
+                  "grundskoleklasser og andre kun til gymnasieklasser"),
                 code='conflict'
             )
         return products
@@ -2087,7 +2087,7 @@ class EvaluationForm(forms.ModelForm):
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
         required=False,
-        label=_(u'Deltagere uden spørgeskema')
+        label=_('Deltagere uden spørgeskema')
     )
 
     class Meta:
@@ -2153,7 +2153,7 @@ class EvaluationForm(forms.ModelForm):
 class EvaluationStatisticsForm(forms.Form):
 
     from_date = forms.DateField(
-        label=_(u'Dato fra'),
+        label=_('Dato fra'),
         input_formats=['%d-%m-%Y'],
         required=False,
         widget=forms.DateInput(
@@ -2164,7 +2164,7 @@ class EvaluationStatisticsForm(forms.Form):
     )
 
     to_date = forms.DateField(
-        label=_(u'Dato til'),
+        label=_('Dato til'),
         input_formats=['%d-%m-%Y'],
         required=False,
         widget=forms.DateInput(
@@ -2175,7 +2175,7 @@ class EvaluationStatisticsForm(forms.Form):
     )
 
     unit = forms.ModelChoiceField(
-        label=_(u'Enhed'),
+        label=_('Enhed'),
         queryset=OrganizationalUnit.objects.all(),
         widget=forms.Select(
             attrs={

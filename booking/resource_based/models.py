@@ -27,8 +27,8 @@ from user_profile.constants import TEACHER, HOST, NONE
 class EventTime(models.Model):
 
     class Meta:
-        verbose_name = _(u"tidspunkt")
-        verbose_name_plural = _(u"tidspunkter")
+        verbose_name = _("tidspunkt")
+        verbose_name_plural = _("tidspunkter")
         ordering = ['start', 'end']
 
     product = models.ForeignKey(
@@ -51,7 +51,7 @@ class EventTime(models.Model):
     # Whether the time is publicly bookable
     bookable = models.BooleanField(
         default=True,
-        verbose_name=_(u'Kan bookes')
+        verbose_name=_('Kan bookes')
     )
 
     RESOURCE_STATUS_AVAILABLE = 1
@@ -59,9 +59,9 @@ class EventTime(models.Model):
     RESOURCE_STATUS_ASSIGNED = 3
 
     resource_status_choices = (
-        (RESOURCE_STATUS_AVAILABLE, _(u"Ressourcer ledige")),
-        (RESOURCE_STATUS_BLOCKED, _(u"Blokeret af manglende ressourcer")),
-        (RESOURCE_STATUS_ASSIGNED, _(u"Ressourcer tildelt")),
+        (RESOURCE_STATUS_AVAILABLE, _("Ressourcer ledige")),
+        (RESOURCE_STATUS_BLOCKED, _("Blokeret af manglende ressourcer")),
+        (RESOURCE_STATUS_ASSIGNED, _("Ressourcer tildelt")),
     )
     resource_status_classes = {
         RESOURCE_STATUS_AVAILABLE: 'primary',
@@ -82,31 +82,31 @@ class EventTime(models.Model):
     resource_status = models.IntegerField(
         choices=resource_status_choices,
         default=RESOURCE_STATUS_AVAILABLE,
-        verbose_name=_(u"Ressource-status"),
+        verbose_name=_("Ressource-status"),
     )
 
     start = models.DateTimeField(
-        verbose_name=_(u"Starttidspunkt"),
+        verbose_name=_("Starttidspunkt"),
         blank=True,
         null=True
     )
     end = models.DateTimeField(
-        verbose_name=_(u"Sluttidspunkt"),
+        verbose_name=_("Sluttidspunkt"),
         blank=True,
         null=True
     )
     has_specific_time = models.BooleanField(
         default=True,
-        verbose_name=_(u"Angivelse af tidspunkt"),
+        verbose_name=_("Angivelse af tidspunkt"),
         choices=(
-            (True, _(u"Både dato og tidspunkt")),
-            (False, _(u"Kun dato")),
+            (True, _("Både dato og tidspunkt")),
+            (False, _("Kun dato")),
         ),
     )
     notes = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Interne kommentarer')
+        verbose_name=_('Interne kommentarer')
     )
 
     has_notified_start = models.BooleanField(
@@ -664,14 +664,14 @@ class EventTime(models.Model):
                         self.naive_start, "SHORT_DATE_FORMAT"
                     ),
             else:
-                return _(u"<Intet tidspunkt angivet>")
+                return _("<Intet tidspunkt angivet>")
 
     def __str__(self):
-        parts = [_(u"Tidspunkt:")]
+        parts = [_("Tidspunkt:")]
         if self.product:
             parts.append(self.product.title)
         if self.visit:
-            parts.append(_(u"(Besøg: %s)") % self.visit.pk)
+            parts.append(_("(Besøg: %s)") % self.visit.pk)
         parts.append(self.interval_display)
 
         # Force lazy translations to be evaluated with str() before join().
@@ -1144,7 +1144,7 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     title = models.CharField(
         max_length=60,
         blank=False,
-        verbose_name=_(u'Titel')
+        verbose_name=_('Titel')
     )
 
     calendar = models.ForeignKey(
@@ -1158,24 +1158,24 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     NOT_AVAILABLE = 1
 
     availability_choices = (
-        (AVAILABLE, _(u"Tilgængelig")),
-        (NOT_AVAILABLE, _(u"Utilgængelig")),
+        (AVAILABLE, _("Tilgængelig")),
+        (NOT_AVAILABLE, _("Utilgængelig")),
     )
     availability = models.IntegerField(
         choices=availability_choices,
-        verbose_name=_(u'Tilgængelighed'),
+        verbose_name=_('Tilgængelighed'),
         default=AVAILABLE,
         blank=False,
     )
     start = models.DateTimeField(
-        verbose_name=_(u"Starttidspunkt")
+        verbose_name=_("Starttidspunkt")
     )
     end = models.DateTimeField(
-        verbose_name=_(u"Sluttidspunkt"),
+        verbose_name=_("Sluttidspunkt"),
         blank=True
     )
     recurrences = RecurrenceField(
-        verbose_name=_(u"Gentagelser"),
+        verbose_name=_("Gentagelser"),
         null=True,
         blank=True,
     )
@@ -1282,7 +1282,7 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                     self.naive_start, "SHORT_DATE_FORMAT"
                 )
             else:
-                return _(u"<Intet tidspunkt angivet>")
+                return _("<Intet tidspunkt angivet>")
 
     @property
     def affected_eventtimes(self):
@@ -1445,17 +1445,17 @@ class ResourceType(models.Model):
 class Resource(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(
         ResourceType,
-        verbose_name=_(u'Type')
+        verbose_name=_('Type')
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_(u"Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed")
     )
     calendar = models.OneToOneField(
         Calendar,
         blank=True,
         null=True,
-        verbose_name=_(u"Ressourcens kalender"),
+        verbose_name=_("Ressourcens kalender"),
         on_delete=models.SET_NULL
     )
 
@@ -1759,7 +1759,7 @@ class NamedResource(Resource):
         abstract = True
     name = models.CharField(
         max_length=1024,
-        verbose_name=_(u'Navn')
+        verbose_name=_('Navn')
     )
 
     def get_name(self):
@@ -1771,7 +1771,7 @@ class ItemResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_(u'Lokalitet')
+        verbose_name=_('Lokalitet')
     )
 
     def __init__(self, *args, **kwargs):
@@ -1786,7 +1786,7 @@ class VehicleResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_(u'Lokalitet')
+        verbose_name=_('Lokalitet')
     )
 
     def __init__(self, *args, **kwargs):
@@ -1804,16 +1804,16 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(ResourceType)
     name = models.CharField(
         max_length=1024,
-        verbose_name=_(u'Navn')
+        verbose_name=_('Navn')
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_(u"Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed")
     )
     # TODO: Begrænse på enhed, resource_type
     resources = models.ManyToManyField(
         Resource,
-        verbose_name=_(u"Ressourcer"),
+        verbose_name=_("Ressourcer"),
         blank=True
     )
 

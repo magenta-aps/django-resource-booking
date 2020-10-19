@@ -31,7 +31,7 @@ class ChangeVisitStatusForm(forms.ModelForm):
                 choices = (x for x in choices if x[0] != remove_val)
 
             self.fields['workflow_status'].widget.choices = choices
-            self.fields['workflow_status'].label = _(u'Ny status')
+            self.fields['workflow_status'].label = _('Ny status')
 
 
 class ChangeVisitResponsibleForm(forms.ModelForm):
@@ -151,7 +151,7 @@ class ChangeVisitCommentsForm(forms.ModelForm):
 class VisitAddLogEntryForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
-        label=_(u'Ny log-post')
+        label=_('Ny log-post')
     )
 
 
@@ -164,7 +164,7 @@ class ResetVisitChangesForm(forms.ModelForm):
 class VisitAddCommentForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
-        label=_(u'Ny kommentar')
+        label=_('Ny kommentar')
     )
 
 
@@ -173,13 +173,13 @@ class BecomeSomethingForm(forms.Form):
     resourcerequirements = forms.ModelMultipleChoiceField(
         queryset=None,
         widget=forms.CheckboxSelectMultiple,
-        label=_(u'Opfyld behov for'),
+        label=_('Opfyld behov for'),
         required=False,
     )
 
     comment = forms.CharField(
         widget=forms.Textarea,
-        label=_(u'Kommentar'),
+        label=_('Kommentar'),
         required=False
     )
 
@@ -197,9 +197,9 @@ class VisitAutosendForm(forms.ModelForm):
     ACTIVITY_INHERIT = 2
     active = forms.ChoiceField(
         choices=[
-            (ACTIVITY_ENABLED, _(u'Aktiv')),
-            (ACTIVITY_INHERIT, _(u'Nedarv')),
-            (ACTIVITY_DISABLED, _(u'Inaktiv'))
+            (ACTIVITY_ENABLED, _('Aktiv')),
+            (ACTIVITY_INHERIT, _('Nedarv')),
+            (ACTIVITY_DISABLED, _('Inaktiv'))
         ],
         widget=forms.widgets.RadioSelect()
     )
@@ -243,15 +243,15 @@ class VisitAutosendForm(forms.ModelForm):
                 self.fields['days'].widget = forms.HiddenInput()
             elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
-                self.fields['days'].help_text = _(u'Notifikation vil blive '
-                                                  u'afsendt dette antal dage '
-                                                  u'før besøget')
+                self.fields['days'].help_text = _('Notifikation vil blive '
+                                                  'afsendt dette antal dage '
+                                                  'før besøget')
             elif template_type.key == \
                     EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
-                self.fields['days'].help_text = _(u'Notifikation vil blive '
-                                                  u'afsendt dette antal dage '
-                                                  u'efter første booking '
-                                                  u'er foretaget')
+                self.fields['days'].help_text = _('Notifikation vil blive '
+                                                  'afsendt dette antal dage '
+                                                  'efter første booking '
+                                                  'er foretaget')
 
     @property
     def associated_visit(self):
