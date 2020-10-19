@@ -40,7 +40,7 @@ from user_profile.models import TEACHER, HOST, EDIT_ROLES
 
 
 class VisitBreadcrumbMixin(ContextMixin):
-    view_title = _(u'opdater')
+    view_title = _('opdater')
 
     def get_breadcrumb_args(self):
         return [self.object]
@@ -73,7 +73,7 @@ class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequiredMixin,
 class ChangeVisitStartTimeView(AutologgerMixin, UpdateWithCancelView):
     model = EventTime
     template_name = "booking/workflow/change_starttime.html"
-    view_title = _(u'Redigér tidspunkt')
+    view_title = _('Redigér tidspunkt')
 
     fields = ('has_specific_time', 'start', 'end', 'notes')
 
@@ -120,7 +120,7 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = ChangeVisitStatusForm
     template_name = "booking/workflow/change_status.html"
-    view_title = _(u'Skift status')
+    view_title = _('Skift status')
 
     def form_valid(self, form):
         response = super(ChangeVisitStatusView, self).form_valid(
@@ -148,14 +148,14 @@ class ChangeVisitResponsibleView(AutologgerMixin, UpdateWithCancelView):
     model = MultiProductVisit
     form_class = ChangeVisitResponsibleForm
     template_name = "booking/workflow/change_responsible.html"
-    view_title = _(u'Redigér besøgsansvarlig')
+    view_title = _('Redigér besøgsansvarlig')
 
 
 class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = ChangeVisitTeachersForm
     template_name = "booking/workflow/change_teachers.html"
-    view_title = _(u'Redigér undervisere')
+    view_title = _('Redigér undervisere')
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -216,7 +216,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = ChangeVisitHostsForm
     template_name = "booking/workflow/change_hosts.html"
-    view_title = _(u'Redigér værter')
+    view_title = _('Redigér værter')
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -275,7 +275,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = ChangeVisitRoomsForm
     template_name = "booking/workflow/change_rooms.html"
-    view_title = _(u'Redigér lokaler')
+    view_title = _('Redigér lokaler')
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -357,7 +357,7 @@ class ChangeVisitCommentsView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = ChangeVisitCommentsForm
     template_name = "booking/workflow/change_comments.html"
-    view_title = _(u'Redigér kommentarer')
+    view_title = _('Redigér kommentarer')
 
 
 class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
@@ -365,7 +365,7 @@ class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
     form_class = VisitAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
     object = None
-    view_title = _(u'Tilføj log-post')
+    view_title = _('Tilføj log-post')
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -408,7 +408,7 @@ class VisitAddCommentView(VisitAddLogEntryView):
     form_class = VisitAddCommentForm
     template_name = "booking/workflow/add_comment.html"
     object = None
-    view_title = _(u'Tilføj kommentar')
+    view_title = _('Tilføj kommentar')
 
     def form_valid(self, form):
         self.object.add_comment(
@@ -422,7 +422,7 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
     form_class = VisitAutosendFormSet
     template_name = "booking/workflow/change_autosend.html"
-    view_title = _(u'Redigér automatiske emails')
+    view_title = _('Redigér automatiske emails')
 
     def form_valid(self, form):
         form.save()
@@ -437,7 +437,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
     model = Visit
     errors = None
     m2m_attribute = None
-    view_title = _(u'Tilmeld rolle')
+    view_title = _('Tilmeld rolle')
     roles = [HOST, TEACHER] + list(EDIT_ROLES)
     form_class = BecomeSomethingForm
     notify_mail_template_type = None
@@ -597,15 +597,15 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
 class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
-    view_title = _(u'Tilmeld som underviser')
+    view_title = _('Tilmeld som underviser')
     notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
-    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
+    ERROR_NONE_NEEDED = _("Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
-        u"Du skal have rollen underviser for at kunne bruge denne funktion"
+        "Du skal have rollen underviser for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede underviser på besøget"
+        "Du er allerede underviser på besøget"
     )
 
     def needs_more(self):
@@ -618,15 +618,15 @@ class BecomeTeacherView(BecomeSomethingView):
 class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
-    view_title = _(u'Tilmeld som underviser')
+    view_title = _('Tilmeld som underviser')
     notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
-    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
+    ERROR_NONE_NEEDED = _("Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
-        u"Du skal have rollen underviser for at kunne bruge denne funktion"
+        "Du skal have rollen underviser for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede underviser på besøget"
+        "Du er allerede underviser på besøget"
     )
 
     def needs_more(self):
@@ -639,15 +639,15 @@ class DeclineTeacherView(BecomeSomethingView):
 class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
-    view_title = _(u'Tilmeld som vært')
+    view_title = _('Tilmeld som vært')
     notify_mail_template_type = EmailTemplateType.notify_host__associated
 
-    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
+    ERROR_NONE_NEEDED = _("Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
-        u"Du skal have rollen vært for at kunne bruge denne funktion"
+        "Du skal have rollen vært for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede vært på besøget"
+        "Du er allerede vært på besøget"
     )
 
     def needs_more(self):
@@ -660,15 +660,15 @@ class BecomeHostView(BecomeSomethingView):
 class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
-    view_title = _(u'Tilmeld som vært')
+    view_title = _('Tilmeld som vært')
     notify_mail_template_type = EmailTemplateType.notify_host__associated
 
-    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
+    ERROR_NONE_NEEDED = _("Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
-        u"Du skal have rollen vært for at kunne bruge denne funktion"
+        "Du skal have rollen vært for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede vært på besøget"
+        "Du er allerede vært på besøget"
     )
 
     def needs_more(self):
@@ -682,7 +682,7 @@ class ResetVisitChangesView(UpdateWithCancelView):
     model = Visit
     form_class = ResetVisitChangesForm
     template_name = "booking/workflow/change_changes_marker.html"
-    view_title = _(u'Nulstil markør for nylige ændringer')
+    view_title = _('Nulstil markør for nylige ændringer')
 
     def form_valid(self, form):
         self.object = form.save()

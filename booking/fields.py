@@ -146,7 +146,7 @@ class VisitEventTimeField(ChoiceField):
                 if not eventtime.visit.is_bookable and \
                         not eventtime.visit.can_join_waitinglist:
                     raise ValidationError(
-                        _(u'Det valgte tidspunkt er blevet lukket for booking')
+                        _('Det valgte tidspunkt er blevet lukket for booking')
                     )
         except self.model.DoesNotExist:
             pass

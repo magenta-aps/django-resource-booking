@@ -180,26 +180,26 @@ class MainPageView(TemplateView):
                 {
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
-                    'title': _(u'Senest opdaterede tilbud'),
+                    'title': _('Senest opdaterede tilbud'),
                     'queryset': Product.objects.get_latest_updated(
                         self.request.user
                     ),
                     'limit': 10,
                     'button': {
-                        'text': _(u'Vis alle'),
+                        'text': _('Vis alle'),
                         'link': reverse('product-customlist') + "?type=%s" %
                         ProductCustomListView.TYPE_LATEST_UPDATED
                     }
                 }, {
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
-                    'title': _(u'Senest bookede tilbud'),
+                    'title': _('Senest bookede tilbud'),
                     'queryset': Product.objects.get_latest_booked(
                         self.request.user
                     ),
                     'limit': 10,
                     'button': {
-                        'text': _(u'Vis alle'),
+                        'text': _('Vis alle'),
                         'link': reverse('product-customlist') + "?type=%s" %
                         ProductCustomListView.TYPE_LATEST_BOOKED
                     }
@@ -453,8 +453,8 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     no_index = True
 
     boolean_choice = (
-        (1, _(u'Ja')),
-        (0, _(u'Nej')),
+        (1, _('Ja')),
+        (0, _('Nej')),
     )
 
     def dispatch(self, request, *args, **kwargs):
@@ -516,7 +516,7 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     def get_query_string(self):
         return urlunquote_plus(self.request.GET.get("q", "")).strip()
 
-    search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
+    search_prune = re.compile("[^\s\wæøåÆØÅ]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
@@ -1053,12 +1053,12 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     @staticmethod
     def build_breadcrumbs(request=None):
         breadcrumbs = [
-            {'url': reverse('search'), 'text': _(u'Søgning')}
+            {'url': reverse('search'), 'text': _('Søgning')}
         ]
         if request and 'search' in request.GET:
             breadcrumbs.append({
                 'url': request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
+                'text': _('Søgeresultat')
             })
         return breadcrumbs
 
@@ -1117,7 +1117,7 @@ class ProductCustomListView(BreadcrumbMixin, SearchEngineMixin, ListView):
     @staticmethod
     def build_breadcrumbs():
         return [
-            {'text': _(u'Tilbudsliste')}
+            {'text': _('Tilbudsliste')}
         ]
 
     def get_paginate_by(self, queryset):
@@ -1165,7 +1165,7 @@ class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
     @staticmethod
     def build_breadcrumbs():
         return [
-            {'text': _(u'Opret tilbud')}
+            {'text': _('Opret tilbud')}
         ]
 
 
@@ -1573,9 +1573,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
         :param max:
         :return: Boolean
         """
-        if min == u'':
+        if min == '':
             min = 0
-        if max == u'':
+        if max == '':
             max = 0
 
         existing_bookings_outside_bounds = Guest.objects.filter(
@@ -1603,15 +1603,15 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
         if pk is not None:
             if self._is_any_booking_outside_new_attendee_count_bounds(
                 pk,
-                request.POST.get(u'minimum_number_of_visitors'),
-                request.POST.get(u'maximum_number_of_visitors'),
+                request.POST.get('minimum_number_of_visitors'),
+                request.POST.get('maximum_number_of_visitors'),
             ):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes besøg for tilbudet med '
-                      u'deltagerantal udenfor de angivne min-/max-grænser for '
-                      u'deltagere!')
+                    _('Der findes besøg for tilbudet med '
+                      'deltagerantal udenfor de angivne min-/max-grænser for '
+                      'deltagere!')
                 )
         self.set_object(pk, request, self.is_cloning())
         forms = self.get_forms()
@@ -1634,7 +1634,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             messages.add_message(
                 request,
                 messages.INFO,
-                _(u'Tilbuddet blev gemt.')
+                _('Tilbuddet blev gemt.')
             )
             return super(EditProductView, self).form_valid(forms['form'])
         else:
@@ -1701,12 +1701,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                         'product-clone' if cloning else 'product-edit',
                         args=[product.pk]
                     ),
-                    'text': _(u'Kopiér') if cloning else _(u'Redigér')
+                    'text': _('Kopiér') if cloning else _('Redigér')
                 }
             ]
         else:
             return [
-                {'text': _(u'Opret tilbud')}
+                {'text': _('Opret tilbud')}
             ]
 
     def save_autosend(self, autosendformset=None):
@@ -1858,7 +1858,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                 'url': reverse('product-simple-ressources', args=[
                     product.id
                 ]),
-                'text': _(u'Redigér ressourcer')
+                'text': _('Redigér ressourcer')
             }
         ]
 
@@ -2099,7 +2099,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             products = self.object.multiproductvisit.products
         context['recp'] = {
             'guests_accepted': {
-                'label': _(u'Deltagende gæster'),
+                'label': _('Deltagende gæster'),
                 'items': {
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2109,7 +2109,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     }
             },
             'guests_waiting': {
-                'label': _(u'Gæster på venteliste'),
+                'label': _('Gæster på venteliste'),
                 'items': {
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2119,7 +2119,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     }
             },
             'roomadmins': {
-                'label': _(u'Lokaleansvarlige'),
+                'label': _('Lokaleansvarlige'),
                 'items': merge_dicts(*[{
                     "%s%s%d" % (self.RECIPIENT_ROOMRESPONSIBLE,
                                 self.RECIPIENT_SEPARATOR,
@@ -2129,7 +2129,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 } for product in products])
             },
             'assigned_hosts': {
-                'label': _(u'Tildelte værter'),
+                'label': _('Tildelte værter'),
                 'items': {
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2142,7 +2142,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 }
             },
             'assigned_teachers': {
-                'label': _(u'Tildelte undervisere'),
+                'label': _('Tildelte undervisere'),
                 'items': {
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2155,7 +2155,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 }
             },
             'potential_hosts': {
-                'label': _(u'Potentielle værter'),
+                'label': _('Potentielle værter'),
                 'items': merge_dicts(*[{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2170,7 +2170,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 } for product in products])
             },
             'potential_teachers': {
-                'label': _(u'Potentielle undervisere'),
+                'label': _('Potentielle undervisere'),
                 'items': merge_dicts(*[{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
@@ -2206,7 +2206,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
     @staticmethod
     def build_breadcrumbs(visit):
         return VisitDetailView.build_breadcrumbs(visit) + [
-            {'text': _(u'Send notifikation')}
+            {'text': _('Send notifikation')}
         ]
 
 
@@ -2234,7 +2234,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         if 'nogroups' not in self.request.GET:
             recipients = {
                 'guests': {
-                    'label': _(u'Gæster'),
+                    'label': _('Gæster'),
                     'items': {
                         "%s%s%d" % (self.RECIPIENT_BOOKER,
                                     self.RECIPIENT_SEPARATOR,
@@ -2243,7 +2243,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     }
                 },
                 'hosts': {
-                    'label': _(u'Værter'),
+                    'label': _('Værter'),
                     'items': {
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
@@ -2254,7 +2254,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         }
                 },
                 'teachers': {
-                    'label': _(u'Undervisere'),
+                    'label': _('Undervisere'),
                     'items': {
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
@@ -2265,7 +2265,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         }
                 },
                 'tilbudsansvarlig': {
-                    'label': _(u'Tilbudsansvarlig'),
+                    'label': _('Tilbudsansvarlig'),
                     'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR, user.id):
@@ -2276,7 +2276,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     } for product in products])
                 },
                 'roomadmins': {
-                    'label': _(u'Lokaleansvarlige'),
+                    'label': _('Lokaleansvarlige'),
                     'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
@@ -2308,7 +2308,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
     @staticmethod
     def build_breadcrumbs(booking):
         return BookingDetailView.build_breadcrumbs(booking) + [
-            {'text': _(u'Send notifikation')}
+            {'text': _('Send notifikation')}
         ]
 
 
@@ -2329,10 +2329,10 @@ class RrulestrView(View):
         tz = timezone.pytz.timezone('Europe/Copenhagen')
         dates = []
         lines = rrulestring.split("\n")
-        times_list = request.POST[u'start_times'].split(',')
+        times_list = request.POST['start_times'].split(',')
         product_id = None
-        if request.POST[u'product_id'] != 'None':
-            product_id = int(request.POST[u'product_id'])
+        if request.POST['product_id'] != 'None':
+            product_id = int(request.POST['product_id'])
         existing_dates_strings = set()
 
         if product_id is not None:
@@ -2350,8 +2350,8 @@ class RrulestrView(View):
             # behaviour. Hence, we set a default UNTIL clause to 90 days in
             # the future from datetime.now()
             # Todo: This should probably be handled more elegantly
-            if u'RRULE' in line and u'UNTIL=' not in line:
-                line += u';UNTIL=%s' % (now + timedelta(90))\
+            if 'RRULE' in line and 'UNTIL=' not in line:
+                line += ';UNTIL=%s' % (now + timedelta(90))\
                     .strftime('%Y%m%dT%H%M%S')
                 dates += [
                     timezone.make_aware(x, tz) for x in rrulestr(
@@ -2359,7 +2359,7 @@ class RrulestrView(View):
                     )
                 ]
             # RRDATEs are appended to the dates list
-            elif u'RDATE' in line:
+            elif 'RDATE' in line:
                 dates += [
                     timezone.make_aware(x, tz)for x in rrulestr(
                         line,
@@ -2555,7 +2555,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     self.request.user,
                     eventtime.visit,
                     LOGACTION_CREATE,
-                    _(u'Besøg oprettet')
+                    _('Besøg oprettet')
                 )
 
             booking.visit = eventtime.visit
@@ -3084,7 +3084,7 @@ class BookingEditView(BreadcrumbMixin, EditorRequiredMixin, UpdateView):
     def build_breadcrumbs(booking):
         return BookingDetailView.build_breadcrumbs(booking) + [
             {
-                'text': _(u'Redigér'),
+                'text': _('Redigér'),
                 'url': reverse('booking-edit-view', args=[booking.id])
             }
         ]
@@ -3170,7 +3170,7 @@ class VisitListView(SearchEngineMixin, LoginRequiredMixin,
     @staticmethod
     def build_breadcrumbs():
         return VisitSearchView.build_breadcrumbs() + [
-            {'text': _(u'Besøgsliste')}
+            {'text': _('Besøgsliste')}
         ]
 
 
@@ -3435,7 +3435,7 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
         if len(form.cleaned_data):
             breadcrumbs.append({
-                'text': _(u'Søgeresultat'),
+                'text': _('Søgeresultat'),
                 'url': reverse('visit-search') + '?' + '&'.join([
                     "%s=%s" % (key, str(value))
                     for key, value in form.cleaned_data.items()
@@ -3448,7 +3448,7 @@ class VisitSearchView(VisitListView):
         return [
             {
                 'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
+                'text': _('Søg i besøg')
             }
         ]
 
@@ -3540,7 +3540,7 @@ class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
         return BookingDetailView.build_breadcrumbs(booking) + [
             {
                 'url': reverse('booking-cancel', args=[booking.id]),
-                'text': _(u'Aflys')
+                'text': _('Aflys')
             }
         ]
 
@@ -3708,7 +3708,7 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
     def build_breadcrumbs():
         return [{
             'url': reverse('emailtemplate-list'),
-            'text': _(u'Emailskabelonliste')
+            'text': _('Emailskabelonliste')
         }]
 
 
@@ -3753,7 +3753,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.object = form.save()
             self.object.key = self.object.type.key
             self.object.save()
-            if u'continue' in request.POST:
+            if 'continue' in request.POST:
                 self.just_preserve_back = True
                 return self.redirect(
                     reverse('emailtemplate-edit', args=[self.object.pk])
@@ -3797,12 +3797,12 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
                         'emailtemplate-edit',
                         args=[template.id]
                     ),
-                    'text': _(u'Kopiér') if cloning else _(u'Redigér')
+                    'text': _('Kopiér') if cloning else _('Redigér')
                 },
             ]
         else:
             return EmailTemplateListView.build_breadcrumbs() + [
-                {'text': _(u'Opret')}
+                {'text': _('Opret')}
             ]
 
 
@@ -3939,14 +3939,14 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         recipient_output = []
         recipient_input = []
         if has_guest_block:
-            recipient_input.append(('guest', _(u'gæst')))
+            recipient_input.append(('guest', _('gæst')))
         if has_teacher_block:
-            recipient_input.append(('teacher', _(u'underviser')))
+            recipient_input.append(('teacher', _('underviser')))
         if has_host_block:
-            recipient_input.append(('host', _(u'vært')))
+            recipient_input.append(('host', _('vært')))
 
         recipient_input.append(
-            ('others', _(u'andre') if len(recipient_input) > 0 else None)
+            ('others', _('andre') if len(recipient_input) > 0 else None)
         )
 
         for key, label in recipient_input:
@@ -4042,7 +4042,7 @@ class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
         return EmailTemplateDetailView.build_breadcrumbs(template) + [
             {
                 'url': reverse('emailtemplate-delete', args=[template.id]),
-                'text': _(u'Slet')
+                'text': _('Slet')
             }
         ]
 
@@ -4150,7 +4150,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         breadcrumbs = []
         if product:
             breadcrumbs = ProductDetailView.build_breadcrumbs(product)
-        breadcrumbs.append({'text': _(u'Svar på e-mail')})
+        breadcrumbs.append({'text': _('Svar på e-mail')})
         return breadcrumbs
 
 
@@ -4247,7 +4247,7 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         if object_id:
             breadcrumbs[-1]['text'] = _(u"Slettet tilmelding")
         breadcrumbs.append({
-            'text': _(u'Svar på ledig plads')
+            'text': _('Svar på ledig plads')
         })
         return breadcrumbs
 
@@ -4264,7 +4264,7 @@ class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
         return ProductDetailView.build_breadcrumbs(product) + [
             {
                 'url': reverse('product-book-notime', args=[product.id]),
-                'text': _(u'Vælg bestillingstype')
+                'text': _('Vælg bestillingstype')
             }
         ]
 
@@ -4323,7 +4323,7 @@ class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
             if product is not None else []
         breadcrumbs.append({
             'url': reverse('mpv-create'),
-            'text': _(u'Vælg dato')
+            'text': _('Vælg dato')
         })
         return breadcrumbs
 
@@ -4339,7 +4339,7 @@ class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView,
         return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
             {
                 'url': reverse('mpv-edit-date', args=[mpv.id]),
-                'text': _(u'Vælg dato')
+                'text': _('Vælg dato')
             }
         ]
 
@@ -4410,7 +4410,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
         return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
             {
                 'url': reverse('mpv-edit-products', args=[mpv.id]),
-                'text': _(u'Vælg tilbud')
+                'text': _('Vælg tilbud')
             }
         ]
 
@@ -4436,7 +4436,7 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
         return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
             {
                 'url': reverse('mpv-confirm', args=[mpv.id]),
-                'text': _(u'Bekræft')
+                'text': _('Bekræft')
             }
         ]
 
@@ -4453,7 +4453,7 @@ class MultiProductVisitAddProductView(BackMixin,
             Visit.WORKFLOW_STATUS_BEING_PLANNED
         ]:
             return HttpResponseBadRequest(
-                u'Can only edit visits that are being planned'
+                'Can only edit visits that are being planned'
             )
         return super(MultiProductVisitAddProductView, self)\
             .dispatch(request, *args, **kwargs)
@@ -4490,7 +4490,7 @@ class MultiProductVisitAddProductView(BackMixin,
         return VisitDetailView.build_breadcrumbs(visit) + [
             {
                 'url': reverse('visit-mpv-edit', args=[visit.id]),
-                'text': _(u'Redigér tilbud')
+                'text': _('Redigér tilbud')
             }
         ]
 
@@ -4572,11 +4572,11 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
             product = evaluation.product
         if evaluation is None:
             return ProductDetailView.build_breadcrumbs(product) + [
-                {'text': _(u'Opret evaluering')}
+                {'text': _('Opret evaluering')}
             ]
         else:
             return EvaluationDetailView.build_breadcrumbs(evaluation) + [
-                {'text': _(u'Rediger')}
+                {'text': _('Rediger')}
             ]
 
 
@@ -4626,7 +4626,7 @@ class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
         if visit is not None:
             return VisitDetailView.build_breadcrumbs(visit) + [
                 {
-                    'text': _(u'Evaluering'),
+                    'text': _('Evaluering'),
                     'url': reverse(
                         'evaluation-view',
                         args=[evaluation.id, visit.id]
@@ -4636,7 +4636,7 @@ class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
         else:
             return ProductDetailView.build_breadcrumbs(product) + [
                 {
-                    'text': _(u'Evaluering'),
+                    'text': _('Evaluering'),
                     'url': reverse(
                         'evaluation-view',
                         args=[evaluation.id]
@@ -4708,7 +4708,7 @@ class EvaluationStatisticsView(
     def build_breadcrumbs():
         return [{
             'url': reverse('evaluation-statistics'),
-            'text': _(u'Statistik over evalueringer')
+            'text': _('Statistik over evalueringer')
         }]
 
 

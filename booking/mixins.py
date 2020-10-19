@@ -142,8 +142,8 @@ class RoleRequiredMixin(object):
         txts = map(str, map(role_to_text, self.roles))
         # TODO: Render this with the error message!
         raise AccessDenied(
-            u"Kun brugere med disse roller kan logge ind: " +
-            u",".join(txts)
+            "Kun brugere med disse roller kan logge ind: " +
+            ",".join(txts)
         )
 
 
@@ -246,16 +246,16 @@ class UnitAccessRequiredMixin(object):
         if hasattr(current_user, 'userprofile'):
             if current_user.userprofile.can_edit(item):
                 return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
+        raise AccessDenied(_("You cannot edit an object for a unit "
+                             "that you don't belong to"))
 
     def check_unit(self, unit):
         current_user = self.request.user
         if hasattr(current_user, 'userprofile'):
             if current_user.userprofile.unit_access(unit):
                 return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
+        raise AccessDenied(_("You cannot edit an object for a unit "
+                             "that you don't belong to"))
 
 
 class AutologgerMixin(object):
@@ -328,16 +328,16 @@ class AutologgerMixin(object):
             result[name] = value
 
         return "\n".join([
-            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
+            "%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
         ])
 
     def _log_changes(self):
         if self._old_state:
             action = LOGACTION_CHANGE
-            msg = _(u"Ændrede felter:\n%s")
+            msg = _("Ændrede felter:\n%s")
         else:
             action = LOGACTION_CREATE
-            msg = _(u"Oprettet med felter:\n%s")
+            msg = _("Oprettet med felter:\n%s")
 
         changeset = self._get_changed_fields(self._old_state)
 

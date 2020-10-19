@@ -11,11 +11,11 @@ LOGACTION_MAIL_SENT = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
 LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
 LOGACTION_DISPLAY_MAP = {
-    LOGACTION_CREATE: _(u'Oprettet'),
-    LOGACTION_CHANGE: _(u'Ændret'),
-    LOGACTION_DELETE: _(u'Slettet'),
-    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
-    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
+    LOGACTION_CREATE: _('Oprettet'),
+    LOGACTION_CHANGE: _('Ændret'),
+    LOGACTION_DELETE: _('Slettet'),
+    LOGACTION_MAIL_SENT: _('Mail sendt'),
+    LOGACTION_MANUAL_ENTRY: _('Log-post tilføjet manuelt')
 }
 
 AVAILABLE_SEATS_NO_LIMIT = -1
