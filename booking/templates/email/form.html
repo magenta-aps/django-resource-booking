@@ -221,13 +221,12 @@
             dropdownbutton.on("focus", focus.bind(null));
 
             window.insertField = function(field) {
-                var insertion = "\{\{ "+field+" \}\}";
                 if (currentFocus) {
                     var contents = currentFocus.val();
                     var input = currentFocus.get(0);
                     var start = getSelectionStart(input);
                     var end = getSelectionEnd(input);
-                    currentFocus.val(contents.substring(0, start) + insertion + contents.substring(end));
+                    currentFocus.val(contents.substring(0, start) + field + contents.substring(end));
                 }
             }
         });
