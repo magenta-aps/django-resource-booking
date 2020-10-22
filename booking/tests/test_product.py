@@ -10,7 +10,7 @@ from django.http import QueryDict
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from django.utils.datetime_safe import datetime
-from pyquery import PyQuery as pq
+from pyquery import PyQuery
 
 from booking.forms import AssignmentHelpForm
 from booking.forms import ClassProductForm
@@ -722,12 +722,12 @@ class TestProduct(TestMixin, TestCase):
         self.login(url, user)
         response = self.client.get(url)
         self.assertEquals(200, response.status_code)
-        query = pq(response.content)
+        query = PyQuery(response.content)
         items = query("h3.panel-title")\
             .closest(".panel").find(".panel-body .list-group-item")
         self.assertEquals(1, len(items))
         item = items[0]
-        self.assertEquals(product.title, pq(item).find("h2").text())
+        self.assertEquals(product.title, PyQuery(item).find("h2").text())
 
     def test_evaluation(self):
         EmailTemplateType.set_defaults()
@@ -948,7 +948,7 @@ class TestProduct(TestMixin, TestCase):
         rproducts = products[:]
         rproducts.reverse()
         response = self.client.get("/")
-        query = pq(response.content)
+        query = PyQuery(response.content)
         lists = query(".listcontainer > div")
 
         self._check_frontpage_product_list(

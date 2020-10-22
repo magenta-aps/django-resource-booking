@@ -86,7 +86,7 @@ class ParsedNode(object):
         ]
 
     def find(self, selector):
-        return self.el.cssselect(selector)
+        return [ParsedNode(n) for n in self.el.cssselect(selector)]
 
     def dict(self):
         d = {
@@ -108,7 +108,7 @@ class ParsedNode(object):
         for item in self.find("dt"):
             key = unicode(item.text).strip().lower()
             value = []
-            for node in item.itersiblings():
+            for node in item.el.itersiblings():
                 if node.tag != 'dd':
                     break
                 parsednode = ParsedNode(node)
@@ -173,7 +173,7 @@ class TestMixin(object):
     def login(self, url, user):
         self.client.logout()
         response = self.client.get(url)
-        self.assertEquals(302, response.status_code)
+        self.assertTrue(response.status_code in [301, 302])
         self.assertEquals("/profile/login?next=%s" % url, response['Location'])
         # self.client.login(username="admin", password="admin")
         self.client.force_login(user)
@@ -518,3 +518,7 @@ class TestMixin(object):
             if isinstance(value, Model):
                 data[key] = value.pk
         return data
+
+    @staticmethod
+    def strip_inner(text, trim_empty_lines=False):
+        return '\n'.join([x.strip() for x in text.split('\n') if x.strip() or not trim_empty_lines])
