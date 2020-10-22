@@ -87,13 +87,13 @@ from booking.mixins import AdminRequiredMixin
 from booking.mixins import AutologgerMixin
 from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.mixins import SearchEngineMixin
 from booking.mixins import EditorRequiredMixin
 from booking.mixins import HasBackButtonMixin
 from booking.mixins import LoggedViewMixin
 from booking.mixins import LoginRequiredMixin
 from booking.mixins import ModalMixin
 from booking.mixins import RoleRequiredMixin
+from booking.mixins import SearchEngineMixin
 from booking.mixins import UnitAccessRequiredMixin
 from booking.models import BookerResponseNonce
 from booking.models import Booking, Guest
@@ -122,7 +122,6 @@ from booking.models import Visit
 from booking.utils import DummyRecipient
 from booking.utils import TemplateSplit
 from booking.utils import full_email
-from booking.utils import get_model_field_map
 from booking.utils import merge_dicts
 from user_profile.constants import FACULTY_EDITOR, ADMINISTRATOR
 from user_profile.models import EDIT_ROLES
@@ -3769,12 +3768,99 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context['booking_enabled_keys'] = EmailTemplateType.get_keys(
             enable_booking=True
         )
-        context['modelmap'] = modelmap = {}
+        context['modelmap'] = modelmap = []
 
-        for model in [Booking, Visit, Product]:
-            model_name = model.__name__
-            modelmap[(model_name.lower(), model._meta.verbose_name)] = \
-                get_model_field_map(model)
+        modelmap.append((u'Tilbud', [
+            (u'ID', '{{ product.id }}'),
+            (u'Titel', '{{ product.title }}'),
+            (u'Type', '{{ product.type }}'),
+            (u'Status', '{{ product.state }}'),
+            (u'Navn på uddannelsen', '{{ product.catering_available }}'),
+            (u'Mulighed for forplejning', [
+                (u'ja/nej', '{{ product.catering_available|yesno }}'),
+                (u'Som blok', '{% if product.catering_available %}{% endif %}')
+            ]),
+            (u'Mulighed for rundvisning', [
+                (u'ja/nej', '{{ product.tour_available|yesno }}'),
+                (u'Som blok', '{% if product.tour_available %}{% endif %}')
+            ]),
+            (u'Mulighed for oplæg om uddannelse', [
+                (u'ja/nej', '{{ product.presentation_available|yesno }}'),
+                (
+                    u'Som blok',
+                    '{% if product.presentation_available %}{% endif %}'
+                )
+            ]),
+            (u'Andet', [
+                (u'ja/nej', '{{ product.custom_available|yesno }}'),
+                (u'Som blok', '{% if product.custom_available %}{% endif %}'),
+                (u'Tekst', '{{ product.custom_name }}')
+            ]),
+            (u'Varighed', '{{ product.duration }}'),
+            (u'Beskrivelse', '{{ product.description }}'),
+            (u'Pris', '{{ product.price }}'),
+            (
+                u'Antal pladser på venteliste',
+                '{{ product.waiting_list_length }}'
+            ),
+            (
+                u'Højeste antal deltagere',
+                '{{ product.maximum_number_of_visitors }}'
+            ),
+            (u'Nødvendigt antal værter', '{{ product.needed_hosts }}'),
+            (u'Nødvendigt antal undervisere', '{{ product.needed_teachers }}'),
+            (u'Tilbud kræver brug af et eller flere lokaler', [
+                (u'ja/nej', '{{ product.rooms_needed|yesno }}'),
+                (u'Som blok', '{% if product.rooms_needed %}{% endif %}')
+            ]),
+            (u'Lokalitet', [
+                (u'Navn', '{{ product.locality.name }}'),
+                (u'Adresse', '{{ product.locality.address_line }}'),
+                (u'Postnr/by', '{{ product.locality.zip_city }}')
+            ]),
+            (u'Enhed', '{{ product.organizationalunit.name }}'),
+            (u'Teaser', '{{ product.teaser }}'),
+            (u'Kommentar indskrevet til tilbuddet', '{{ product.comment }}'),
+
+        ],))
+
+        modelmap.append((u'Besøg', [
+            (u'ID', '{{ visit.id }}'),
+            (u'Tidspunkt', '{{ visit.eventtime.start }}'),
+            (u'Ønsket tidspunkt', '{{ visit.desired_time }}'),
+            (u'Prioritet', '{{ visit.multi_priority }}'),
+            (u'Underbesøg?', [
+                (u'ja/nej', '{{ visit.is_multi_sub|yesno }}'),
+                (u'Som blok', '{% if visit.is_multi_sub %}{% endif %}')
+            ]),
+            (u'Lokalestatus', '{{ visit.room_status }}'),
+            (u'Varighed', '{{ visit.eventtime.get_duration_display }}'),
+        ],))
+
+        modelmap.append(('Tilmelding', [
+            (u'ID', '{{ booking.id }}'),
+            (u'Ventelisteposition', '{{ booking.waitinglist_spot }}'),
+            (u'Aflyst', '{{ booking.cancelled }}'),
+            (u'Bemærkninger', '{{ booking.notes }}'),
+            (u'Besøgende navn', '{{ booking.booker.get_full_name }}'),
+            (u'Besøgende institution', '{{ booking.booker.school.name }}'),
+            (u'Besøgende adresse', '{{ booking.booker.school.full_address }}'),
+            (u'Besøgende telefon', '{{ booking.booker.phone }}'),
+            (u'Besøgende email', '{{ booking.booker.email }}'),
+            (u'Antal deltagere', '{{ booking.booker.attendee_count }}'),
+            (u'Fag/niveau', [
+                (
+                    u'Kommasepareret',
+                    '{{ booking.subjectlevel_displayvalues|join:", " }}'
+                ),
+                (
+                    u'Punktliste',
+                    '<ul>{% for subjectlevel in '
+                    'booking.subjectlevel_displayvalues %}'
+                    '<li>{{ subjectlevel }}</li>{% endfor %}</ul>'
+                )
+            ])
+        ],))
 
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
