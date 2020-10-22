@@ -436,7 +436,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'])
+            typeId = int(form.cleaned_data['type'].pk)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(reverse(
@@ -655,7 +655,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
-            typeId = int(form.cleaned_data['type'].id)
+            typeId = int(form.cleaned_data['type'].pk)
             unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(

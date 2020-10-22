@@ -5,7 +5,7 @@
         <div id="gymnasiefag" class="rowcontainer institution_level_dependent" data-display-value="1">
             {% for form in gymnasiesubjectform %}
                 {{ form.id }}
-                <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
+                <div class="form-group{% if forloop.first %} rowprototype{% endif %} row">
                     <div class="col-sm-2">
                         <label class="control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
                         </div>

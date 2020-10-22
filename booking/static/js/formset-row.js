@@ -14,6 +14,7 @@ $(function() {
             if (totalRows < maxRows) {
                 var newRow = $(rowPrototype).clone();
                 newRow.attr("id", "");
+                newRow.removeClass("rowprototype");
                 newRow.find("input,select").each(function(){
                     this.id = formset._replaceCounter(this.id, totalRows);
                     this.name = formset._replaceCounter(this.name, totalRows);

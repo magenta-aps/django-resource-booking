@@ -14,6 +14,7 @@ source python-env/bin/activate
 # Run syntax check
 flake8 --exclude="migrations,data" booking/ resource_booking/ profile/
 STATUS=$?
+
 # Exit python virtual environment
 deactivate
 
