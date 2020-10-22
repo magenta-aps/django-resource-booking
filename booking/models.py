@@ -2068,6 +2068,24 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 Product.resource_type_choices
                 if x[0] in Product.applicable_types)
 
+    @classmethod
+    def type_name(cls, type):
+        for value, label in cls.resource_type_choices:
+            if value == type:
+                return label
+
+    def type_display(self):
+        return Product.type_name(self.type)
+
+    @classmethod
+    def state_name(cls, type):
+        for value, label in cls.state_choices:
+            if value == type:
+                return label
+
+    def state_display(self):
+        return Product.state_name(self.state)
+
     rooms_needed = models.BooleanField(
         default=True,
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
@@ -3048,6 +3066,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         default=STATUS_NOT_ASSIGNED,
         verbose_name=_(u'Status for tildeling af lokaler')
     )
+
+    @classmethod
+    def room_status_name(cls, room_status):
+        for value, label in cls.room_status_choices:
+            if value == room_status:
+                return label
+
+    @property
+    def room_status_display(self):
+        return Visit.room_status_name(self.room_status)
 
     statistics = models.ForeignKey(
         ObjectStatistics,
@@ -5331,6 +5359,10 @@ class School(models.Model):
         verbose_name=_(u'Uddannelsestype')
     )
 
+    @property
+    def full_address(self):
+        return u"%s, %s" % (self.address, unicode(self.postcode))
+
     def __unicode__(self):
         if self.postcode is not None:
             return "%s (%d %s)" % \
@@ -5832,6 +5864,14 @@ class Booking(models.Model):
     @property
     def organizationalunit(self):
         return self.visit.real.organizationalunit
+
+    @property
+    def subjectlevel_displayvalues(self):
+        return [
+            s.display_value() for s in
+            list(self.bookinggrundskolesubjectlevel_set.all()) +
+            list(self.bookinggymnasiesubjectlevel_set.all())
+        ]
 
 
 Booking.add_visit_attr('product')
