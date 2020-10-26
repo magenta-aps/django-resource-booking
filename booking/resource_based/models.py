@@ -4,7 +4,6 @@ import math
 import re
 
 from django.contrib.auth import models as auth_models
-from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -12,6 +11,7 @@ from django.db.models import F
 from django.db.models import Q
 from django.db.models.deletion import SET_NULL
 from django.db.models.expressions import RawSQL
+from django.urls import reverse
 from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -33,7 +33,8 @@ class EventTime(models.Model):
 
     product = models.ForeignKey(
         "Product",
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     visit = models.OneToOneField(
@@ -1024,7 +1025,8 @@ class CalendarCalculatedAvailable(models.Model):
         Calendar,
         null=False,
         blank=False,
-        verbose_name=_('Kalender')
+        verbose_name=_('Kalender'),
+        on_delete=models.CASCADE
 
     )
     start = models.DateTimeField(
@@ -1151,7 +1153,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
         Calendar,
         null=False,
         blank=False,
-        verbose_name=_('Kalender')
+        verbose_name=_('Kalender'),
+        on_delete=models.CASCADE
     )
 
     AVAILABLE = 0
@@ -1445,11 +1448,13 @@ class ResourceType(models.Model):
 class Resource(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(
         ResourceType,
-        verbose_name=_('Type')
+        verbose_name=_('Type'),
+        on_delete=models.CASCADE
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_("Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed"),
+        on_delete=models.CASCADE
     )
     calendar = models.OneToOneField(
         Calendar,
@@ -1615,7 +1620,8 @@ class UserResource(Resource):
 
     user = models.ForeignKey(
         auth_models.User,
-        verbose_name=_(u"Underviser")
+        verbose_name=_(u"Bruger"),
+        on_delete=models.CASCADE
     )
 
     def __init__(self, *args, **kwargs):
@@ -1720,7 +1726,8 @@ class RoomResource(Resource):
     # TODO: Begræns ud fra enhed
     room = models.ForeignKey(
         "Room",
-        verbose_name=_(u"Lokale")
+        verbose_name=_(u"Lokale"),
+        on_delete=models.CASCADE
     )
 
     def __init__(self, *args, **kwargs):
@@ -1777,7 +1784,8 @@ class ItemResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_('Lokalitet')
+        verbose_name=_('Lokalitet'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -1792,7 +1800,8 @@ class VehicleResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_('Lokalitet')
+        verbose_name=_('Lokalitet'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -1807,14 +1816,18 @@ class CustomResource(NamedResource):
 
 
 class ResourcePool(AvailabilityUpdaterMixin, models.Model):
-    resource_type = models.ForeignKey(ResourceType)
+    resource_type = models.ForeignKey(
+        ResourceType,
+        on_delete=models.CASCADE
+    )
     name = models.CharField(
         max_length=1024,
         verbose_name=_('Navn')
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_("Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed"),
+        on_delete=models.CASCADE
     )
     # TODO: Begrænse på enhed, resource_type
     resources = models.ManyToManyField(
@@ -1923,7 +1936,10 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
-    product = models.ForeignKey("Product")
+    product = models.ForeignKey(
+        "Product",
+        on_delete=models.CASCADE
+    )
     resource_pool = models.ForeignKey(
         ResourcePool,
         verbose_name=_(u"Ressourcegruppe"),
@@ -1995,17 +2011,20 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
     visit = models.ForeignKey(
         "Visit",
         verbose_name=_(u"Besøg"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
     resource = models.ForeignKey(
         Resource,
         verbose_name=_(u"Ressource"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
     resource_requirement = models.ForeignKey(
         ResourceRequirement,
         verbose_name=_(u"Ressourcebehov"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
 
     @property

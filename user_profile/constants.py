@@ -13,11 +13,7 @@ ADMINISTRATOR = 3
 FACULTY_EDITOR = 4
 NONE = 5
 
-EDIT_ROLES = set([
-    ADMINISTRATOR,
-    FACULTY_EDITOR,
-    COORDINATOR
-])
+EDIT_ROLES = {ADMINISTRATOR, FACULTY_EDITOR, COORDINATOR}
 
 user_role_choices = (
     (TEACHER, _(u"Underviser")),
@@ -33,6 +29,7 @@ def get_role_name(role):
     for id, label in user_role_choices:
         if id == role:
             return label
+
 
 # Which roles are available for editing?
 # E.g. a faculty editor can create, edit and delete coordinators but not admins

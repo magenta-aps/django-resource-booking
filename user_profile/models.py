@@ -5,11 +5,11 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db.models import Aggregate
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models.functions import Coalesce
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -104,8 +104,14 @@ class UserRole(models.Model):
 class UserProfile(models.Model):
     """User profile associated with each user."""
 
-    user = models.OneToOneField(User)
-    user_role = models.ForeignKey(UserRole)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+    user_role = models.ForeignKey(
+        UserRole,
+        on_delete=models.CASCADE
+    )
     # Unit must always be specified for coordinators,
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
@@ -592,7 +598,10 @@ class UserProfile(models.Model):
 class EmailLoginURL(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
     success_url = models.CharField(max_length=2024)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 

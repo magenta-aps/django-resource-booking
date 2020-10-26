@@ -3,11 +3,11 @@
 import datetime
 from itertools import chain
 
-from django.core.urlresolvers import reverse, reverse_lazy
 from django.forms import models as forms_models
 from django.forms.widgets import TextInput, HiddenInput, Select
 from django.http import Http404
 from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import RedirectView

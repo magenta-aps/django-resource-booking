@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import static
-from django.core.urlresolvers import RegexURLPattern
+from django.urls import URLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
 from django.views.i18n import JavaScriptCatalog
@@ -495,7 +495,7 @@ embed_views = [
 
 embedpatterns = []
 for x in urlpatterns:
-    if isinstance(x, RegexURLPattern):
+    if isinstance(x, URLPattern):
         if hasattr(x, 'name') and x.name in embed_views:
             # Tell template system that these URLs can be embedded
             x.default_args['can_be_embedded'] = True
@@ -503,7 +503,7 @@ for x in urlpatterns:
             # Add a corresponding embed URL
             embedpatterns.append(
                 url(
-                    '^(?P<embed>embed/)' + x.regex.pattern[1:],
+                    '^(?P<embed>embed/)' + x.pattern.regex.pattern[1:],
                     xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )

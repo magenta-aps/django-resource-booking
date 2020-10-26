@@ -80,7 +80,8 @@ class RoomResponsible(models.Model):
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     allow_null_unit_editing = True
@@ -135,7 +136,10 @@ class OrganizationalUnit(models.Model):
         ordering = ['name']
 
     name = models.CharField(max_length=100)
-    type = models.ForeignKey(OrganizationalUnitType)
+    type = models.ForeignKey(
+        OrganizationalUnitType,
+        on_delete=models.CASCADE
+    )
     parent = models.ForeignKey(
         'self',
         null=True,
@@ -1149,7 +1153,8 @@ class EmailTemplate(models.Model):
 
     type = models.ForeignKey(
         EmailTemplateType,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     subject = models.CharField(
@@ -1335,12 +1340,25 @@ class KUEmailRecipient(models.Model):
 
     all_types = set([k for k, v in type_choices])
 
-    email_message = models.ForeignKey('KUEmailMessage')
+    email_message = models.ForeignKey(
+        'KUEmailMessage',
+        on_delete=models.CASCADE
+    )
     name = models.TextField(blank=True, null=True)
     formatted_address = models.TextField(blank=True, null=True)
     email = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User, blank=True, null=True)
-    guest = models.ForeignKey('Guest', blank=True, null=True)
+    user = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    guest = models.ForeignKey(
+        'Guest',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
 
     def __str__(self):
@@ -1494,15 +1512,23 @@ class ProductGymnasieFag(models.Model):
 
     class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
-    product = models.ForeignKey("Product", blank=False, null=False)
+    product = models.ForeignKey(
+        "Product",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
                 Subject.SUBJECT_TYPE_BOTH
             ]
-        }
+        },
+        on_delete=models.CASCADE
     )
 
     display_value_cached = models.CharField(
@@ -1583,7 +1609,12 @@ class ProductGrundskoleFag(models.Model):
 
     class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
-    product = models.ForeignKey("Product", blank=False, null=False)
+    product = models.ForeignKey(
+        "Product",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
         Subject, blank=False, null=False,
         limit_choices_to={
@@ -1591,7 +1622,8 @@ class ProductGrundskoleFag(models.Model):
                 Subject.SUBJECT_TYPE_GRUNDSKOLE,
                 Subject.SUBJECT_TYPE_BOTH
             ]
-        }
+        },
+        on_delete=models.CASCADE
     )
 
     # TODO: We should validate that min <= max here.
@@ -3085,7 +3117,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         related_name='cancelled_visits',
         blank=True,
         null=True,
-        default=None
+        default=None,
+        on_delete=models.SET_NULL
     )
 
     WORKFLOW_STATUS_BEING_PLANNED = 0
@@ -4508,7 +4541,8 @@ class MultiProductVisit(Visit):
         User,
         blank=True,
         null=True,
-        verbose_name=_('Besøgsansvarlig')
+        verbose_name=_('Besøgsansvarlig'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -4904,8 +4938,15 @@ class MultiProductVisit(Visit):
 
 
 class MultiProductVisitTempProduct(models.Model):
-    product = models.ForeignKey(Product, related_name='prod')
-    multiproductvisittemp = models.ForeignKey('MultiProductVisitTemp')
+    product = models.ForeignKey(
+        Product,
+        related_name='prod',
+        on_delete=models.CASCADE
+    )
+    multiproductvisittemp = models.ForeignKey(
+        'MultiProductVisitTemp',
+        on_delete=models.CASCADE
+    )
     index = models.IntegerField()
 
 
@@ -4943,7 +4984,8 @@ class MultiProductVisitTemp(models.Model):
         Product,
         null=True,
         blank=True,
-        related_name='foobar'
+        related_name='foobar',
+        on_delete=models.CASCADE
     )
     required_visits = models.PositiveIntegerField(
         default=2,
@@ -4996,7 +5038,8 @@ class VisitComment(models.Model):
         Visit,
         verbose_name=_('Besøg'),
         null=False,
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         User,
@@ -5044,7 +5087,8 @@ class Autosend(models.Model):
 
     template_type = models.ForeignKey(
         EmailTemplateType,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     def save(self, *args, **kwargs):
@@ -5085,7 +5129,8 @@ class ProductAutosend(Autosend):
     product = models.ForeignKey(
         Product,
         verbose_name=_('Besøg'),
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -5099,7 +5144,8 @@ class VisitAutosend(Autosend):
     visit = models.ForeignKey(
         Visit,
         verbose_name=_('BesøgForekomst'),
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
     inherit = models.BooleanField(
         verbose_name=_('Genbrug indstilling fra tilbud')
@@ -5224,7 +5270,8 @@ class Municipality(models.Model):
 
     region = models.ForeignKey(
         Region,
-        verbose_name=_('Region')
+        verbose_name=_('Region'),
+        on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -5258,7 +5305,8 @@ class PostCode(models.Model):
         max_length=48
     )
     region = models.ForeignKey(
-        Region
+        Region,
+        on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -5320,11 +5368,13 @@ class School(models.Model):
     )
     postcode = models.ForeignKey(
         PostCode,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
     municipality = models.ForeignKey(
         Municipality,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
     address = models.CharField(
         max_length=128,
@@ -5587,7 +5637,8 @@ class Guest(models.Model):
     school = models.ForeignKey(
         School,
         null=True,
-        verbose_name='Skole'
+        verbose_name='Skole',
+        on_delete=models.SET_NULL
     )
 
     attendee_count = models.IntegerField(
@@ -5684,14 +5735,18 @@ class Booking(models.Model):
 
     objects = BookingQuerySet.as_manager()
 
-    booker = models.OneToOneField(Guest)
+    booker = models.OneToOneField(
+        Guest,
+        on_delete=models.CASCADE
+    )
 
     visit = models.ForeignKey(
         Visit,
         null=True,
         blank=True,
         related_name='bookings',
-        verbose_name=_('Besøg')
+        verbose_name=_('Besøg'),
+        on_delete=models.SET_NULL
     )
 
     waitinglist_spot = models.IntegerField(
@@ -5939,16 +5994,29 @@ class BookingGymnasieSubjectLevel(models.Model):
         verbose_name = _('fagniveau for booking (gymnasium)')
         verbose_name_plural = _('fagniveauer for bookinger (gymnasium)')
 
-    booking = models.ForeignKey(Booking, blank=False, null=False)
+    booking = models.ForeignKey(
+        Booking,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
             ]
         }
     )
-    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+    level = models.ForeignKey(
+        GymnasieLevel,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return "%s (for booking %s)" % (self.display_value(), self.booking.pk)
@@ -5963,16 +6031,29 @@ class BookingGrundskoleSubjectLevel(models.Model):
         verbose_name = _('klasseniveau for booking (grundskole)')
         verbose_name_plural = _('klasseniveauer for bookinger(grundskole)')
 
-    booking = models.ForeignKey(Booking, blank=False, null=False)
+    booking = models.ForeignKey(
+        Booking,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GRUNDSKOLE,
             ]
         }
     )
-    level = models.ForeignKey(GrundskoleLevel, blank=False, null=False)
+    level = models.ForeignKey(
+        GrundskoleLevel,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return "%s (for booking %s)" % (self.display_value(), self.booking.pk)
@@ -6000,7 +6081,12 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
-    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    content_type = models.ForeignKey(
+        ContentType,
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL
+    )
     object_id = models.PositiveIntegerField(null=True, default=None)
     content_object = GenericForeignKey('content_type', 'object_id')
     reply_nonce = models.UUIDField(
@@ -6019,13 +6105,15 @@ class KUEmailMessage(models.Model):
         verbose_name='Template type',
         default=None,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
     reply_to_message = models.ForeignKey(
         'KUEmailMessage',
         verbose_name='Reply to',
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
 
     @staticmethod
@@ -6261,7 +6349,10 @@ class KUEmailMessage(models.Model):
 
 class BookerResponseNonce(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
-    booker = models.ForeignKey(Guest)
+    booker = models.ForeignKey(
+        Guest,
+        on_delete=models.CASCADE
+    )
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
@@ -6397,18 +6488,21 @@ class SurveyXactEvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
 
     guest = models.ForeignKey(
         Guest,
         null=False,
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
     # deprecate
     visit = models.ForeignKey(
         Visit,
-        null=False
+        null=False,
+        on_delete=models.CASCADE
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1

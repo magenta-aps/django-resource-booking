@@ -3,7 +3,6 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib.auth.models import User
 from django.core import validators
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxInput
@@ -19,6 +18,7 @@ from django.forms import Textarea
 from django.forms import TimeInput
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
+from django.urls import reverse_lazy
 from django.utils.dates import MONTHS
 from django.utils.safestring import mark_safe
 from django.utils.text import format_lazy
