@@ -94,14 +94,17 @@ class TestVisit(TestMixin, TestCase):
                 product.save()
 
                 start = datetime.utcnow() + timedelta(days=10)
-                visit = self.create_visit(product, start, start + timedelta(hours=1))
+                visit = self.create_visit(
+                    product,
+                    start,
+                    start + timedelta(hours=1)
+                )
                 visit.teachers.add(teacher)
                 # not adding host - hosts behave the same as teachers,
                 # and we want to check the case where no host is assigned
                 # (potential hosts will get mail, assigned hosts will not)
                 visit.save()
                 visits.append(visit)
-
 
         for time_mode in [
             Product.TIME_MODE_RESOURCE_CONTROLLED,
@@ -119,7 +122,11 @@ class TestVisit(TestMixin, TestCase):
             self.create_resourcerequirement(product, host_pool, 1)
             product.save()
             start = datetime.utcnow() + timedelta(days=10)
-            visit = self.create_visit(product, start, start + timedelta(hours=1))
+            visit = self.create_visit(
+                product,
+                start,
+                start + timedelta(hours=1)
+            )
             visit.teachers.add(teacher)
             # not adding host - hosts behave the same as teachers,
             # and we want to check the case where no host is assigned
@@ -223,25 +230,28 @@ class TestVisit(TestMixin, TestCase):
         host = self.create_default_host(unit=self.unit)
         coordinator = self.create_default_coordinator(unit=self.unit)
         roomguy = self.create_default_roomresponsible(unit=self.unit)
-        teacher_pool = self.create_resourcepool(
+        self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_TEACHER,
             self.unit,
             'test_teacher_pool',
             teacher.userprofile.get_resource()
         )
-        host_pool = self.create_resourcepool(
+        self.create_resourcepool(
             ResourceType.RESOURCE_TYPE_HOST,
             self.unit,
             'test_host_pool',
             teacher.userprofile.get_resource()
         )
 
-        product = self.create_product(self.unit, time_mode=Product.TIME_MODE_SPECIFIC)
+        product = self.create_product(
+            self.unit,
+            time_mode=Product.TIME_MODE_SPECIFIC
+        )
         product.roomresponsible.add(roomguy)
         product.tilbudsansvarlig = coordinator
         product.do_create_waiting_list = True
-        product.waiting_list_length=10
-        product.maximum_number_of_visitors=10
+        product.waiting_list_length = 10
+        product.maximum_number_of_visitors = 10
         product.save()
         start = datetime.utcnow() + timedelta(days=10)
         visit = self.create_visit(product, start, start + timedelta(hours=1))
@@ -253,7 +263,7 @@ class TestVisit(TestMixin, TestCase):
         guest1.attendee_count = 10
         guest1.school = School.objects.get(id=1)
         guest1.save()
-        booking1 = self.create_booking(visit, guest1)
+        self.create_booking(visit, guest1)
         guest2 = self.create_guest("Tester2")
         guest2.attendee_count = 10
         guest2.school = School.objects.get(id=2)
@@ -267,7 +277,10 @@ class TestVisit(TestMixin, TestCase):
         response = self.client.get(url)
         print(response.content)
         query = PyQuery(response.content)
-        self.assertEquals("10 har tilmeldt sig testproduct", query("#attendees").text())
+        self.assertEquals(
+            "10 har tilmeldt sig testproduct",
+            query("#attendees").text()
+        )
 
         overview = ParsedNode(query("#status-overview"))
         data = {}
@@ -283,7 +296,9 @@ class TestVisit(TestMixin, TestCase):
         self.assertDictEqual(
             {
                 u'Enhed': [u'testunit'],
-                u'Tidspunkt': [product.eventtime_set.first().interval_display, u'Redigér'],
+                u'Tidspunkt': [
+                    product.eventtime_set.first().interval_display, u'Redigér'
+                ],
                 u'Undervisere': [u'1/0 undervisere fundet', u'Redigér'],
                 u'Værter': [u'1/0 værter fundet', u'Redigér'],
                 u'Lokaler': [u'Afventer tildeling/bekræftelse', u'Redigér'],
@@ -296,7 +311,10 @@ class TestVisit(TestMixin, TestCase):
         )
 
         attendees_overview = ParsedNode(query(".attendees"))
-        self.assertEquals("Tilmeldte\n(10/10)", self.strip_inner(attendees_overview.find("h2")[0].text))
+        self.assertEquals(
+            "Tilmeldte\n(10/10)",
+            self.strip_inner(attendees_overview.find("h2")[0].text)
+        )
         attendees_list = attendees_overview.find(".list-group-item")
         for attendee in attendees_list:
             data = {}
@@ -316,13 +334,14 @@ class TestVisit(TestMixin, TestCase):
                     u'skole:': [
                         {
                             'text': 'Aabenraa Statsskole, 6200 Aabenraa',
-                            'children': [{'text': 'Aabenraa Statsskole, 6200 Aabenraa'}]
+                            'children': [
+                                {'text': 'Aabenraa Statsskole, 6200 Aabenraa'}
+                            ]
                         }
                     ]
                 },
                 data
             )
-
 
     def test_visit_edit(self):
         # test editing of visit components

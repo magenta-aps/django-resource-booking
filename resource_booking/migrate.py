@@ -3,6 +3,7 @@ from booking.models import School, GymnasieLevel, GrundskoleLevel, Region, \
     Locality, Municipality, PostCode, KUEmailMessage, Guide, \
     ExercisePresentation, EmailTemplateType
 
+
 def setup_defaults(overwrite_templates=False):
     EmailTemplateType.set_defaults()
     Region.create_defaults()

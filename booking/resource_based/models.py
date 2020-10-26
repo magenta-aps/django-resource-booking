@@ -293,7 +293,6 @@ class EventTime(models.Model):
         else:
             return 0
 
-
     @property
     def available_seats(self):
         if self.visit:

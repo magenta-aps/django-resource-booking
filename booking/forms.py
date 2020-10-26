@@ -962,7 +962,10 @@ class BookingForm(forms.ModelForm):
                     options[month] = []
                 options[month].append(option)
 
-            months = sorted(options, key=lambda month: "%04d%02d" % (month[1], month[0]))
+            months = sorted(
+                options,
+                key=lambda month: "%04d%02d" % (month[1], month[0])
+            )
             for month in months:
                 optionlist = options[month]
                 if month is None:

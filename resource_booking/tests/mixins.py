@@ -521,4 +521,8 @@ class TestMixin(object):
 
     @staticmethod
     def strip_inner(text, trim_empty_lines=False):
-        return '\n'.join([x.strip() for x in text.split('\n') if x.strip() or not trim_empty_lines])
+        return '\n'.join([
+            x.strip()
+            for x in text.split('\n')
+            if x.strip() or not trim_empty_lines
+        ])

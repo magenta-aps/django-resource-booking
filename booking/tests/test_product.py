@@ -214,7 +214,7 @@ class TestProduct(TestMixin, TestCase):
                 {'type': str(product_type + 10)}
             )
             self.assertEquals(200, response.status_code)
-            query = pq(response.content)
+            query = PyQuery(response.content)
             errors = query("[name=\"type\"]") \
                 .closest("div.form-group").find("ul.errorlist li")
             self.assertEquals(1, len(errors))
@@ -306,7 +306,7 @@ class TestProduct(TestMixin, TestCase):
                         self._apply_value(form_data, key, submit_value)
                     )
                     self.assertEquals(200, response.status_code, msg)
-                    query = pq(response.content)
+                    query = PyQuery(response.content)
                     errors = query("[name=\"%s\"]" % key) \
                         .closest("div.form-group").find("ul.errorlist li")
                     self.assertEquals(1, len(errors), msg)
@@ -426,7 +426,7 @@ class TestProduct(TestMixin, TestCase):
 
         response = self.client.get("/product/%d" % product.id)
         self.assertEquals(200, response.status_code)
-        query = pq(response.content)
+        query = PyQuery(response.content)
         self.assertEquals([
                 u'Du er her:',
                 u'Søgning',
@@ -574,7 +574,7 @@ class TestProduct(TestMixin, TestCase):
             q['page'] = page
             response = self.client.get("/search?%s" % q.urlencode())
             self.assertEquals(200, response.status_code)
-            query = pq(response.content)
+            query = PyQuery(response.content)
             self.assertEquals(
                 u"%d resultater matcher din søgning på \"%s\""
                 % (len(products), query_params.get('q', '')),
