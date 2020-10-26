@@ -526,9 +526,11 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
                 )
                 # We run a raw query on individual words, ANDed together
                 # and with a wildcard at the end of each word
-                searchexpression = " & ".join(
-                    ["%s:*" % x for x in searchexpression.split()]
-                )
+                searchexpression = " & ".join([
+                    "%s:*" % x.strip()
+                    for x in searchexpression.split()
+                    if len(x)
+                ])
                 query = SearchQuery(searchexpression)
                 qs = self.model.objects.annotate(
                     rank=SearchRank(F('search_vector'), query)
@@ -1295,14 +1297,18 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             for sv_text in submitvalue:
                 sv = sv_text.split(",")
                 subject_pk = sv.pop(0)
-                subject = Subject.objects.get(pk=subject_pk)
-                result.append({
-                    'submitvalue': sv_text,
-                    'description': ProductGymnasieFag.display(
-                        subject,
-                        [GymnasieLevel.objects.get(pk=x) for x in sv]
-                    )
-                })
+                try:
+                    subject = Subject.objects.get(pk=subject_pk)
+                    result.append({
+                        'submitvalue': sv_text,
+                        'description': ProductGymnasieFag.display(
+                            subject,
+                            [GymnasieLevel.objects.get(pk=x) for x in sv]
+                        )
+                    })
+                except Subject.DoesNotExist:
+                    # raise ValidationError()
+                    pass
 
         return result
 
@@ -3875,7 +3881,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     @staticmethod
     def build_breadcrumbs(template, cloning=False):
-        if template:
+        if template and template.id:
             return EmailTemplateDetailView.build_breadcrumbs(template) + [
                 {
                     'url': reverse(

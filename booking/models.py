@@ -1992,7 +1992,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         max_digits=10,
         decimal_places=2,
-        verbose_name=_('Pris')
+        verbose_name=_('Pris'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     gymnasiefag = models.ManyToManyField(
@@ -2106,12 +2107,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     minimum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_('Mindste antal deltagere')
+        verbose_name=_('Mindste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
     maximum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_('Højeste antal deltagere')
+        verbose_name=_('Højeste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     # Waiting lists
@@ -2122,17 +2125,24 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     waiting_list_length = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_('Antal pladser')
+        verbose_name=_('Antal pladser'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_days = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_('Lukning af venteliste (dage inden besøg)')
+        verbose_name=_('Lukning af venteliste (dage inden besøg)'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_hours = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_('Lukning af venteliste (timer inden besøg)')
+        verbose_name=_('Lukning af venteliste (timer inden besøg)'),
+
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(23)
+        ]
     )
 
     do_show_countdown = models.BooleanField(
@@ -2207,10 +2217,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_('Antal dage før afholdelse, '
                        'hvor der lukkes for tilmeldinger'),
         blank=False,
-        null=True
+        null=True,
+        validators=[validators.MinValueValidator(0)]
     )
 
-    booking_max_days_in_future = models.IntegerField(
+    booking_max_days_in_future = models.PositiveIntegerField(
         default=90,
         verbose_name=_(
             'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
@@ -2689,7 +2700,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 return True
             if eventtime.visit.is_bookable:
                 return True
-
         return False
 
     @property
@@ -3984,7 +3994,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         s = self.visitautosend_set.filter(
             template_type=template_type
         )
-
         # If no rule specified, always inherit
         if s.count() == 0:
             return True
@@ -5164,6 +5173,10 @@ class Room(models.Model):
             RoomResource.create(self)
 
         return return_value
+
+    @property
+    def resource(self):
+        return self.roomresource_set.first()
 
 
 class Region(models.Model):
@@ -6537,22 +6550,32 @@ class SurveyXactEvaluationGuest(models.Model):
         self.save()
 
     def send(self, first=True):
+        template_types = []
         if first:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_first_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_first
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
         else:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_second_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_second
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
 
-        sent = self.booking.autosend(template)
+        sent = False
+        for template_type in template_types:
+            if self.booking.autosend(template_type):
+                sent = True
         if sent:
             self.status = new_status
             self.save()

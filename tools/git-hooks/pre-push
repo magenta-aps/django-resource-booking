@@ -12,10 +12,15 @@ echo $GIT_ROOT
 source python-env/bin/activate
 
 # Run syntax check
+<<<<<<< HEAD
 # flake8 --exclude="migrations,data" booking/ resource_booking/ profile/
 # STATUS=$?
 echo "Flake8 check disabled for python3 upgrade"
 STATUS=0
+=======
+flake8 --exclude="migrations,data" booking/ resource_booking/ profile/
+STATUS=$?
+>>>>>>> feature/36798_test
 
 # Exit python virtual environment
 deactivate

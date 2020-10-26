@@ -750,7 +750,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequiredMixin,
                 # after the form has saved m2m relations.
                 self.object.save()
             return self.redirect(
-                reverse('resource-view', args=[self.object.id])
+                reverse('resourcepool-view', args=[self.object.id])
             )
         else:
             return self.render_to_response(

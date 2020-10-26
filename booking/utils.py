@@ -256,7 +256,7 @@ def merge_dicts(*dicts):
 
 def flatten(args):
     flat = []
-    if type(args) in (type(()), type([])):
+    if type(args) in (tuple, list):
         for arg in args:
             flat.extend(flatten(arg))
     else:
@@ -545,7 +545,6 @@ def surveyxact_upload(survey_id, data):
             value = str(value)
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
-
     response = requests.post(
         config['url']['upload'],
         headers={
