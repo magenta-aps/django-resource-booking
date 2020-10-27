@@ -691,15 +691,15 @@ class EventTime(models.Model):
         return " ".join([unicode(x) for x in parts])
 
     def on_start(self):
-        self.has_notified_start = True
         if self.visit:
             self.visit.on_starttime()
+        self.has_notified_start = True
         self.save()
 
     def on_end(self):
-        self.has_notified_end = True
         if self.visit:
             self.visit.on_endtime()
+        self.has_notified_end = True
         self.save()
 
 
