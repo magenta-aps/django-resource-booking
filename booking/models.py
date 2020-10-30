@@ -5151,6 +5151,7 @@ class VisitAutosend(Autosend):
         verbose_name=_('Genbrug indstilling fra tilbud')
     )
 
+
     def get_inherited(self):
         if self.inherit:
             return self.visit.get_autosend(self.template_type)

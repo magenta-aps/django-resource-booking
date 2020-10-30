@@ -2,6 +2,7 @@
 import datetime
 import math
 import re
+from functools import total_ordering
 
 from django.contrib.auth import models as auth_models
 from django.core.validators import MinValueValidator
@@ -1037,6 +1038,7 @@ class CalendarCalculatedAvailable(models.Model):
     )
 
 
+@total_ordering
 class CalendarEventInstance(object):
     start = None
     end = None
@@ -1121,11 +1123,19 @@ class CalendarEventInstance(object):
 
         return obj
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         if isinstance(other, CalendarEventInstance):
             return (
-                (self.start - other.start).total_seconds() or
-                (self.end - other.end).total_seconds()
+                    (self.start < other.start) or
+                    (self.end < other.end)
+            )
+        return NotImplemented
+
+    def __eq__(self, other):
+        if isinstance(other, CalendarEventInstance):
+            return (
+                    (self.start == other.start) and
+                    (self.end == other.end)
             )
         return NotImplemented
 
@@ -1438,7 +1448,6 @@ class ResourceType(models.Model):
             except ResourceType.DoesNotExist:
                 item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
-                print("Created new ResourceType %d=%s" % (id, name))
 
     def __str__(self):
         return self.name

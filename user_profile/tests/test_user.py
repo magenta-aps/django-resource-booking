@@ -2,13 +2,14 @@
 import re
 
 from django.contrib.auth.models import User
+from django.template.response import TemplateResponse
 from django.test import TestCase
 from pyquery import PyQuery as pq
 
 from booking.models import OrganizationalUnit, OrganizationalUnitType, Product
 from booking.resource_based.models import ResourceType
-from profile.constants import TEACHER, HOST, FACULTY_EDITOR, COORDINATOR
-from profile.models import UserRole
+from user_profile.constants import TEACHER, HOST, FACULTY_EDITOR, COORDINATOR
+from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin
 
 
@@ -101,7 +102,7 @@ class TestUser(TestMixin, TestCase):
             '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'
             'Opret ny bruger'
             '</a>',
-            response.content
+            str(response.content)
         )
         query = pq(response.content)
         items = query("ul.list-unstyled li")

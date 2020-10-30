@@ -9,7 +9,7 @@ from pyquery import PyQuery
 from booking.models import Product, KUEmailRecipient, EmailTemplateType, \
     RoomResponsible, ResourceType, OrganizationalUnitType, School, \
     OrganizationalUnit, Locality
-from profile.models import UserRole
+from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
 from django.test import TestCase
 
@@ -180,7 +180,7 @@ class TestVisit(TestMixin, TestCase):
                 return (item.name, item.email)
 
         for visit in visits:
-            for template_type_key, expected_recipients in expected.iteritems():
+            for template_type_key, expected_recipients in expected.items():
                 actual_recipients = visit.get_recipients(
                     EmailTemplateType.get(template_type_key)
                 )
@@ -275,7 +275,6 @@ class TestVisit(TestMixin, TestCase):
         url = "/visit/%d/" % visit.id
         self.login(url, self.admin)
         response = self.client.get(url)
-        print(response.content)
         query = PyQuery(response.content)
         self.assertEquals(
             "10 har tilmeldt sig testproduct",

@@ -34,7 +34,7 @@ from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import Subject
 from booking.utils import flatten
-from profile.models import UserRole
+from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
 
 
@@ -300,7 +300,7 @@ class TestProduct(TestMixin, TestCase):
                 for submit_value in self._ensure_list(value['fail']):
                     msg = u"Testing with value %s in field %s, " \
                           "expected to fail, did not fail"\
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     response = self.client.post(
                         url,
                         self._apply_value(form_data, key, submit_value)
@@ -320,7 +320,7 @@ class TestProduct(TestMixin, TestCase):
                         else (v, v)
                     msg = u"Testing with value %s in field %s, " \
                           "expected to succeed, did not succeed" \
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     response = self.client.post(
                         url,
                         self._apply_value(form_data, key, submit_value)
@@ -447,7 +447,7 @@ class TestProduct(TestMixin, TestCase):
             'hvad': self._get_choices_label(
                 Product.resource_type_choices, product_type
             ),
-            u'arrangør': unicode(self.unit.name),
+            u'arrangør': self.unit.name,
         }
         if 'maximum_number_of_visitors' in data:
             expected_data['antal'] = \
@@ -465,7 +465,7 @@ class TestProduct(TestMixin, TestCase):
             )
         if 'locality' in data:
             expected_data['hvor'] = '\n'.join([
-                unicode(getattr(data['locality'], x))
+                getattr(data['locality'], x)
                 for x in ['name', 'address_line', 'zip_city']
                 if len(x.strip()) > 0
             ])
@@ -482,7 +482,7 @@ class TestProduct(TestMixin, TestCase):
             expected_data['mulighed for'] = '\n'.join(options)
 
         expected_data = {
-            unicode(key+":"): value
+            (key+":"): value
             for key, value in expected_data.items()
         }
 
@@ -490,7 +490,7 @@ class TestProduct(TestMixin, TestCase):
             key: '\n'.join([v for v in value])
             for key, value in ParsedNode(
                 query(".panel-body dl.dl-horizontal")
-            ).extract_dl(True).iteritems()
+            ).extract_dl(True).items()
         }
         self.assertDictEqual(expected_data, rightbox_data)
 
@@ -602,9 +602,9 @@ class TestProduct(TestMixin, TestCase):
                     actual = {
                         'type': self._get_choices_key(
                             Product.type_choices,
-                            unicode(q_list_item.find(
+                            q_list_item.find(
                                 ".media-body > div.small"
-                            ).text())
+                            ).text()
                         ),
                         'title': "\n".join(flatten([
                             ParsedNode._get_text_nodes(node)
@@ -893,7 +893,7 @@ class TestProduct(TestMixin, TestCase):
                 return (item.name, item.email)
 
         for product in products:
-            for template_type_key, expected_recipients in expected.iteritems():
+            for template_type_key, expected_recipients in expected.items():
                 actual_recipients = product.get_recipients(
                     EmailTemplateType.get(template_type_key)
                 )

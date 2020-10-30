@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytz
 from django.contrib.auth.models import User
+from django.core import management
 from django.db.models import Model
 from django.utils.datetime_safe import datetime
 from pyquery import PyQuery
@@ -23,12 +24,12 @@ from booking.models import Visit
 from booking.models import VisitAutosend
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from profile.constants import ADMINISTRATOR
-from profile.constants import COORDINATOR
-from profile.constants import FACULTY_EDITOR
-from profile.constants import HOST
-from profile.constants import TEACHER
-from profile.models import UserRole, UserProfile
+from user_profile.constants import ADMINISTRATOR
+from user_profile.constants import COORDINATOR
+from user_profile.constants import FACULTY_EDITOR
+from user_profile.constants import HOST
+from user_profile.constants import TEACHER
+from user_profile.models import UserRole, UserProfile
 
 from django.test.client import Client
 
@@ -37,6 +38,8 @@ class ParsedNode(object):
     def __init__(self, el):
         if isinstance(el, PyQuery):
             el = el[0]
+        if isinstance(el, ParsedNode):
+            el = el.el
         self.el = el
 
     def __str__(self):
@@ -78,7 +81,7 @@ class ParsedNode(object):
     @staticmethod
     def _get_text_nodes(element):
         return [
-            unicode(x.strip())
+            x.strip()
             for x in element.itertext()
             if len(x.strip()) > 0
         ]
@@ -87,9 +90,9 @@ class ParsedNode(object):
         return [ParsedNode(n) for n in self.el.cssselect(selector)]
 
     def dict(self):
+        text = self.text
         d = {
-            "text": self.text.strip()
-            if self.text else None
+            "text": text.strip() if text else None
         }
         if self.tag == 'a':
             d['url'] = self.attr("href")
@@ -104,7 +107,7 @@ class ParsedNode(object):
     def extract_dl(self, text_only=False, as_dicts=True):
         data = {}
         for item in self.find("dt"):
-            key = unicode(item.text).strip().lower()
+            key = item.text.strip().lower()
             value = []
             for node in item.el.itersiblings():
                 if node.tag != 'dd':
@@ -122,8 +125,7 @@ class ParsedNode(object):
     def extract_ul(self, as_dict=True):
         data = []
         for node in self.find("li"):
-            parsednode = ParsedNode(node)
-            data.append(parsednode.dict() if as_dict else parsednode)
+            data.append(node.dict() if as_dict else node)
         return data
 
     def extract_table(self):
@@ -131,7 +133,7 @@ class ParsedNode(object):
         return [
             {
                 headers[i]: ParsedNode(cell).dict()
-                for (i, cell) in enumerate(row.cssselect("td"))
+                for (i, cell) in enumerate(row.el.cssselect("td"))
             }
             for row in self.find("tbody tr")
         ]
@@ -148,6 +150,7 @@ class TestMixin(object):
     @classmethod
     def setUpClass(cls):
         super(TestMixin, cls).setUpClass()
+        management.call_command('flush', '--no-input')
         (cls.admin, c) = User.objects.get_or_create(
             {'is_superuser': True},
             username="admin"
