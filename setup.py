@@ -37,7 +37,8 @@ designed for the University of Copenhagen.""",
           'beautifulsoup4==4.7.1',
           'Pillow==6.0.0',
           'django-extensions==2.1.9',
-          "ipython==7.18.1"
+          "ipython==7.18.1",
+          "pyquery"=="1.4.1"
       ],
       entry_points="""
       # -*- Entry points: -*-
