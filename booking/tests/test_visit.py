@@ -288,9 +288,9 @@ class TestVisit(TestMixin, TestCase):
             values = []
             for c in row.children:
                 if c.tag == 'strong':
-                    key = unicode(c.text)
+                    key = c.text
                 elif c.tag == 'div':
-                    values.append(unicode(c.text))
+                    values.append(c.text)
             data[key] = values
         self.assertDictEqual(
             {

@@ -102,7 +102,7 @@ class TestUser(TestMixin, TestCase):
             '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'
             'Opret ny bruger'
             '</a>',
-            str(response.content)
+            str(response.content).replace("\\n", "\n")
         )
         query = pq(response.content)
         items = query("ul.list-unstyled li")

@@ -40,7 +40,7 @@ from django.views.generic.edit import FormView, ProcessFormView
 import booking.models as booking_models
 import booking.urls as urls
 
-from booking.constants import LOGACTION_CREATE
+from booking.constants import LOGACTION_CREATE, AVAILABLE_SEATS_NO_LIMIT
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
 from booking.forms import AssignmentHelpForm
@@ -1941,7 +1941,9 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         return qs
 
     def get_context_data(self, **kwargs):
-        context = {}
+        context = {
+            'AVAILABLE_SEATS_NO_LIMIT': AVAILABLE_SEATS_NO_LIMIT
+        }
 
         user = self.request.user
 
