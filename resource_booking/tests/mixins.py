@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-import backports.unittest_mock
 import pytz
 from django.contrib.auth.models import User
 from django.db.models import Model
@@ -31,7 +30,6 @@ from profile.constants import HOST
 from profile.constants import TEACHER
 from profile.models import UserRole, UserProfile
 
-backports.unittest_mock.install()  # noqa
 from django.test.client import Client
 
 

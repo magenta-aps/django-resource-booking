@@ -186,7 +186,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 workflow_status=autoassign_fail
             ).distinct(),
             'status_id': autoassign_fail,
-            'status_name': _(u"Ressourceændring")
+            'status_name': _("Ressourceændring")
         }
 
         for list in context['lists']:
@@ -269,8 +269,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'color': self.HEADING_RED,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u"%(count)d besøg under planlægning",
-                u"%(count)d besøg under planlægning",
+                "%(count)d besøg under planlægning",
+                "%(count)d besøg under planlægning",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
@@ -295,8 +295,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u"%(count)d planlagt besøg",
-                u"%(count)d planlagte besøg",
+                "%(count)d planlagt besøg",
+                "%(count)d planlagte besøg",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
@@ -347,8 +347,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_RED,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg der mangler undervisere",
-                    u"%(count)d besøg der mangler undervisere",
+                    "%(count)d besøg der mangler undervisere",
+                    "%(count)d besøg der mangler undervisere",
                     'count'
                 ),
                 'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
@@ -358,8 +358,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_GREEN,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg hvor jeg er underviser",
-                    u"%(count)d besøg hvor jeg er underviser",
+                    "%(count)d besøg hvor jeg er underviser",
+                    "%(count)d besøg hvor jeg er underviser",
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
@@ -403,8 +403,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_RED,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg der mangler værter",
-                    u"%(count)d besøg der mangler værter",
+                    "%(count)d besøg der mangler værter",
+                    "%(count)d besøg der mangler værter",
                     'count',
                 ),
                 'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
@@ -414,8 +414,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_GREEN,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg hvor jeg er vært",
-                    u"%(count)d besøg hvor jeg er vært",
+                    "%(count)d besøg hvor jeg er vært",
+                    "%(count)d besøg hvor jeg er vært",
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
@@ -486,7 +486,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
-                            _(u"Du har rollen 'Fakultetsredaktør', men " +
+                            _("Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
                     unit = OrganizationalUnit.objects.get(
@@ -494,14 +494,14 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     )
                     if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
-                            _(u"Du kan kun redigere enheder, som " +
+                            _("Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
                 elif current_role == COORDINATOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
-                            _(u"Du har rollen 'Koordinator', men er ikke " +
+                            _("Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
                     unit = OrganizationalUnit.objects.get(
@@ -509,7 +509,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     )
                     if unit and not unit == current_unit:
                         raise AccessDenied(
-                            _(u"Du kan kun redigere enheder, som du selv er" +
+                            _("Du kan kun redigere enheder, som du selv er" +
                               " koordinator for.")
                         )
             if hasattr(self.object, 'userprofile'):
@@ -517,8 +517,8 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                 if self.object != current_user and \
                         object_role not in current_profile.available_roles:
                     raise AccessDenied(
-                        _(u"Du har ikke rettigheder til at redigere brugere "
-                          u"med rollen \"%s\""
+                        _("Du har ikke rettigheder til at redigere brugere "
+                          "med rollen \"%s\""
                           % role_to_text(object_role))
                     )
             return result
@@ -629,7 +629,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         if object and object.pk:
             breadcrumbs.append({
                 'url': reverse('user_edit', args=[object.pk]),
-                'text': _(u"Redigér bruger '%s'") % object.username
+                'text': _("Redigér bruger '%s'") % object.username
             })
         else:
             breadcrumbs.append({
@@ -659,7 +659,7 @@ class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
         breadcrumbs = UserListView.build_breadcrumbs()
         breadcrumbs.append({
             'url': reverse('user_delete', args=[object.pk]),
-            'text': _(u"Slet bruger '%s'") % object.username
+            'text': _("Slet bruger '%s'") % object.username
         })
         return breadcrumbs
 
@@ -859,14 +859,14 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
 
         # Heading
         writer.writerow([
-            _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-            _(u"Besøgsdato"), _(u"Klassetrin"), _(u"Niveau"),
-            _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
-            _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
-            _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
-            _(u"Lærer email"), _(u"Bemærkninger på tilbud"),
-            _(u"Bemærkninger fra koordinator"), _(u"Bemærkninger fra lærer"),
-            _(u"Værter"), _(u"Undervisere")
+            _("Enhed"), _("Tilmelding"), _("Type"), _("Tilbud"),
+            _("Besøgsdato"), _("Klassetrin"), _("Nivea"),
+            _("Antal deltagere"), _("Oplæg om uddannelser"),
+            _("Rundvisning"), _("Andet"), _("Region"), _("Skole"),
+            _("Postnummer og by"), _("Adresse"), _("Lærer"),
+            _("Lærer email"), _("Bemærkninger på tilbud"),
+            _("Bemærkninger fra koordinator"), _("Bemærkninger fra lærer"),
+            _("Værter"), _("Undervisere")
         ])
         # Rows
         for booking in context['bookings']:
@@ -916,12 +916,12 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
             except:
                 postalcity = ""
 
-            leveltext = u", ".join(
+            leveltext = ", ".join(
                 [
-                    u"%s - %s" % (x.subject, x.level)
+                    "%s - %s" % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
                 ] + [
-                    u"%s - niveau %s" % (
+                    "%s - niveau %s" % (
                         x.subject, x.level.get_level_display()
                     )
                     for x in
@@ -952,12 +952,12 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                 booking.visit.product.comment or "",
                 booking.visit.comments or "",
                 booking.notes or "",
-                u", ".join([
+                ", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
                     booking.visit.assigned_hosts.all()
                 ]),
-                u", ".join([
+                ", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
                     booking.visit.assigned_teachers.all()

@@ -16,12 +16,12 @@ NONE = 5
 EDIT_ROLES = {ADMINISTRATOR, FACULTY_EDITOR, COORDINATOR}
 
 user_role_choices = (
-    (TEACHER, _(u"Underviser")),
-    (HOST, _(u"Vært")),
-    (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
-    (NONE, _(u"Ingen"))
+    (TEACHER, _("Underviser")),
+    (HOST, _("Vært")),
+    (COORDINATOR, _("Koordinator")),
+    (ADMINISTRATOR, _("Administrator")),
+    (FACULTY_EDITOR, _("Fakultetsredaktør")),
+    (NONE, _("Ingen"))
 )
 
 
