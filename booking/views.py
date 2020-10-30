@@ -39,7 +39,6 @@ from django.views.generic.edit import FormView, ProcessFormView
 
 import booking.models as booking_models
 import booking.urls as urls
-
 from booking.constants import LOGACTION_CREATE, AVAILABLE_SEATS_NO_LIMIT
 from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm

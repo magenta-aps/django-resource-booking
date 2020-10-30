@@ -9,8 +9,8 @@ from booking.models import OrganizationalUnitType, OrganizationalUnit, \
 from booking.resource_based.forms import EditItemResourceForm, \
     EditVehicleResourceForm
 from booking.resource_based.models import ResourceType, ResourcePool
-from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
+from user_profile.models import UserRole
 
 
 class TestResources(TestMixin, TestCase):

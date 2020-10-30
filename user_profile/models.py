@@ -1,10 +1,11 @@
 # encoding: utf-8
+import uuid
 from datetime import timedelta
 
-from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.db.models import Aggregate
 from django.db.models import Count
 from django.db.models import Q
@@ -14,19 +15,22 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 import booking.models
-
+from booking.admin import CLASSES_BY_ROLE
 from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
-
 # User roles
-from user_profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
-    role_to_text
-from user_profile.constants import FACULTY_EDITOR, NONE
-from user_profile.constants import EDIT_ROLES, user_role_choices, available_roles
-
-from booking.admin import CLASSES_BY_ROLE
-
-import uuid
+from user_profile.constants import (
+    ADMINISTRATOR,
+    COORDINATOR,
+    EDIT_ROLES,
+    FACULTY_EDITOR,
+    HOST,
+    NONE,
+    TEACHER,
+    available_roles,
+    role_to_text,
+    user_role_choices,
+)
 
 
 def get_none_role():

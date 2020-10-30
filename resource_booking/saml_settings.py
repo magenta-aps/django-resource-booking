@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import saml2
-import saml2.saml
 import os
+
+import saml2.saml
 
 SAML_BASE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'saml'

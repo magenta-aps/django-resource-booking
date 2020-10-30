@@ -19,8 +19,8 @@ from booking.models import School
 from booking.models import Visit
 from booking.resource_based.models import HostResource
 from booking.resource_based.models import TeacherResource
-from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin
+from user_profile.models import UserRole
 
 
 class TestEmail(TestMixin, TestCase):

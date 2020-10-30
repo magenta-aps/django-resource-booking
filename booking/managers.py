@@ -1,9 +1,9 @@
 from datetime import time, timedelta
-from django.utils import timezone
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Max
-from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 class VisitQuerySet(models.QuerySet):

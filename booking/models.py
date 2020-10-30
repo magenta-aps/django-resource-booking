@@ -16,7 +16,6 @@ from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.urls import reverse
 from django.db import models
 from django.db.models import Case, When
 from django.db.models import Q
@@ -28,6 +27,7 @@ from django.template.base import Template, VariableNode
 from django.template.context import make_context
 from django.template.loader import get_template
 from django.template.loader_tags import IncludeNode
+from django.urls import reverse
 from django.utils import formats
 from django.utils import six
 from django.utils import timezone
@@ -60,7 +60,6 @@ from booking.utils import (
     merge_dicts,
     prose_list_join
 )
-
 from user_profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from user_profile.constants import TEACHER, HOST, NONE, get_role_name
 

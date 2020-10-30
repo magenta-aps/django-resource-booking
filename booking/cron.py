@@ -1,5 +1,11 @@
 # coding=utf-8
+import traceback
 from datetime import timedelta, date
+
+from django.db.models import Count, Q
+from django.utils import timezone
+from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 
 from booking.models import (
     VisitAutosend,
@@ -11,13 +17,6 @@ from booking.models import (
     MultiProductVisitTemp,
     EventTime
 )
-import traceback
-
-from django.db.models import Count, Q
-from django.utils import timezone
-from django_cron import CronJobBase, Schedule
-from django_cron.models import CronJobLog
-
 from booking.utils import surveyxact_anonymize
 
 

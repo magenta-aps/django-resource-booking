@@ -3,15 +3,15 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.utils.datetime_safe import datetime
 from pyquery import PyQuery
 
 from booking.models import Product, KUEmailRecipient, EmailTemplateType, \
     RoomResponsible, ResourceType, OrganizationalUnitType, School, \
     OrganizationalUnit, Locality
-from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
-from django.test import TestCase
+from user_profile.models import UserRole
 
 
 class TestVisit(TestMixin, TestCase):

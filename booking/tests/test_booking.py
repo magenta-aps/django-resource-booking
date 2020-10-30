@@ -1,5 +1,6 @@
-from resource_booking.tests.mixins import TestMixin
 from django.test import TestCase
+
+from resource_booking.tests.mixins import TestMixin
 
 
 class TestBooking(TestMixin, TestCase):

@@ -4,6 +4,7 @@ import pytz
 from django.contrib.auth.models import User
 from django.core import management
 from django.db.models import Model
+from django.test.client import Client
 from django.utils.datetime_safe import datetime
 from pyquery import PyQuery
 
@@ -30,8 +31,6 @@ from user_profile.constants import FACULTY_EDITOR
 from user_profile.constants import HOST
 from user_profile.constants import TEACHER
 from user_profile.models import UserRole, UserProfile
-
-from django.test.client import Client
 
 
 class ParsedNode(object):

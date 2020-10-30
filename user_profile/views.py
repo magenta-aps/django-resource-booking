@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
+import warnings
 from datetime import datetime, timedelta
 
-from django.urls import reverse
-
-from booking.managers import VisitQuerySet
-from booking.models import OrganizationalUnit, Product, Visit, Booking
-from booking.models import EmailTemplateType, KUEmailMessage
-from booking.models import VisitComment
-from booking.utils import UnicodeWriter
-from booking.utils import force_list
 from django.contrib import messages
-from django.db.models import Q, Case, When
-from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q, Case, When
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
@@ -27,19 +21,7 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 from django.views.generic.list import ListView
 
-from user_profile.constants import (
-    NONE,
-    role_to_text,
-    EDIT_ROLES,
-    HOST,
-    TEACHER,
-    FACULTY_EDITOR,
-    COORDINATOR,
-    user_role_choices
-)
-from user_profile.models import UserRole, UserProfile, EmailLoginURL
-from user_profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-
+from booking.managers import VisitQuerySet
 from booking.mixins import (
     BreadcrumbMixin,
     LoginRequiredMixin,
@@ -57,10 +39,26 @@ from booking.models import (
 )
 from booking.utils import UnicodeWriter, force_list
 from booking.views import VisitCustomListView
-from booking.managers import VisitQuerySet
-
-
-import warnings
+from user_profile.constants import (
+    NONE,
+    role_to_text,
+    EDIT_ROLES,
+    HOST,
+    TEACHER,
+    FACULTY_EDITOR,
+    COORDINATOR,
+    user_role_choices
+)
+from user_profile.forms import (
+    UserCreateForm,
+    EditMyProductsForm,
+    StatisticsForm
+)
+from user_profile.models import (
+    UserRole,
+    UserProfile,
+    EmailLoginURL
+)
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):

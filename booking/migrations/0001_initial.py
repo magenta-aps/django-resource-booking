@@ -11,7 +11,6 @@ from django.conf import settings
 from django.db import migrations, models
 
 import booking.mixins
-import booking.models
 import booking.utils
 
 

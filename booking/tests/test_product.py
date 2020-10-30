@@ -21,21 +21,21 @@ from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
 from booking.models import EmailTemplateType
-from booking.models import SurveyXactEvaluationGuest
-from booking.models import KUEmailRecipient
-from booking.models import Visit
-from booking.models import ResourceType
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import Locality
 from booking.models import OrganizationalUnit
 from booking.models import OrganizationalUnitType
 from booking.models import Product
+from booking.models import ResourceType
 from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import Subject
+from booking.models import SurveyXactEvaluationGuest
+from booking.models import Visit
 from booking.utils import flatten
-from user_profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
+from user_profile.models import UserRole
 
 
 class TestProduct(TestMixin, TestCase):
