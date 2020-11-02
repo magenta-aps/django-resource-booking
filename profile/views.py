@@ -106,17 +106,32 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 and product_types != Product.applicable_types:
             context['type'] = product_types[0]
 
-        today_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.objects.get_todays_visits()
-            if visit.real.unit_qs & unit_qs
-        ])
-        today_qs = today_qs.with_product_types(product_types).order_by(
-            *self.visit_ordering_asc)
+        unit_visits = Visit.objects.filter(
+            eventtime__product__organizationalunit__in=unit_qs
+        )
+        unit_multivisits = Visit.objects.filter(
+            is_multi_sub=False,
+            id__in=[
+                v['multi_master']
+                for v in unit_visits.filter(
+                    multi_master__isnull=False
+                ).values("multi_master")
+            ]
+        )
+        today_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_todays_visits().filter(
+                Q(multiproductvisit__in=unit_visits) | Q(id__in=unit_visits)
+            ),
+            to_many=["bookings__booker"]
+        )
 
-        recent_qs = Visit.objects.filter(id__in=[
-            visit.id for visit in Visit.objects.get_recently_held()
-            if visit.real.unit_qs & unit_qs
-        ])
+        recent_qs = VisitQuerySet.prefetch(
+            Visit.objects.get_recently_held().filter(
+                Q(id__in=unit_visits) |
+                Q(multiproductvisit__in=unit_multivisits)
+            ),
+            to_many=["bookings__booker"]
+        )
         recent_qs = recent_qs.with_product_types(
             product_types).order_by(*self.visit_ordering_desc)
 
@@ -152,7 +167,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_LATEST_COMPLETED
             }
-        }])
+        }
+        ])
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
 
@@ -296,7 +312,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        profile = self.request.user.userprofile
+        user = self.request.user
+        profile = user.userprofile
         product_types = self.product_types()
 
         assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
@@ -304,6 +321,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         assigned_qs = profile.all_assigned_visits(
         ).unit_filter(unit_qs).with_product_types(product_types)
+
+        q = Q(id__in=user.potentiel_underviser_for_set.all())
+        if profile.get_resource() is not None:
+            q |= Q(id__in=profile.get_resource().products_qs)
 
         return [
             {
@@ -313,10 +334,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(
-                    eventtime__visit__in=profile.potentially_assigned_visits,
-                    type__in=product_types
-                ).distinct().order_by("title"),
+                'queryset': Product.objects.filter(q)
+                .distinct().order_by("title"),
                 'limit': limit
             },
             {
@@ -349,7 +368,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_for_hosts(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        profile = self.request.user.userprofile
+        user = self.request.user
+        profile = user.userprofile
         product_types = self.product_types()
 
         assignable_qs = profile.can_be_assigned_to_qs.unit_filter(
@@ -357,6 +377,10 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         assigned_qs = profile.all_assigned_visits().unit_filter(
             unit_qs).with_product_types(product_types)
+
+        q = Q(id__in=user.potentiel_vaert_for_set.all())
+        if profile.get_resource() is not None:
+            q |= Q(id__in=profile.get_resource().products_qs)
 
         return [
             {
@@ -366,9 +390,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Product.objects.filter(
-                    eventtime__visit__in=profile.potentially_assigned_visits
-                ).distinct().order_by("title"),
+                'queryset': Product.objects.filter(q)
+                .distinct().order_by("title"),
                 'limit': limit
             },
             {
@@ -611,7 +634,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         return breadcrumbs
 
 
-class DeleteUserView(BreadcrumbMixin, DeleteView):
+class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
@@ -777,6 +800,13 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                 qs = qs.filter(
                     Q(visit__eventtime__end__lt=to_date) |
                     Q(visit__cancelled_eventtime__end__lt=to_date)
+                )
+            if not from_date and not to_date:
+                qs = qs.filter(
+                    visit__eventtime__start__isnull=True,
+                    visit__cancelled_eventtime__start__isnull=True,
+                    visit__eventtime__end__isnull=True,
+                    visit__cancelled_eventtime__end__isnull=True
                 )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs

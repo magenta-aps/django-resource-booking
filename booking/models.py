@@ -3,6 +3,7 @@
 import math
 import random
 import re
+import sys
 import uuid
 from datetime import timedelta, datetime, date, time
 
@@ -17,6 +18,7 @@ from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Case, When
 from django.db.models import Max
@@ -1225,11 +1227,7 @@ class EmailTemplate(models.Model):
             lines.append("{% endautoescape %}")
         lines.append("{% endlanguage %}")
         encapsulated = "\n".join(lines)
-        try:
-            return Template(encapsulated)
-        except TemplateSyntaxError as e:
-            print("Error in mail template. Full text: %s" % encapsulated)
-            raise e
+        return Template(encapsulated)
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False, escape=True):
@@ -6147,7 +6145,7 @@ class BookingGrundskoleSubjectLevel(models.Model):
         on_delete=models.CASCADE
     )
 
-    def __str__(self):
+    def __unicode__(self):
         return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
 
     def display_value(self):

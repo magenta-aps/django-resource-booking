@@ -131,7 +131,7 @@
             {% endfor %}
         {% endif %}
         {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-            {% if request.user.userprofile.is_teacher %}
+            {% if request.user.userprofile.is_teacher and request.user in object.potentielle_undervisere.all %}
                 {% if object.needs_teachers %}
                     {% if request.user in object.teachers.all %}
                         {% trans '(allerede underviser for dette besøg)' %}
@@ -145,7 +145,7 @@
                     <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle undervisere fundet' %}</button>
                 {% endif %}
             {% endif %}
-            {% if request.user.userprofile.is_host %}
+            {% if request.user.userprofile.is_host and request.user in object.potentielle_vaerter.all %}
                 {% if object.needs_hosts %}
                     {% if request.user in object.hosts.all %}
                         {% trans '(allerede vært for dette besøg)' %}
@@ -454,19 +454,19 @@
                     {% if object.type == object.GROUP_VISIT %}
                         {% if object.student_evaluation %}
                             <a href="{% url 'evaluation-view' object.student_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
                         {% endif %}
                         {% if object.teacher_evaluation %}
                             <a href="{% url 'evaluation-view' object.teacher_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
                         {% endif %}
                     {% else %}
                         {% if object.common_evaluation %}
                             <a href="{% url 'evaluation-view' object.common_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -487,7 +487,7 @@
                         {% trans 'Tilmeldte' %}
                         ({{ object.nr_attendees }}{% if object.product.maximum_number_of_visitors %}/{{ object.product.maximum_number_of_visitors }}{% endif %})
                     </h2>
-                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' can_edit=can_edit %}
                 </div>
             </div>
         </div>

@@ -179,7 +179,6 @@ class ResourcePoolTypeForm(forms.Form):
     type = forms.ModelChoiceField(
         label=_(u'Type'),
         queryset=ResourceType.objects.all(),
-        to_field_name="name",
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )

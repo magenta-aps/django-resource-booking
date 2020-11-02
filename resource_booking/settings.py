@@ -267,11 +267,15 @@ PUBLIC_URL_PORT = None
 SURVEYXACT = {
     'username': 'dummyuser',
     'password': 'dummypassword',
-    'url': 'https://rest.survey-xact.dk/uploadrespondents?format=xml',
+    'url': {
+        'upload': 'https://rest.survey-xact.dk/uploadrespondents?format=xml',
+        'anonymize': 'https://rest.survey-xact.dk/rest/surveys/%s/anonymize',
+    },
     'default_survey_id': {
         'student': 0,
         'teacher': 0
-    }
+    },
+
 }
 
 # Add extra middleware defined in the local settings file to the ones

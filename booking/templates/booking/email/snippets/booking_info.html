@@ -8,6 +8,11 @@
 <strong>By</strong>: {{ booker.school.postcode.city|default:"Ikke angivet" }}<br />
 <strong>Region</strong>: {{ booker.school.postcode.region|default:"Ikke angivet" }}<br />
 <strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}<br />
+{% with booking.subjectlevel_displayvalues as subjectlevels %}
+    {% if subjectlevels %}
+    <strong>Fag/niveau</strong>: {{ subjectlevels|join:", " }}<br />
+    {% endif %}
+{% endwith %}
 {% if booking.classbooking.tour_desired %}
     <strong>Ønske om rundvisning</strong>: Ja<br/>
 {% endif %}

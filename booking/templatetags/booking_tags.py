@@ -79,7 +79,7 @@ def timedelta_i18n(value, display="long", sep=", "):
         except TypeError:
             return value
 
-    assert isinstance(value, datetime.timedelta),\
+    assert isinstance(value, datetime.timedelta), \
         "First argument must be a timedelta."
 
     result = []
@@ -220,8 +220,12 @@ def suffix(obj, suffix):
     return "%s%s" % (obj, suffix)
 
 
-class FullURLNode(defaulttags.Node):
+@register.filter('type')
+def get_type(obj):
+    return type(obj).__name__
 
+
+class FullURLNode(defaulttags.Node):
     TOKEN_USER_KEY = 'token_user'
 
     our_kwarg_keys = [TOKEN_USER_KEY]
@@ -389,3 +393,43 @@ kt_conversion.update({
 @register.filter
 def evaluation_classlevel(value):
     return kt_conversion.get(value)
+
+
+@register.tag
+def counter(parser, token):
+    # Establishes a counter, or increments if already existing
+    try:
+        # Splitting by None == splitting by spaces.
+        tag_name, arg = token.contents.split(None, 1)
+    except ValueError:
+        raise TemplateSyntaxError(
+            "%r tag requires arguments" % token.contents.split()[0]
+        )
+
+    m = re.search(r'(.+)(?:\s*=\s*(\w+))?', arg)
+
+    if not m:
+        raise TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    name = m.group(1)
+    s = m.group(2)
+    if s is None or len(s) == 0:
+        start = None
+    else:
+        start = int(s)
+
+    return CounterNode(name, start)
+
+
+class CounterNode(Node):
+
+    def __init__(self, name, start=None):
+        self.name = name
+        self.start = start
+
+    def render(self, context):
+        if self.start is None:
+            value = int(context.get(self.name, 0)) + 1
+        else:
+            value = self.start
+        context.set_upward(self.name, value)
+        return ''
