@@ -27,13 +27,13 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="visit",
             index=django.contrib.postgres.indexes.GinIndex(
-                fields=[b"search_vector"], name="booking_vis_search__08b9a5_gin"
+                fields=["search_vector"], name="booking_vis_search__08b9a5_gin"
             ),
         ),
         migrations.AddIndex(
             model_name="product",
             index=django.contrib.postgres.indexes.GinIndex(
-                fields=[b"search_vector"], name="booking_pro_search__a39a69_gin"
+                fields=["search_vector"], name="booking_pro_search__a39a69_gin"
             ),
         ),
     ]

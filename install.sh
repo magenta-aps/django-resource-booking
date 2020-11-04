@@ -3,7 +3,7 @@
 set -e
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-VE_DIR='python-env'
+VE_DIR='python-env-3'
 VE="${DIR}/${VE_DIR}"
 
 # Install system dependencies
@@ -30,7 +30,7 @@ echo '******************************'
 
 if [ ! -d "$VE" ]
 then
-    virtualenv "$VE"
+    virtualenv --python=python3.7 "$VE"
 fi
 
 if [ -z $VIRTUAL_ENV ]
@@ -70,7 +70,7 @@ echo '**********************'
 echo ''
 echo 'To get started:'
 echo ''
-echo 'source python-env/bin/activate'
+echo "source $VE_DIR/bin/activate"
 echo ''
 echo 'Initiate DB with:'
 echo ''

@@ -1,38 +1,39 @@
 # encoding: utf-8
-from booking.models import OrganizationalUnit
-from booking.models import Resource
-from booking.models import ResourceType
-from booking.models import ItemResource, RoomResource
-from booking.models import TeacherResource, HostResource, VehicleResource
-from booking.models import ResourcePool
-from booking.models import ResourceRequirement
-from booking.models import VisitResource
-from booking.fields import MultipleChoiceDisableField
-from booking.widgets import CheckboxSelectMultipleDisable
 from django import forms
 from django.core.validators import RegexValidator
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
+from booking.fields import MultipleChoiceDisableField
+from booking.models import ItemResource, RoomResource
+from booking.models import OrganizationalUnit
+from booking.models import Resource
+from booking.models import ResourcePool
+from booking.models import ResourceRequirement
+from booking.models import ResourceType
+from booking.models import TeacherResource, HostResource, VehicleResource
+from booking.models import VisitResource
+from booking.widgets import CheckboxSelectMultipleDisable
+
 
 class CreateTimesFromRulesForm(forms.Form):
     hh_mm_validator = RegexValidator("^[0-2][0-9]:[0-5][0-9]$")
 
     start_time = forms.CharField(
-        label=_(u'Fra'),
+        label=_('Fra'),
         required=True,
         initial='08:00',
         validators=[hh_mm_validator]
     )
     end_time = forms.CharField(
-        label=_(u'Til'),
+        label=_('Til'),
         required=True,
         initial='16:00',
         validators=[hh_mm_validator]
     )
     extra_days = forms.ChoiceField(
-        label=_(u'Fulde dage'),
+        label=_('Fulde dage'),
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'}),
         choices=((x, x) for x in range(0, 11))
@@ -48,13 +49,13 @@ class ResourceTypeForm(forms.Form):
     ]
 
     type = forms.ModelChoiceField(
-        label=_(u'Type'),
+        label=_('Type'),
         queryset=ResourceType.objects.exclude(id__in=EXCEPT_TYPES),
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     unit = forms.ModelChoiceField(
-        label=_(u'Enhed'),
+        label=_('Enhed'),
         queryset=OrganizationalUnit.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -85,7 +86,7 @@ class EditResourceForm(forms.ModelForm):
         queryset=ResourcePool.objects.filter(),
         widget=CheckboxSelectMultiple(),
         required=False,
-        label=_(u'Ressourcegrupper')
+        label=_('Ressourcegrupper')
     )
 
     def __init__(self, *args, **kwargs):
@@ -176,13 +177,13 @@ class EditVehicleResourceForm(EditResourceForm):
 
 class ResourcePoolTypeForm(forms.Form):
     type = forms.ModelChoiceField(
-        label=_(u'Type'),
+        label=_('Type'),
         queryset=ResourceType.objects.all(),
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     unit = forms.ModelChoiceField(
-        label=_(u'Enhed'),
+        label=_('Enhed'),
         queryset=OrganizationalUnit.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -295,14 +296,14 @@ class EditVisitResourceForm(forms.Form):
                 if not resource.available_for_visit(visit)
             ]
         else:
-            resourcefield.label = _(u"Ukendt ressourcebehov")
-            resourcefield.label_suffix = _(u"Tilbuddet har et uspecificeret "
-                                           u"ressourcebehov. Dette er et "
-                                           u"problem som skal rettes")
+            resourcefield.label = _("Ukendt ressourcebehov")
+            resourcefield.label_suffix = _("Tilbuddet har et uspecificeret "
+                                           "ressourcebehov. Dette er et "
+                                           "problem som skal rettes")
 
         resourcefield.help_text = __(
-            u"%(count)d nødvendig",
-            u"%(count)d nødvendige",
+            "%(count)d nødvendig",
+            "%(count)d nødvendige",
             'count'
         ) % {'count': resource_requirement.required_amount}
 

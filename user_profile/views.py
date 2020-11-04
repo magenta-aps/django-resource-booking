@@ -1,44 +1,64 @@
 # -*- coding: utf-8 -*-
+import warnings
 from datetime import datetime, timedelta
 
-import profile.constants
-from booking.managers import VisitQuerySet
-from booking.models import OrganizationalUnit, Product, Visit, Booking
-from booking.models import EmailTemplateType, KUEmailMessage
-from booking.models import VisitComment
-from booking.utils import UnicodeWriter
-from booking.utils import force_list
 from django.contrib import messages
-from django.db.models import Q, Case, When
-from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.db.models import Q, Case, When
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
 from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
-
-from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
-    EditorRequiredMixin
-from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import EmailLoginURL
-from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
-from profile.models import HOST, TEACHER
-from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
-import warnings
-import profile.models as profile_models
-import sys
+from booking.managers import VisitQuerySet
+from booking.mixins import (
+    BreadcrumbMixin,
+    LoginRequiredMixin,
+    AccessDenied,
+    EditorRequiredMixin
+)
+from booking.models import (
+    Booking,
+    EmailTemplateType,
+    KUEmailMessage,
+    OrganizationalUnit,
+    Product,
+    Visit,
+    VisitComment
+)
+from booking.utils import UnicodeWriter, force_list
+from booking.views import VisitCustomListView
+from user_profile.constants import (
+    NONE,
+    role_to_text,
+    EDIT_ROLES,
+    HOST,
+    TEACHER,
+    FACULTY_EDITOR,
+    COORDINATOR,
+    user_role_choices
+)
+from user_profile.forms import (
+    UserCreateForm,
+    EditMyProductsForm,
+    StatisticsForm
+)
+from user_profile.models import (
+    UserRole,
+    UserProfile,
+    EmailLoginURL
+)
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -164,7 +184,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 workflow_status=autoassign_fail
             ).distinct(),
             'status_id': autoassign_fail,
-            'status_name': _(u"Ressourceændring")
+            'status_name': _("Ressourceændring")
         }
 
         for list in context['lists']:
@@ -215,11 +235,11 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
-        if role in profile_models.EDIT_ROLES:
+        if role in EDIT_ROLES:
             return self.lists_for_editors()
-        elif role == profile_models.TEACHER:
+        elif role == TEACHER:
             return self.lists_for_teachers()
-        elif role == profile_models.HOST:
+        elif role == HOST:
             return self.lists_for_hosts()
         else:
             return []
@@ -247,8 +267,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'color': self.HEADING_RED,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u"%(count)d besøg under planlægning",
-                u"%(count)d besøg under planlægning",
+                "%(count)d besøg under planlægning",
+                "%(count)d besøg under planlægning",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
@@ -273,8 +293,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u"%(count)d planlagt besøg",
-                u"%(count)d planlagte besøg",
+                "%(count)d planlagt besøg",
+                "%(count)d planlagte besøg",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
@@ -325,8 +345,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_RED,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg der mangler undervisere",
-                    u"%(count)d besøg der mangler undervisere",
+                    "%(count)d besøg der mangler undervisere",
+                    "%(count)d besøg der mangler undervisere",
                     'count'
                 ),
                 'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
@@ -336,8 +356,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_GREEN,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg hvor jeg er underviser",
-                    u"%(count)d besøg hvor jeg er underviser",
+                    "%(count)d besøg hvor jeg er underviser",
+                    "%(count)d besøg hvor jeg er underviser",
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
@@ -381,8 +401,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_RED,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg der mangler værter",
-                    u"%(count)d besøg der mangler værter",
+                    "%(count)d besøg der mangler værter",
+                    "%(count)d besøg der mangler værter",
                     'count',
                 ),
                 'queryset': assignable_qs.order_by(*self.visit_ordering_desc),
@@ -392,8 +412,8 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_GREEN,
                 'type': 'Visit',
                 'title': ungettext_lazy(
-                    u"%(count)d besøg hvor jeg er vært",
-                    u"%(count)d besøg hvor jeg er vært",
+                    "%(count)d besøg hvor jeg er vært",
+                    "%(count)d besøg hvor jeg er vært",
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
@@ -427,7 +447,7 @@ class ListAjaxView(TemplateView):
             'headerless': True,
             'list': {
                 'type': type,
-                'limit': sys.maxint,
+                'limit': 1000000,
                 'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
             }
         }
@@ -464,7 +484,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
-                            _(u"Du har rollen 'Fakultetsredaktør', men " +
+                            _("Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
                     unit = OrganizationalUnit.objects.get(
@@ -472,14 +492,14 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     )
                     if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
-                            _(u"Du kan kun redigere enheder, som " +
+                            _("Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
                 elif current_role == COORDINATOR:
                     # This should not be possible!
                     if current_profile.organizationalunit is None:
                         raise AccessDenied(
-                            _(u"Du har rollen 'Koordinator', men er ikke " +
+                            _("Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
                     unit = OrganizationalUnit.objects.get(
@@ -487,7 +507,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     )
                     if unit and not unit == current_unit:
                         raise AccessDenied(
-                            _(u"Du kan kun redigere enheder, som du selv er" +
+                            _("Du kan kun redigere enheder, som du selv er" +
                               " koordinator for.")
                         )
             if hasattr(self.object, 'userprofile'):
@@ -495,9 +515,9 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                 if self.object != current_user and \
                         object_role not in current_profile.available_roles:
                     raise AccessDenied(
-                        _(u"Du har ikke rettigheder til at redigere brugere "
-                          u"med rollen \"%s\""
-                          % profile.constants.role_to_text(object_role))
+                        _("Du har ikke rettigheder til at redigere brugere "
+                          "med rollen \"%s\""
+                          % role_to_text(object_role))
                     )
             return result
         else:
@@ -561,7 +581,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                         user
                     )
                 except Exception as e:
-                    print "Error sending mail to user: %s" % e
+                    print("Error sending mail to user: %s" % e)
 
             messages.add_message(
                 request,
@@ -607,7 +627,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
         if object and object.pk:
             breadcrumbs.append({
                 'url': reverse('user_edit', args=[object.pk]),
-                'text': _(u"Redigér bruger '%s'") % object.username
+                'text': _("Redigér bruger '%s'") % object.username
             })
         else:
             breadcrumbs.append({
@@ -637,7 +657,7 @@ class DeleteUserView(BreadcrumbMixin, EditorRequiredMixin, DeleteView):
         breadcrumbs = UserListView.build_breadcrumbs()
         breadcrumbs.append({
             'url': reverse('user_delete', args=[object.pk]),
-            'text': _(u"Slet bruger '%s'") % object.username
+            'text': _("Slet bruger '%s'") % object.username
         })
         return breadcrumbs
 
@@ -837,14 +857,14 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
 
         # Heading
         writer.writerow([
-            _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-            _(u"Besøgsdato"), _(u"Klassetrin"), _(u"Niveau"),
-            _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
-            _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
-            _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
-            _(u"Lærer email"), _(u"Bemærkninger på tilbud"),
-            _(u"Bemærkninger fra koordinator"), _(u"Bemærkninger fra lærer"),
-            _(u"Værter"), _(u"Undervisere")
+            _("Enhed"), _("Tilmelding"), _("Type"), _("Tilbud"),
+            _("Besøgsdato"), _("Klassetrin"), _("Nivea"),
+            _("Antal deltagere"), _("Oplæg om uddannelser"),
+            _("Rundvisning"), _("Andet"), _("Region"), _("Skole"),
+            _("Postnummer og by"), _("Adresse"), _("Lærer"),
+            _("Lærer email"), _("Bemærkninger på tilbud"),
+            _("Bemærkninger fra koordinator"), _("Bemærkninger fra lærer"),
+            _("Værter"), _("Undervisere")
         ])
         # Rows
         for booking in context['bookings']:
@@ -894,12 +914,12 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
             except:
                 postalcity = ""
 
-            leveltext = u", ".join(
+            leveltext = ", ".join(
                 [
-                    u"%s - %s" % (x.subject, x.level)
+                    "%s - %s" % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
                 ] + [
-                    u"%s - niveau %s" % (
+                    "%s - niveau %s" % (
                         x.subject, x.level.get_level_display()
                     )
                     for x in
@@ -909,7 +929,7 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
 
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
-                booking.__unicode__(),
+                str(booking),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
                 timetext + time_extra,
@@ -924,18 +944,18 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
                 booking.booker.school.get_type_display() + ")",
                 str(postalcode) + " " +
                 postalcity,
-                unicode(booking.booker.school.address or ""),
+                booking.booker.school.address or "",
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
                 booking.visit.comments or "",
                 booking.notes or "",
-                u", ".join([
+                ", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
                     booking.visit.assigned_hosts.all()
                 ]),
-                u", ".join([
+                ", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
                     booking.visit.assigned_teachers.all()

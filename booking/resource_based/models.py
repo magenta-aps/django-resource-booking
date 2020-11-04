@@ -1,4 +1,10 @@
 # encoding: utf-8
+import datetime
+import math
+import re
+from functools import total_ordering
+
+from django.contrib.auth import models as auth_models
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -6,33 +12,30 @@ from django.db.models import F
 from django.db.models import Q
 from django.db.models.deletion import SET_NULL
 from django.db.models.expressions import RawSQL
-from django.contrib.auth import models as auth_models
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+
+from booking.constants import AVAILABLE_SEATS_NO_LIMIT
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit, EmailTemplateType, Product, \
     KUEmailRecipient
-from profile.constants import TEACHER, HOST, NONE
-
-import datetime
-import math
-import re
-import sys
+from user_profile.constants import TEACHER, HOST, NONE
 
 
 class EventTime(models.Model):
 
     class Meta:
-        verbose_name = _(u"tidspunkt")
-        verbose_name_plural = _(u"tidspunkter")
+        verbose_name = _("tidspunkt")
+        verbose_name_plural = _("tidspunkter")
         ordering = ['start', 'end']
 
     product = models.ForeignKey(
         "Product",
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     visit = models.OneToOneField(
@@ -50,7 +53,7 @@ class EventTime(models.Model):
     # Whether the time is publicly bookable
     bookable = models.BooleanField(
         default=True,
-        verbose_name=_(u'Kan bookes')
+        verbose_name=_('Kan bookes')
     )
 
     RESOURCE_STATUS_AVAILABLE = 1
@@ -58,9 +61,9 @@ class EventTime(models.Model):
     RESOURCE_STATUS_ASSIGNED = 3
 
     resource_status_choices = (
-        (RESOURCE_STATUS_AVAILABLE, _(u"Ressourcer ledige")),
-        (RESOURCE_STATUS_BLOCKED, _(u"Blokeret af manglende ressourcer")),
-        (RESOURCE_STATUS_ASSIGNED, _(u"Ressourcer tildelt")),
+        (RESOURCE_STATUS_AVAILABLE, _("Ressourcer ledige")),
+        (RESOURCE_STATUS_BLOCKED, _("Blokeret af manglende ressourcer")),
+        (RESOURCE_STATUS_ASSIGNED, _("Ressourcer tildelt")),
     )
     resource_status_classes = {
         RESOURCE_STATUS_AVAILABLE: 'primary',
@@ -74,38 +77,38 @@ class EventTime(models.Model):
     }
 
     NONBLOCKED_RESOURCE_STATES = [
-        x[0] for x in resource_status_choices
-        if x[0] != RESOURCE_STATUS_BLOCKED
+        RESOURCE_STATUS_AVAILABLE,
+        RESOURCE_STATUS_ASSIGNED
     ]
 
     resource_status = models.IntegerField(
         choices=resource_status_choices,
         default=RESOURCE_STATUS_AVAILABLE,
-        verbose_name=_(u"Ressource-status"),
+        verbose_name=_("Ressource-status"),
     )
 
     start = models.DateTimeField(
-        verbose_name=_(u"Starttidspunkt"),
+        verbose_name=_("Starttidspunkt"),
         blank=True,
         null=True
     )
     end = models.DateTimeField(
-        verbose_name=_(u"Sluttidspunkt"),
+        verbose_name=_("Sluttidspunkt"),
         blank=True,
         null=True
     )
     has_specific_time = models.BooleanField(
         default=True,
-        verbose_name=_(u"Angivelse af tidspunkt"),
+        verbose_name=_("Angivelse af tidspunkt"),
         choices=(
-            (True, _(u"Både dato og tidspunkt")),
-            (False, _(u"Kun dato")),
+            (True, _("Både dato og tidspunkt")),
+            (False, _("Kun dato")),
         ),
     )
     notes = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Interne kommentarer')
+        verbose_name=_('Interne kommentarer')
     )
 
     has_notified_start = models.BooleanField(
@@ -264,8 +267,8 @@ class EventTime(models.Model):
     @property
     def l10n_start(self):
         if self.start:
-            return unicode(
-                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            return formats.date_format(
+                self.naive_start, "SHORT_DATETIME_FORMAT"
             )
         else:
             return ''
@@ -273,16 +276,14 @@ class EventTime(models.Model):
     @property
     def l10n_end(self):
         if self.end:
-            return unicode(
-                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
-            )
+            return formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
         else:
             return ''
 
     @property
     def l10n_end_time(self):
         if self.end:
-            return unicode(formats.time_format(self.naive_end))
+            return formats.time_format(self.naive_end)
         else:
             return ''
 
@@ -293,20 +294,6 @@ class EventTime(models.Model):
         else:
             return 0
 
-    def get_duration_display(self):
-        mins = self.duration_in_minutes
-        if mins > 0:
-            hours = math.floor(mins / 60)
-            mins = mins % 60
-            if(hours == 1):
-                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
-            else:
-                return _(u"%(hours)d timer og %(minutes)d minutter") % {
-                    'hours': hours, 'minutes': mins
-                }
-        else:
-            return ""
-
     @property
     def available_seats(self):
         if self.visit:
@@ -314,7 +301,7 @@ class EventTime(models.Model):
         elif self.product:
             max = self.product.maximum_number_of_visitors
             if max is None:  # No limit set
-                return sys.maxint
+                return AVAILABLE_SEATS_NO_LIMIT
             return max
         else:
             return 0
@@ -678,17 +665,18 @@ class EventTime(models.Model):
                         self.naive_start, "SHORT_DATE_FORMAT"
                     ),
             else:
-                return unicode(_(u"<Intet tidspunkt angivet>"))
+                return _("<Intet tidspunkt angivet>")
 
-    def __unicode__(self):
-        parts = [_(u"Tidspunkt:")]
+    def __str__(self):
+        parts = [_("Tidspunkt:")]
         if self.product:
             parts.append(self.product.title)
         if self.visit:
-            parts.append(_(u"(Besøg: %s)") % self.visit.pk)
+            parts.append(_("(Besøg: %s)") % self.visit.pk)
         parts.append(self.interval_display)
 
-        return " ".join([unicode(x) for x in parts])
+        # Force lazy translations to be evaluated with str() before join().
+        return " ".join([str(x) for x in parts])
 
     def on_start(self):
         if self.visit:
@@ -800,7 +788,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         new_generators = []
         for x in generators:
             try:
-                item = x.next()
+                item = next(x)
                 new_generators.append(x)
             except StopIteration:
                 continue
@@ -820,7 +808,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             # move next item from the matched generator to pending items
             # If generator is empty, remove it and its pending item slot
             try:
-                pending_items[item_idx] = generators[item_idx].next()
+                pending_items[item_idx] = next(generators[item_idx])
             except StopIteration:
                 del generators[item_idx]
                 del pending_items[item_idx]
@@ -900,7 +888,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         current_end = None
 
         try:
-            next_unavailable = unavailables.next()
+            next_unavailable = next(unavailables)
         except StopIteration:
             next_unavailable = None
 
@@ -970,7 +958,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                 # ot compare it to
                 if current_start:
                     try:
-                        next_unavailable = unavailables.next()
+                        next_unavailable = next(unavailables)
                     except StopIteration:
                         next_unavailable = None
 
@@ -1037,7 +1025,8 @@ class CalendarCalculatedAvailable(models.Model):
         Calendar,
         null=False,
         blank=False,
-        verbose_name=_('Kalender')
+        verbose_name=_('Kalender'),
+        on_delete=models.CASCADE
 
     )
     start = models.DateTimeField(
@@ -1049,6 +1038,7 @@ class CalendarCalculatedAvailable(models.Model):
     )
 
 
+@total_ordering
 class CalendarEventInstance(object):
     start = None
     end = None
@@ -1133,15 +1123,23 @@ class CalendarEventInstance(object):
 
         return obj
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         if isinstance(other, CalendarEventInstance):
             return (
-                (self.start - other.start).total_seconds() or
-                (self.end - other.end).total_seconds()
+                    (self.start < other.start) or
+                    (self.end < other.end)
             )
         return NotImplemented
 
-    def __unicode__(self):
+    def __eq__(self, other):
+        if isinstance(other, CalendarEventInstance):
+            return (
+                    (self.start == other.start) and
+                    (self.end == other.end)
+            )
+        return NotImplemented
+
+    def __str__(self):
         return 'CalendarEventInstance: %s %s - %s' % (
             "Available" if self.available else "Unavailable",
             self.start,
@@ -1149,7 +1147,7 @@ class CalendarEventInstance(object):
         )
 
     def __repr__(self):
-        return '%s at 0x%x' % (self.__unicode__(), id(self))
+        return '%s at 0x%x' % (self.__str__(), id(self))
 
 
 class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
@@ -1157,38 +1155,39 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     title = models.CharField(
         max_length=60,
         blank=False,
-        verbose_name=_(u'Titel')
+        verbose_name=_('Titel')
     )
 
     calendar = models.ForeignKey(
         Calendar,
         null=False,
         blank=False,
-        verbose_name=_('Kalender')
+        verbose_name=_('Kalender'),
+        on_delete=models.CASCADE
     )
 
     AVAILABLE = 0
     NOT_AVAILABLE = 1
 
     availability_choices = (
-        (AVAILABLE, _(u"Tilgængelig")),
-        (NOT_AVAILABLE, _(u"Utilgængelig")),
+        (AVAILABLE, _("Tilgængelig")),
+        (NOT_AVAILABLE, _("Utilgængelig")),
     )
     availability = models.IntegerField(
         choices=availability_choices,
-        verbose_name=_(u'Tilgængelighed'),
+        verbose_name=_('Tilgængelighed'),
         default=AVAILABLE,
         blank=False,
     )
     start = models.DateTimeField(
-        verbose_name=_(u"Starttidspunkt")
+        verbose_name=_("Starttidspunkt")
     )
     end = models.DateTimeField(
-        verbose_name=_(u"Sluttidspunkt"),
+        verbose_name=_("Sluttidspunkt"),
         blank=True
     )
     recurrences = RecurrenceField(
-        verbose_name=_(u"Gentagelser"),
+        verbose_name=_("Gentagelser"),
         null=True,
         blank=True,
     )
@@ -1262,8 +1261,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     @property
     def l10n_start(self):
         if self.start:
-            return unicode(
-                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            return formats.date_format(
+                self.naive_start, "SHORT_DATETIME_FORMAT"
             )
         else:
             return ''
@@ -1271,16 +1270,14 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     @property
     def l10n_end(self):
         if self.end:
-            return unicode(
-                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
-            )
+            return formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
         else:
             return ''
 
     @property
     def l10n_end_time(self):
         if self.end:
-            return unicode(formats.time_format(self.naive_end))
+            return formats.time_format(self.naive_end)
         else:
             return ''
 
@@ -1293,11 +1290,11 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                 return " - ".join([self.l10n_start, self.l10n_end_time])
         else:
             if self.start:
-                return unicode(
-                    formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
+                return formats.date_format(
+                    self.naive_start, "SHORT_DATE_FORMAT"
                 )
             else:
-                return unicode(_(u"<Intet tidspunkt angivet>"))
+                return _("<Intet tidspunkt angivet>")
 
     @property
     def affected_eventtimes(self):
@@ -1345,15 +1342,14 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
             return qs
         return CalendarEvent.objects.none()
 
-    def __unicode__(self):
-        return ", ".join(unicode(x) for x in [
+    def __str__(self):
+        return ", ".join(x for x in [
             self.title,
             "%s %s%s" % (
                 self.get_availability_display().lower(),
                 self.interval_display,
                 _(" (med gentagelser)") if self.has_recurrences else ""
             ),
-
         ] if x)
 
 
@@ -1452,26 +1448,27 @@ class ResourceType(models.Model):
             except ResourceType.DoesNotExist:
                 item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
-                print "Created new ResourceType %d=%s" % (id, name)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class Resource(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(
         ResourceType,
-        verbose_name=_(u'Type')
+        verbose_name=_('Type'),
+        on_delete=models.CASCADE
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_(u"Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed"),
+        on_delete=models.CASCADE
     )
     calendar = models.OneToOneField(
         Calendar,
         blank=True,
         null=True,
-        verbose_name=_(u"Ressourcens kalender"),
+        verbose_name=_("Ressourcens kalender"),
         on_delete=models.SET_NULL
     )
 
@@ -1538,10 +1535,10 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         cls = type.resource_class
         return cls()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (
-            unicode(self.get_name()),
-            unicode(self.resource_type)
+            self.get_name(),
+            str(self.resource_type)
         )
 
     @property
@@ -1631,7 +1628,8 @@ class UserResource(Resource):
 
     user = models.ForeignKey(
         auth_models.User,
-        verbose_name=_(u"Underviser")
+        verbose_name=_(u"Bruger"),
+        on_delete=models.CASCADE
     )
 
     def __init__(self, *args, **kwargs):
@@ -1641,7 +1639,7 @@ class UserResource(Resource):
         )
 
     def get_name(self):
-        return unicode(self.user.get_full_name())
+        return self.user.get_full_name()
 
     def can_delete(self):
         return False
@@ -1654,13 +1652,13 @@ class UserResource(Resource):
                 user__userprofile__user_role__role=cls.role
             )
         ])
-        print "We already have resources for %d users" % len(known_users)
+        print("We already have resources for %d users" % len(known_users))
         missing_users = auth_models.User.objects.filter(
             userprofile__user_role__role=cls.role
         ).exclude(
             pk__in=known_users
         )
-        print "We are missing resources for %d users" % len(missing_users)
+        print("We are missing resources for %d users" % len(missing_users))
         if len(missing_users) > 0:
             created = 0
             skipped = 0
@@ -1677,11 +1675,13 @@ class UserResource(Resource):
                     else:
                         skipped += 1
                 except Exception as e:
-                    print e
-            print "Created %d %s objects" % (created, cls.__name__)
+                    print(e)
+            print("Created %d %s objects" % (created, cls.__name__))
             if skipped > 0:
-                print "Skipped creating resources for %d objects " \
-                      "that had no unit" % skipped
+                print(
+                        "Skipped creating resources for %d objects that "
+                        "had no unit" % skipped
+                )
 
     @classmethod
     def create(cls, user, unit=None):
@@ -1734,7 +1734,8 @@ class RoomResource(Resource):
     # TODO: Begræns ud fra enhed
     room = models.ForeignKey(
         "Room",
-        verbose_name=_(u"Lokale")
+        verbose_name=_(u"Lokale"),
+        on_delete=models.CASCADE
     )
 
     def __init__(self, *args, **kwargs):
@@ -1779,7 +1780,7 @@ class NamedResource(Resource):
         abstract = True
     name = models.CharField(
         max_length=1024,
-        verbose_name=_(u'Navn')
+        verbose_name=_('Navn')
     )
 
     def get_name(self):
@@ -1791,7 +1792,8 @@ class ItemResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_(u'Lokalitet')
+        verbose_name=_('Lokalitet'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -1806,7 +1808,8 @@ class VehicleResource(NamedResource):
         "Locality",
         null=True,
         blank=True,
-        verbose_name=_(u'Lokalitet')
+        verbose_name=_('Lokalitet'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -1821,26 +1824,30 @@ class CustomResource(NamedResource):
 
 
 class ResourcePool(AvailabilityUpdaterMixin, models.Model):
-    resource_type = models.ForeignKey(ResourceType)
+    resource_type = models.ForeignKey(
+        ResourceType,
+        on_delete=models.CASCADE
+    )
     name = models.CharField(
         max_length=1024,
-        verbose_name=_(u'Navn')
+        verbose_name=_('Navn')
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
-        verbose_name=_(u"Ressourcens enhed")
+        verbose_name=_("Ressourcens enhed"),
+        on_delete=models.CASCADE
     )
     # TODO: Begrænse på enhed, resource_type
     resources = models.ManyToManyField(
         Resource,
-        verbose_name=_(u"Ressourcer"),
+        verbose_name=_("Ressourcer"),
         blank=True
     )
 
     def can_delete(self):
         return True
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (self.name, _("Gruppe af %s") % self.resource_type)
 
     @property
@@ -1899,9 +1906,9 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
     # lost or gained resources, respectively.
     def update_eventtimes_on_resource_change(cls, qs, restrictive=False):
         if restrictive:
-            print "Checking %s for missing resources" % [x for x in qs]
+            print("Checking %s for missing resources" % [x for x in qs])
         else:
-            print "Checking %s for available resources" % [x for x in qs]
+            print("Checking %s for available resources" % [x for x in qs])
 
         qs = EventTime.objects.filter(
             product__resourcerequirement__resource_pool__in=qs
@@ -1931,13 +1938,16 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
                 for resource in self.resources.all()
                 if resource.calendar is not None
             ],
-            unicode(self),
+            str(self),
             reverse('resourcepool-view', args=[self.pk])
         )
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
-    product = models.ForeignKey("Product")
+    product = models.ForeignKey(
+        "Product",
+        on_delete=models.CASCADE
+    )
     resource_pool = models.ForeignKey(
         ResourcePool,
         verbose_name=_(u"Ressourcegruppe"),
@@ -2009,17 +2019,20 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
     visit = models.ForeignKey(
         "Visit",
         verbose_name=_(u"Besøg"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
     resource = models.ForeignKey(
         Resource,
         verbose_name=_(u"Ressource"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
     resource_requirement = models.ForeignKey(
         ResourceRequirement,
         verbose_name=_(u"Ressourcebehov"),
-        related_name='visitresource'
+        related_name='visitresource',
+        on_delete=models.CASCADE
     )
 
     @property

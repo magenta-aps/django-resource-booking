@@ -44,7 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'booking',
-    'profile',
+    'user_profile',
     'recurrence',
     'tinymce',
     'django_cron',
@@ -58,7 +58,7 @@ INSTALLED_APPS = (
 # INSTALLED_APPS might be extended with the debug toolbar
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 2017-09-26, ticket #18859: Disabled for now
     # 'django.middleware.locale.LocaleMiddleware',
@@ -257,7 +257,7 @@ MAKE_SAML_LOGIN_DEFAULT = False
 # Setup the default login backend so we can override it after loading local
 # saml settings
 AUTHENTICATION_BACKENDS = [
-    'profile.auth.backends.EmailLoginBackend',
+    'user_profile.auth.backends.EmailLoginBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
 
@@ -281,7 +281,7 @@ SURVEYXACT = {
 
 # Add extra middleware defined in the local settings file to the ones
 # already specified.
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + tuple(EXTRA_MIDDLEWARE)
+MIDDLEWARE = MIDDLEWARE + tuple(EXTRA_MIDDLEWARE)
 
 PUBLIC_URL = "".join([
     PUBLIC_URL_PROTOCOL, "://",
@@ -316,9 +316,9 @@ HIJACK_USE_BOOTSTRAP = True
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         "debug_toolbar.middleware.DebugToolbarMiddleware",
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
     if "127.0.0.1" not in INTERNAL_IPS:
         INTERNAL_IPS = INTERNAL_IPS + ("127.0.0.1",)
 
@@ -329,4 +329,4 @@ local_settings_file = os.path.join(
     'local_settings.py'
 )
 if os.path.exists(local_settings_file):
-    from local_settings import *  # noqa
+    from .local_settings import *  # noqa

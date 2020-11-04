@@ -24,7 +24,7 @@ def log_action(user, obj, action_flag, change_message=''):
         user_id = user.pk
     else:
         # Late import due to mutual import conflicts
-        from profile.models import get_public_web_user  # noqa
+        from user_profile.models import get_public_web_user  # noqa
         pw_user = get_public_web_user()
         user_id = pw_user.pk
 
@@ -39,7 +39,7 @@ def log_action(user, obj, action_flag, change_message=''):
         except:
             pass
         try:
-            object_repr = unicode(obj)
+            object_repr = str(obj)
         except:
             pass
 

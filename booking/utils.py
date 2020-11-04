@@ -1,10 +1,7 @@
 # encoding: utf-8
-import cStringIO
-import codecs
 import csv
 import os
 import re
-import sys
 from itertools import chain
 
 import requests
@@ -167,28 +164,41 @@ def get_model_field_map(model, visited_models=None):
             #    continue
 
             if field.one_to_many:
-                # print "ignoring field %s.%s because
-                # it is one-to-many" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it is one-to-many" %
+                #         (model.__name__, field.name)
+                # )
                 continue
 
             if field.many_to_many:
-                # print "ignoring field %s.%s because
-                # it is many-to-many" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it is many-to-many" %
+                #         (model.__name__, field.name)
+                # )
                 continue
 
             if field.related_model == model:
-                # print "ignoring field %s.%s because
-                # it points to the same model" % (model.__name__, field.name)
+                # print(
+                #         "ignoring field %s.%s because it points to "
+                #         "the same model" % (model.__name__, field.name)
+                # )
                 continue
 
             if field.related_model in visited_models:
-                # print "Already seen %s.%s (%s)" %
-                # (model.__name__, field.name, field.related_model.__name__)
+                # print(
+                #         "Already seen %s.%s (%s)" % (
+                #             model.__name__,
+                #             field.name,
+                #             field.related_model.__name__
+                #         )
+                # )
                 continue
 
             if issubclass(field.related_model, model):
-                # print "%s is subclass of %s" %
-                # (field.related_model.__name__, model.__name__)
+                # print(
+                #         "%s is subclass of %s" %
+                #         (field.related_model.__name__, model.__name__)
+                # )
                 continue
 
             try:
@@ -215,24 +225,13 @@ class UnicodeWriter:
     which is encoded in the given encoding.
     """
 
-    def __init__(self, f, dialect=csv.excel, encoding="utf-16le", **kwds):
+    def __init__(self, f, dialect=csv.excel, **kwargs):
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.writer = csv.writer(f, dialect=dialect, **kwargs)
         self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
 
     def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
+        self.writer.writerow(row)
 
     def writerows(self, rows):
         for row in rows:
@@ -257,7 +256,7 @@ def merge_dicts(*dicts):
 
 def flatten(args):
     flat = []
-    if type(args) in (type(()), type([])):
+    if type(args) in (tuple, list):
         for arg in args:
             flat.extend(flatten(arg))
     else:
@@ -299,7 +298,7 @@ def binary_and(*items):
     """
     AND several integers together (handy when they vary in number)
     """
-    base = sys.maxint
+    base = (1 << 64) - 1
     for item in flatten(items):
         try:
             base = base & item
@@ -493,7 +492,7 @@ class TemplateSplit(object):
     def get_subblock_containing(self, c):
         candidates = []
         for block in self.blocks:
-            if isinstance(c, basestring):
+            if isinstance(c, str):
                 subblock = block.get_subblock_with_condition(c)
             else:
                 subblock = block.get_subblock_containing(c)
@@ -538,15 +537,14 @@ def surveyxact_upload(survey_id, data):
     csv_suffix = '\x0a\x00'
     header = []
     body = []
-    for key, value in data.iteritems():
-        header.append(unicode(key))
+    for key, value in data.items():
+        header.append(str(key))
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
-            value = unicode(value)
+        if not isinstance(value, str):
+            value = str(value)
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
-
     response = requests.post(
         config['url']['upload'],
         headers={
@@ -565,14 +563,14 @@ def surveyxact_upload(survey_id, data):
         }
     )
     if response.status_code != 200:
-        print "Error creating respondent with data:"
-        print body
+        print("Error creating respondent with data:")
+        print(body)
     else:
         m = re.search(r'<collecturl>([^<]*)</collecturl>', response.text)
         if m is not None:
             return m.group(1)
         else:
-            print "Didn't find collecturl in %s" % response.text
+            print("Didn't find collecturl in %s" % response.text)
 
 
 def surveyxact_anonymize(survey_id, before_datetime):
@@ -599,7 +597,7 @@ def surveyxact_anonymize(survey_id, before_datetime):
     if response.status_code == 202:
         return True
     else:
-        print "Failed to anonymize SurveyXact data: %s" % response.text
+        print("Failed to anonymize SurveyXact data: %s" % response.text)
         return False
 
 
@@ -624,5 +622,4 @@ def getattr_long(object, path, default=None):
 
 
 def prose_list_join(items, sep, lsep):
-    return sep.join([unicode(item) for item in items[:-1]]) + \
-           unicode(lsep) + unicode(items[-1])
+    return sep.join(items[:-1]) + lsep + items[-1]
