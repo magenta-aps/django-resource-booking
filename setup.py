@@ -20,7 +20,7 @@ designed for the University of Copenhagen.""",
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-          'Django==1.11.22',
+          'Django==1.2.17',
           'flake8==2.5.0',
           'psycopg2-binary',
           'django-npm==1.0.0',
@@ -37,9 +37,9 @@ designed for the University of Copenhagen.""",
           'beautifulsoup4==4.7.1',
           'Pillow==6.0.0',
           'django-extensions==2.1.9',
-          "ipython==7.18.1",
           "pyquery==1.4.1",
           "freezegun==1.0.0"
+          "bpython==0.18",
       ],
       entry_points="""
       # -*- Entry points: -*-
