@@ -6430,7 +6430,7 @@ class SurveyXactEvaluation(models.Model):
             guest__booking__visit=visit
         )
         for evalguest in qs:
-            evalguest.send(True)
+            evalguest.send(False)
 
     def product_autosend_activated(self):
         return self.product.get_autosends().filter(

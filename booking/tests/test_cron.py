@@ -15,6 +15,9 @@ from booking.models import (
     Guest,
     KUEmailMessage,
     EmailTemplateType,
+    SurveyXactEvaluationGuest,
+    OrganizationalUnit,
+    OrganizationalUnitType,
 )
 from booking.cron import (
     RemoveOldMvpJob,
@@ -99,9 +102,39 @@ class AnonymizeGuestsJobTestCase(TestCase, TestMixin):
         self.assertIn(guest, Guest.objects.filter(Guest.filter_anonymized()))
 
 
-class EvaluationReminderJobTestCase(TestCase):
+class EvaluationReminderJobTestCase(TestCase, TestMixin):
     def test_evaluation_reminders_are_sent(self):
-        pass
+        guest = self.create_guest()
+        unit = self.create_organizational_unit()
+        product = self.create_product(unit=unit)
+        evaluation = self.create_evaluation(
+            product
+        )
+        evaluation_guest = SurveyXactEvaluationGuest.objects.create(
+            status=SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
+            evaluation=evaluation,
+            guest=guest
+        )
+        visit = self.create_visit(
+            product,
+            start=datetime.now() - timedelta(days=10),
+            end=datetime.now() - timedelta(days=5),
+        )
+        booking = self.create_booking(visit, guest)
+        template_type = EmailTemplateType.objects.create(
+            key=EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            name_da="gæst evaluering anden",
+        )
+        email_template = self.create_emailtemplate(
+            type=template_type
+        )
+
+        autosend = self.create_autosend(visit, template_type, enabled=True, days=5)
+        job = EvaluationReminderJob()
+        job.run()
+
+        evaluation_guest.refresh_from_db()
+        self.assertEqual(evaluation_guest.status, SurveyXactEvaluationGuest.STATUS_SECOND_SENT)
 
 
 class NotifyEventTimeJobTestCase(TestCase, TestMixin):
