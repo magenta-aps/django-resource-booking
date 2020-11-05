@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from django.test import TestCase
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.core import mail
 from freezegun import freeze_time
 
 from django_cron.models import CronJobLog
@@ -16,9 +17,10 @@ from booking.models import (
     KUEmailMessage,
     EmailTemplateType,
     SurveyXactEvaluationGuest,
-    OrganizationalUnit,
-    OrganizationalUnitType,
 )
+from user_profile.models import UserRole
+from booking.resource_based.models import ResourceType
+
 from booking.cron import (
     RemoveOldMvpJob,
     NotifyEventTimeJob,
@@ -27,6 +29,7 @@ from booking.cron import (
     AnonymizeEvaluationsJob,
     AnonymizeEmailsJob,
     AnonymizeInquirersJob,
+    ReminderJob,
 )
 import unittest.mock
 
@@ -186,9 +189,37 @@ class NotifyEventTimeJobTestCase(TestCase, TestMixin):
         self.assertEqual(visit.workflow_status, Visit.WORKFLOW_STATUS_EXECUTED)
 
 
-class ReminderJobTestCase(TestCase):
+class ReminderJobTestCase(TestCase, TestMixin):
     def test_reminder_emails_are_sent(self):
-        pass
+        ResourceType.create_defaults()
+        UserRole.create_defaults()
+
+        unit = self.create_organizational_unit()
+        self.create_default_teacher(unit=unit)
+        product = self.create_product(unit=unit)
+        visit = self.create_visit(
+            product,
+            start=datetime.now() + timedelta(days=5),
+            end=datetime.now() + timedelta(days=10),
+        )
+        template_type = EmailTemplateType.objects.create(
+            key=EmailTemplateType.NOTIFY_GUEST_REMINDER,
+            name_da="gæst notifikation",
+            send_to_unit_teachers=True
+        )
+        self.create_emailtemplate(
+            type=template_type,
+            subject="Mail til lærer",
+            body="Mail til lærer"
+        )
+
+        self.create_autosend(visit, template_type, enabled=True, days=5)
+        job = ReminderJob()
+        job.run()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Mail til lærer")
+        self.assertEqual(mail.outbox[0].body, "\n\n\nMail til lærer\n")
 
 
 class IdleHostroleJobTestCase(TestCase):

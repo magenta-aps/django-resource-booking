@@ -350,7 +350,9 @@ class TestMixin(object):
 
     def create_organizational_unit(self, name="Test enhed", type=None):
         if not type:
-            type, _ = OrganizationalUnitType.objects.get_or_create(name="Test enhedstype")
+            type, _ = OrganizationalUnitType.objects.get_or_create(
+                name="Test enhedstype"
+            )
         unit = OrganizationalUnit.objects.create(name=name, type=type)
         return unit
 
