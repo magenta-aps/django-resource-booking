@@ -1384,7 +1384,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
             if not created:
                 found = False
-                for x in list(existing_gym_fag.keys()):
+                for x in list(existing_gym_fag):
                     if existing_gym_fag[x].subject.is_all():
                         # Unschedule 'all' from deletion
                         del existing_gym_fag[x]
@@ -1410,7 +1410,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
             created = set()
             for gval in self.request.POST.getlist('grundskolefag', []):
-                if gval in existing_gs_fag:
+                if gval in list(existing_gs_fag):
                     if existing_gs_fag[gval].subject.is_all():
                         # Do not add 'all' to created
                         continue
@@ -1424,7 +1424,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
             if not created:
                 found = False
-                for x in existing_gs_fag.keys():
+                for x in list(existing_gs_fag):
                     if existing_gs_fag[x].subject.is_all():
                         # Unschedule 'all' from deletion
                         del existing_gs_fag[x]
