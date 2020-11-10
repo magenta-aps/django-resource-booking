@@ -5954,11 +5954,11 @@ class ClassBooking(Booking):
     def verbose_desires(self):
         desires = []
         if self.tour_desired:
-            desires.append(_('rundvisning'))
+            desires.append(gettext('rundvisning'))
         if self.catering_desired:
-            desires.append(_('forplejning'))
+            desires.append(gettext('forplejning'))
         if self.presentation_desired:
-            desires.append(_('oplæg om uddannelse'))
+            desires.append(gettext('oplæg om uddannelse'))
         if self.custom_desired:
             try:
                 desires.append(self.visit.product.custom_name.lower())
