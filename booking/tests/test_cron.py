@@ -17,6 +17,7 @@ from booking.models import (
     KUEmailMessage,
     EmailTemplateType,
     SurveyXactEvaluationGuest,
+    ObjectStatistics
 )
 from user_profile.models import UserRole
 from booking.resource_based.models import ResourceType
@@ -30,6 +31,7 @@ from booking.cron import (
     AnonymizeEmailsJob,
     AnonymizeInquirersJob,
     ReminderJob,
+    IdleHostroleJob,
 )
 import unittest.mock
 
@@ -222,9 +224,47 @@ class ReminderJobTestCase(TestCase, TestMixin):
         self.assertEqual(mail.outbox[0].body, "\n\n\nMail til lærer\n")
 
 
-class IdleHostroleJobTestCase(TestCase):
+class IdleHostroleJobTestCase(TestCase, TestMixin):
     def test_idle_host_role_notifications_are_sent(self):
-        pass
+        ResourceType.create_defaults()
+        UserRole.create_defaults()
+        unit = self.create_organizational_unit()
+
+        guest = self.create_guest()
+        host = self.create_default_host(unit=unit)
+
+        product = self.create_product(unit=unit, potential_hosts=[host])
+        product.needed_hosts = 1
+        product.save()
+        visit = self.create_visit(
+            product,
+            start=datetime.now() + timedelta(days=5),
+            end=datetime.now() + timedelta(days=10),
+        )
+        booking = self.create_booking(visit, guest)
+        statistics = ObjectStatistics.objects.create()
+        booking.statistics = statistics
+        booking.save()
+        template_type = EmailTemplateType.objects.create(
+            key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            name_da="notificer vært",
+            send_to_potential_hosts=True,
+        )
+        email_template = self.create_emailtemplate(
+            key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            type=template_type,
+            unit=unit,
+            subject="Mail til vært",
+            body="Mail til vært"
+        )
+        self.create_autosend(visit, template_type, enabled=True, days=0)
+
+        job = IdleHostroleJob()
+        job.run()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Mail til vært")
+        self.assertEqual(mail.outbox[0].body, "\n\n\nMail til vært\n")
 
 
 class RemoveOldMvpJobTestCase(TestCase):
