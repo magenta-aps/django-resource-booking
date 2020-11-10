@@ -67,6 +67,8 @@ MODEL_UNIT_FILTER_MAP = {
 
 class KUBookingModelAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
+        if not request.user.is_authenticated:
+            return False
         return request.user.userprofile.get_role() in EDIT_ROLES
 
     def has_change_permission(self, request, obj=None):
