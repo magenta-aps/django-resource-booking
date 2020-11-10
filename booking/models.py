@@ -32,7 +32,7 @@ from django.utils import formats
 from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
+from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __, gettext
 
 from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
@@ -5964,7 +5964,7 @@ class ClassBooking(Booking):
                 desires.append(self.visit.product.custom_name.lower())
             except:
                 pass
-        return prose_list_join(desires, ', ', _(' og '))
+        return prose_list_join(desires, ', ', gettext(' og '))
 
 
 class TeacherBooking(Booking):
