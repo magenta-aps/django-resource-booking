@@ -151,7 +151,8 @@ class ChangeVisitCommentsForm(forms.ModelForm):
 class VisitAddLogEntryForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
-        label=_('Ny log-post')
+        label=_('Ny log-post'),
+        max_length=500
     )
 
 
@@ -164,7 +165,8 @@ class ResetVisitChangesForm(forms.ModelForm):
 class VisitAddCommentForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
-        label=_('Ny kommentar')
+        label=_('Ny kommentar'),
+        max_length=500
     )
 
 
