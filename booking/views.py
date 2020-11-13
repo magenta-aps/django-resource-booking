@@ -3117,7 +3117,7 @@ class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
         can_embed = False
 
         for x in urls.embedpatterns:
-            if x.regex.match(test_url):
+            if x.pattern.regex.match(test_url):
                 can_embed = True
                 break
 
