@@ -655,7 +655,6 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
                     nb_products.id = booking_product.id
             '''
             qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
-            self.needs_num_bookings = False
 
         if self.sort_grundskole_fag:
             all_subject_id = int(Subject.get_all().id)
@@ -781,6 +780,7 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
         b = form.cleaned_data.get("b", "")
 
         if b == "":
+            self.needs_num_bookings = False
             return
 
         b = int(b)
@@ -844,7 +844,6 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
                    add_to_all=None, unsubjected=None):
 
         hits = {}
-
         # Remove filter for the field we want to facetize
         filters = self.get_filters()
         new_filter_args = [
