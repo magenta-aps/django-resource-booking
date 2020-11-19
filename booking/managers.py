@@ -66,17 +66,21 @@ class VisitQuerySet(models.QuerySet):
         if product_types is None:
             return self
         return (
-            VisitQuerySet.prefetch(self.filter(
-                multiproductvisit__isnull=True,
-                eventtime__product__type__in=product_types,
-            ) | self.filter(
-                multiproductvisit__isnull=False,
-                multiproductvisit__subvisit__eventtime__product__type__in=product_types,
-                multiproductvisit__subvisit__is_multi_sub=True
+            VisitQuerySet.prefetch(
+                self.filter(
+                    Q(
+                        multiproductvisit__isnull=True,
+                        eventtime__product__type__in=product_types,
+                    )
+                    | Q(
+                        multiproductvisit__isnull=False,
+                        multiproductvisit__subvisit__eventtime__product__type__in=product_types,
+                        multiproductvisit__subvisit__is_multi_sub=True,
+                    )
                 ),
                 **kwargs
             )
-            ).distinct()
+        ).distinct()
 
     def get_latest_created(self):
         return VisitQuerySet.prefetch(
