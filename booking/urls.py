@@ -503,7 +503,7 @@ for x in urlpatterns:
             # Add a corresponding embed URL
             embedpatterns.append(
                 url(
-                    '^(?P<embed>embed/)' + x.pattern.regex.pattern[1:],
+                    '^(?P<embed>embed/)' + str(x)[1:],
                     xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )
