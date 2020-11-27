@@ -98,7 +98,7 @@ class ChangeVisitStartTimeView(AutologgerMixin, UpdateWithCancelView):
 
         try:
             desired_time = self.object.visit.desired_time
-        except:
+        except Exception:
             desired_time = None
 
         return super(ChangeVisitStartTimeView, self).get_context_data(
@@ -370,7 +370,7 @@ class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.object = self.model.objects.get(pk=kwargs['pk'])
-        except:
+        except Exception:
             raise Http404("Visit not found")
 
         return super(VisitAddLogEntryView, self).dispatch(

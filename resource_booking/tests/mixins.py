@@ -508,8 +508,8 @@ class TestMixin(object):
 
     @staticmethod
     def _get_choices_key(choices, label):
-        for (value, l) in choices:
-            if l == label:
+        for (value, choicelabel) in choices:
+            if choicelabel == label:
                 return value
 
     @staticmethod

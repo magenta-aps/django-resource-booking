@@ -33,6 +33,7 @@ def run_searchvector_for_object(obj):
 def update_search_vectors(sender, instance, **kwargs):
     run_searchvector_for_object(instance)
 
+
 for model in MODELS_WITH_SEARCHVECTOR:
     post_save.connect(update_search_vectors, sender=model)
 
@@ -42,6 +43,7 @@ def on_booking_save(sender, instance, **kwargs):
     if vo:
         run_searchvector_for_object(vo)
 
+
 for model in BOOKING_MODELS:
     post_save.connect(on_booking_save, sender=model)
 
@@ -50,6 +52,7 @@ def on_booker_save(sender, instance, **kwargs):
     vo = getattr(instance, 'visit', None)
     if vo:
         run_searchvector_for_object(vo)
+
 
 post_save.connect(on_booker_save, sender=Guest)
 

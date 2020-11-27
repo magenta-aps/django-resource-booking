@@ -479,7 +479,7 @@ class EmailTemplateTypeMeta(ModelBase):
                 if type(value) == int:
                     try:
                         return self.objects.get(key=value)
-                    except:
+                    except Exception:
                         pass
 
 
@@ -1242,7 +1242,7 @@ class EmailTemplate(models.Model):
                 ).first()
                 if template is not None:
                     templates.append(template)
-            except:
+            except Exception:
                 pass
             unit = unit.parent if unit.parent != unit else None
         if include_overridden or len(templates) == 0:
@@ -1253,7 +1253,7 @@ class EmailTemplate(models.Model):
                 ).first()
                 if template is not None:
                     templates.append(template)
-            except:
+            except Exception:
                 pass
         if include_overridden:
             return templates
@@ -1384,11 +1384,11 @@ class KUEmailRecipient(models.Model):
         else:
             try:
                 ku_email_recipient.name = base.get_name()
-            except:
+            except Exception:
                 pass
             try:
                 address = base.get_email()
-            except:
+            except Exception:
                 pass
 
         if recipient_type is not None:
@@ -1801,7 +1801,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (GROUP_VISIT, _("Besøg med klassen")),
         (STUDY_PROJECT, _("Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _("Lektiehjælp")),
-        (OTHER_OFFERS,  _("Andre tilbud")),
+        (OTHER_OFFERS, _("Andre tilbud")),
         (STUDY_MATERIAL, _("Undervisningsmateriale"))
     )
 
@@ -2480,7 +2480,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             item = self.productautosend_set.filter(
                 template_type=template_type, enabled=True)[0]
             return item
-        except:
+        except Exception:
             return None
 
     def autosend_enabled(self, template_type):
@@ -2524,13 +2524,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 texts.append(self.organizationalunit.parent.name)
 
         # Url, name and description of all links
-        for l in self.links.all():
-            if l.url:
-                texts.append(l.url)
-            if l.name:
-                texts.append(l.name)
-            if l.description:
-                texts.append(l.description)
+        for link in self.links.all():
+            if link.url:
+                texts.append(link.url)
+            if link.name:
+                texts.append(link.name)
+            if link.description:
+                texts.append(link.description)
 
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
@@ -2912,7 +2912,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             parts = self.duration.split(":")
             try:
                 result = int(parts[0]) * 60 + int(parts[1])
-            except:
+            except Exception:
                 pass
         return result
 
@@ -3503,7 +3503,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if self.product.type == Product.STUDENT_FOR_A_DAY:
                 return self.bookings.first().booker.get_full_name()
             return self.bookings.first().booker.school.name
-        except:
+        except Exception:
             return self.product.title if self.product \
                 else _("Besøg #%d") % self.id
 
@@ -3898,11 +3898,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def product(self):
         try:
             return self.eventtime.product
-        except:
+        except Exception:
             pass
         try:
             return self.cancelled_eventtime.product
-        except:
+        except Exception:
             pass
         return None
 
@@ -3912,7 +3912,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.multiproductvisit.unit
         try:
             return self.product.organizationalunit
-        except:
+        except Exception:
             pass
 
     def get_override_attr(self, attrname):
@@ -4051,7 +4051,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 if not include_disabled:
                     query = query.filter(enabled=True)
                 return query[0]
-            except:
+            except Exception:
                 return None
 
     def get_autosends(self, follow_inherit=True,
@@ -4626,7 +4626,7 @@ class MultiProductVisit(Visit):
     def unit(self):
         try:
             return self.products[0].organizationalunit
-        except:
+        except Exception:
             pass
 
     def resources_assigned(self, requirement):
@@ -4751,7 +4751,7 @@ class MultiProductVisit(Visit):
         # return _(u'prioriteret liste af %d tilbud') % len(self.products)
         try:
             return self.bookings.first().booker.school.name
-        except:
+        except Exception:
             count = len(self.subvisits_unordered)
             return __(
                 "%(title)s, %(count)d prioritet",
@@ -5663,7 +5663,7 @@ class Guest(models.Model):
     def student_count(self):
         try:
             return self.attendee_count - (self.teacher_count or 0)
-        except:
+        except Exception:
             return 0
 
     def evaluationguest_student(self):
@@ -5671,7 +5671,7 @@ class Guest(models.Model):
             return self.surveyxactevaluationguest_set.filter(
                 evaluation__for_students=True, evaluation__for_teachers=False
             ).first()
-        except:
+        except Exception:
             return None
 
     def evaluationguest_teacher(self):
@@ -5679,7 +5679,7 @@ class Guest(models.Model):
             return self.surveyxactevaluationguest_set.filter(
                 evaluation__for_students=False, evaluation__for_teachers=True
             ).first()
-        except:
+        except Exception:
             return None
 
     def as_searchtext(self):
@@ -5962,7 +5962,7 @@ class ClassBooking(Booking):
         if self.custom_desired:
             try:
                 desires.append(self.visit.product.custom_name.lower())
-            except:
+            except Exception:
                 pass
         return prose_list_join(desires, ', ', _(' og '))
 
@@ -6138,11 +6138,11 @@ class KUEmailMessage(models.Model):
             else:
                 try:
                     name = recipient.get_name()
-                except:
+                except Exception:
                     pass
                 try:
                     address = recipient.get_email()
-                except:
+                except Exception:
                     pass
             if address is not None and address != '':
 
@@ -6565,7 +6565,7 @@ class SurveyXactEvaluationGuest(models.Model):
             evalguest = SurveyXactEvaluationGuest.objects.get(
                 shortlink_id=shortlink_id,
             )
-        except:
+        except Exception:
             return None
         url = surveyxact_upload(
             evalguest.evaluation.surveyId, evalguest.get_surveyxact_data()

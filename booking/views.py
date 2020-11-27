@@ -217,7 +217,7 @@ class ProductBookingDetailView(DetailView):
     def on_display(self):
         try:
             self.object.ensure_statistics()
-        except:
+        except Exception:
             return
         self.object.statistics.on_display()
 
@@ -233,7 +233,7 @@ class ProductBookingUpdateView(UpdateView):
     def on_update(self):
         try:
             self.object.ensure_statistics()
-        except:
+        except Exception:
             return
         self.object.statistics.on_update()
 
@@ -261,7 +261,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             self.template_type = EmailTemplateType.objects.get(
                 id=int(request.GET.get("template", None))
             )
-        except:
+        except Exception:
             pass
 
     def dispatch(self, request, *args, **kwargs):
@@ -393,7 +393,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 try:
                     id = Booking.objects.get(id=id).booker.id
                     recipient_type = EmailComposeView.RECIPIENT_BOOKER
-                except:
+                except Exception:
                     pass
             if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
                 booker_ids.append(id)
@@ -475,7 +475,7 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
             return None
 
         q = self.get_query_string()
-        if re.match('^#?\d+$', q):
+        if re.match(r'^#?\d+$', q):
             if q[0] == "#":
                 q = q[1:]
             try:
@@ -514,7 +514,7 @@ class SearchView(SearchEngineMixin, BreadcrumbMixin, ListView):
     def get_query_string(self):
         return urlunquote_plus(self.request.GET.get("q", "")).strip()
 
-    search_prune = re.compile("[^\s\wæøåÆØÅ]+")
+    search_prune = re.compile(r"[^\s\wæøåÆØÅ]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
@@ -1088,7 +1088,7 @@ class ProductCustomListView(BreadcrumbMixin, SearchEngineMixin, ListView):
                 return Product.objects.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.objects.get_latest_updated(self.request.user)
-        except:
+        except Exception:
             pass
         raise Http404
 
@@ -1240,7 +1240,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     type = int(self.kwargs['type'])
                     if type in self.model.applicable_types:
                         self.object.type = type
-                except:
+                except Exception:
                     pass
             else:
                 try:
@@ -1350,7 +1350,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                         file=self.request.FILES["%s-file" % fileform.prefix]
                     )
                     instance.save()
-                except:
+                except Exception:
                     pass
 
     def save_subjects(self):
@@ -1761,7 +1761,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_success_url(self):
         try:
             return reverse('product-view', args=[self.object.id])
-        except:
+        except Exception:
             return '/'
 
     def form_invalid(self, forms):
@@ -2437,7 +2437,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         if product_id is not None:
             try:
                 self.product = Product.objects.get(id=product_id)
-            except:
+            except Exception:
                 pass
 
     def get_context_data(self, **kwargs):
@@ -2715,7 +2715,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     repeatemail = forms['bookerform'].fields['repeatemail']
                     repeatemail.widget.attrs['autocomplete'] = 'on'
                     repeatemail.widget.attrs['disablepaste'] = 'false'
-            except:
+            except Exception:
                 pass
 
             type = self.product.type
@@ -3015,14 +3015,14 @@ class BookingEditView(BreadcrumbMixin, EditorRequiredMixin, UpdateView):
             try:
                 self.object = self.object.classbooking
                 form_class = ClassBookingBaseForm
-            except:
+            except Exception:
                 pass
 
         elif type == Product.TEACHER_EVENT:
             try:
                 self.object = self.object.teacherbooking
                 form_class = TeacherBookingBaseForm
-            except:
+            except Exception:
                 pass
 
         elif type == Product.STUDENT_FOR_A_DAY:
@@ -3199,7 +3199,7 @@ class VisitCustomListView(VisitListView):
                 return Visit.objects.get_latest_updated()
             elif listtype == self.TYPE_TODAY:
                 return Visit.objects.get_todays_visits()
-        except:
+        except Exception:
             pass
         raise Http404
 
@@ -3264,7 +3264,7 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
         t = form.cleaned_data.get("t", "").strip()
 
-        if re.match('^#?\d+$', t):
+        if re.match(r'^#?\d+$', t):
             if t[0] == "#":
                 t = t[1:]
             qs = qs.filter(eventtime__product__pk=t)
@@ -3276,7 +3276,7 @@ class VisitSearchView(VisitListView):
         form = self.get_form()
         b = form.cleaned_data.get("b", "").strip()
 
-        if re.match('^#?\d+$', b):
+        if re.match(r'^#?\d+$', b):
             if b[0] == "#":
                 b = b[1:]
             qs = qs.filter(pk=b)
@@ -3316,11 +3316,11 @@ class VisitSearchView(VisitListView):
 
     def filter_by_teacher(self, qs):
         form = self.get_form()
-        l = form.cleaned_data.get("l", None)
-        if l is not None:
+        teachers = form.cleaned_data.get("l", None)
+        if teachers is not None:
             qs = qs.filter(
-                Q(teachers=l) |
-                Q(resources__teacherresource__user=l)
+                Q(teachers=teachers) |
+                Q(resources__teacherresource__user=teachers)
             )
         return qs
 
@@ -3406,7 +3406,7 @@ class VisitSearchView(VisitListView):
 
         try:
             p_min = form.cleaned_data.get("p_min", "")
-        except:
+        except Exception:
             pass
 
         if p_min != "":
@@ -3416,7 +3416,7 @@ class VisitSearchView(VisitListView):
 
         try:
             p_max = form.cleaned_data.get("p_max", "")
-        except:
+        except Exception:
             pass
 
         if p_max != "":
@@ -4399,14 +4399,14 @@ class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
                 )
                 relation.save()
 
-            except:
+            except Exception:
                 pass
         return response
 
     def get_breadcrumb_args(self):
         try:
             return [Product.objects.get(id=self.request.GET['base'])]
-        except:
+        except Exception:
             return []
 
     @staticmethod

@@ -231,6 +231,7 @@ def register_models(models, namespace=None):
         cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
         admin.site.register(value, cls)
 
+
 register_models(
     booking_models.__dict__.items(),
     'booking.models'

@@ -615,7 +615,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                 return reverse("user_list")
             else:
                 return reverse("user_profile")
-        except:
+        except Exception:
             return '/'
 
     def get_breadcrumb_args(self):
@@ -683,14 +683,14 @@ class UserListView(BreadcrumbMixin, EditorRequiredMixin, ListView):
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
             )
-        except:
+        except Exception:
             pass
         if self.selected_unit:
             qs = qs.filter(userprofile__organizationalunit=self.selected_unit)
 
         try:
             self.selected_role = int(self.request.GET.get("role", None))
-        except:
+        except Exception:
             pass
         if self.selected_role is not None:
             qs = qs.filter(userprofile__user_role__role=self.selected_role)
@@ -876,7 +876,7 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
             has_classbooking = False
             try:
                 has_classbooking = (booking.classbooking is not None)
-            except:
+            except Exception:
                 pass
 
             if has_classbooking:
@@ -903,15 +903,15 @@ class StatisticsView(EditorRequiredMixin, BreadcrumbMixin, TemplateView):
             try:
                 postalregion = booking.booker.school.\
                                      postcode.region.name or ""
-            except:
+            except Exception:
                 postalregion = ""
             try:
                 postalcode = booking.booker.school.postcode.number or ""
-            except:
+            except Exception:
                 postalcode = ""
             try:
                 postalcity = booking.booker.school.postcode.city or ""
-            except:
+            except Exception:
                 postalcity = ""
 
             leveltext = ", ".join(

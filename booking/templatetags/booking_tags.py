@@ -290,7 +290,7 @@ class FullURLNode(defaulttags.Node):
                 return ''
             else:
                 return self.prefix(self.tokenize(result, context))
-        except:
+        except Exception:
             args = [arg.resolve(context) for arg in self.url_node.args]
             string_if_invalid = context.template.engine.string_if_invalid
             if not string_if_invalid:
@@ -376,7 +376,7 @@ def evaluation_boolean(value):
             b = value
         elif isinstance(value, str):
             b = value.lower() in ['true', '1', 'y', 'yes', 'ja']
-        elif isinstance(value, (int, long, float, complex)):
+        elif isinstance(value, (int, float, complex)):
             b = value > 0
     return 1 if b else 2
 

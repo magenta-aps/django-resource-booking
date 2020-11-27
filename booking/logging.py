@@ -36,11 +36,11 @@ def log_action(user, obj, action_flag, change_message=''):
         content_type_id = ctype.pk
         try:
             object_id = obj.pk
-        except:
+        except Exception:
             pass
         try:
             object_repr = str(obj)
-        except:
+        except Exception:
             pass
 
     LogEntry.objects.log_action(

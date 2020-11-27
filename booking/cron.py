@@ -38,7 +38,7 @@ class KuCronJob(CronJobBase):
         try:
             self.run()
             print("CRON job complete")
-        except:
+        except Exception:
             print(traceback.format_exc())
             print("CRON job failed")
             raise
