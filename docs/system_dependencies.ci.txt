@@ -1,0 +1,6 @@
+gettext
+libffi-dev
+npm
+xmlsec1
+libjpeg-dev
+zlib1g-dev
