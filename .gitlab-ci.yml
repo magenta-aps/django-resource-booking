@@ -1,0 +1,57 @@
+stages:
+  - migrations
+  - test
+
+variables:
+  XDG_CACHE_HOME: "$CI_PROJECT_DIR/.cache"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/
+
+notice:
+  stage: migrations
+  image: python:3.8
+  services:
+    - postgres:alpine
+  variables:
+    POSTGRES_DB: resource_booking
+    POSTGRES_USER: resource_booking
+    POSTGRES_PASSWORD: resource_booking
+    POSTGRES_HOST: postgres
+    DJANGO_SETTINGS_MODULE: resource_booking.settings
+
+  script:
+    - apt-get update -qq
+    - apt-get install -qq $(cat docs/system_dependencies.ci.txt)
+    - python3 setup.py build install
+    - python3 manage.py makemigrations --check --dry-run # exit code 1 if there is something to migrate, ie. not all model changes are reflected in migration files
+
+tests:
+  stage: test
+  services:
+    - postgres:alpine
+  image: python:3.8
+  variables:
+    POSTGRES_DB: resource_booking
+    POSTGRES_USER: resource_booking
+    POSTGRES_PASSWORD: resource_booking
+    POSTGRES_HOST: postgres
+    DJANGO_SETTINGS_MODULE: resource_booking.settings
+
+  script:
+    - apt-get update -qq
+    - apt-get install -qq $(cat docs/system_dependencies.ci.txt)
+    - python3 setup.py build install
+    - python3 manage.py makemigrations
+    - python3 manage.py migrate
+    - python3 manage.py test
+
+flake8:
+  stage: test
+  image: python:latest
+  allow_failure: true
+  script:
+    - pip3 install flake8
+    - flake8 --exclude="migrations,data" booking/ resource_booking/ user_profile/
