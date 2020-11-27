@@ -740,12 +740,12 @@ class ProductAutosendForm(forms.ModelForm):
         template_type = None
         try:
             template_type = self.instance.template_type
-        except:
+        except Exception:
             pass
         if template_type is None:
             try:
                 template_type = self.initial['template_type']
-            except:
+            except Exception:
                 pass
 
         if isinstance(template_type, EmailTemplateType):
@@ -1021,7 +1021,7 @@ class BookerForm(forms.ModelForm):
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
                        'placeholder': _('Telefonnummer'),
-                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
+                       'pattern': r'(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'line': Select(
                 attrs={'class': 'selectpicker form-control'}
@@ -1163,7 +1163,7 @@ class BookerForm(forms.ModelForm):
         if postcode is not None:
             try:
                 PostCode.objects.get(number=postcode)
-            except:
+            except Exception:
                 raise forms.ValidationError(_('Ukendt postnummer'))
         return postcode
 
@@ -1217,7 +1217,7 @@ class BookerForm(forms.ModelForm):
         try:
             school = field.clean(value)
             self.schooltype = School.objects.get(name__iexact=school).type
-        except:
+        except Exception:
             pass
         if self.schooltype is not None:
             if self.schooltype != School.ELEMENTARY_SCHOOL:
@@ -1264,7 +1264,7 @@ class EditBookerForm(forms.ModelForm):
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
                        'placeholder': _('Telefonnummer'),
-                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
+                       'pattern': r'(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'attendee_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
@@ -1340,7 +1340,7 @@ class EditBookerForm(forms.ModelForm):
         if postcode is not None:
             try:
                 PostCode.objects.get(number=postcode)
-            except:
+            except Exception:
                 raise forms.ValidationError(_('Ukendt postnummer'))
         return postcode
 
@@ -1893,7 +1893,7 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
             attrs={
                 'class': 'form-control input-sm',
                 'placeholder': _('Dit telefonnummer'),
-                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
+                'pattern': r'(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
             },
         ),
         required=False

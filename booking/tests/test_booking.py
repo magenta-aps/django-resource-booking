@@ -88,11 +88,17 @@ class TestBooking(TestMixin, TestCase):
         self.assertEquals(200, response.status_code)
         query = PyQuery(response.content)
         for name in formdata.keys():
-            self.assertEqual(1, len(query("input[name=%s],select[name=%s]" % (name, name))))
+            self.assertEqual(
+                1,
+                len(query("input[name=%s],select[name=%s]" % (name, name)))
+            )
 
         response = self.client.post(url, formdata)
         self.assertEquals(302, response.status_code)
-        self.assertEquals("/product/%d/book/success?modal=0#" % product.id, response['Location'])
+        self.assertEquals(
+            "/product/%d/book/success?modal=0#" % product.id,
+            response['Location']
+        )
         booking = visit.booking_list[0]
         for name in guestdata.keys():
             self.assertEquals(guestdata[name], getattr(booking.booker, name))

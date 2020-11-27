@@ -202,7 +202,7 @@ class EventTime(models.Model):
                     assigned = self.visit.visitresource.filter(
                         resource_requirement=req
                     ).count()
-                except:
+                except Exception:
                     assigned = 0
 
                 if req.required_amount == assigned:
@@ -323,23 +323,23 @@ class EventTime(models.Model):
     def can_be_deleted(self):
         return not self.visit
 
-    date_re = re.compile("^(\d{2}).(\d{2}).(\d{4})$")
+    date_re = re.compile(r"^(\d{2}).(\d{2}).(\d{4})$")
     date_with_times_re = re.compile(
-        "^(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})\s+-\s+(\d{2}):(\d{2})$"
+        r"^(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})\s+-\s+(\d{2}):(\d{2})$"
     )
     dates_re = re.compile(
-        "^" +
-        "(\d{2}).(\d{2}).(\d{4})" +
-        "\s+-\s+" +
-        "(\d{2}).(\d{2}).(\d{4})" +
-        "$"
+        r"^" +
+        r"(\d{2}).(\d{2}).(\d{4})" +
+        r"\s+-\s+" +
+        r"(\d{2}).(\d{2}).(\d{4})" +
+        r"$"
     )
     dates_with_times_re = re.compile(
-        "^" +
-        "(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
-        "\s+-\s+" +
-        "(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
-        "$"
+        r"^" +
+        r"(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
+        r"\s+-\s+" +
+        r"(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
+        r"$"
     )
 
     # Update resource_status for eventtimes in the given queryset
@@ -1545,7 +1545,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     def subclass_instance(self):
         try:
             return self.resource_type.resource_class.objects.get(pk=self.pk)
-        except:
+        except Exception:
             pass
         return Resource.get_subclass_instance(self.pk)
 
@@ -1760,7 +1760,7 @@ class RoomResource(Resource):
         for room in missing_rooms:
             try:
                 RoomResource.create(room)
-            except:
+            except Exception:
                 pass
 
     @staticmethod

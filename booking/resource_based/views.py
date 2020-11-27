@@ -64,7 +64,7 @@ class CreateTimeView(BreadcrumbMixin, CreateView):
                 self._product = booking_models.Product.objects.get(
                     pk=self.kwargs.get('product_pk', -1)
                 )
-            except:
+            except Exception:
                 raise Http404
         return self._product
 
@@ -160,7 +160,7 @@ class CreateTimesFromRulesView(BreadcrumbMixin, FormView):
                 self.product = booking_models.Product.objects.get(
                     pk=self.kwargs.get('product_pk', -1)
                 )
-            except:
+            except Exception:
                 raise Http404
 
         return self.product
@@ -1489,7 +1489,7 @@ class CalendarEventCreateView(
         kwargs = self.get_form_kwargs()
         try:
             calendar = self.get_calendar()
-        except:
+        except Exception:
             raise Http404
 
         if self.request.method == "GET":

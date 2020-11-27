@@ -215,10 +215,10 @@ class ModalMixin(object):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.modalid = request.GET["modalid"]
-        except:
+        except Exception:
             try:
                 self.modalid = request.POST["modalid"]
-            except:
+            except Exception:
                 pass
         return super(ModalMixin, self).dispatch(request, *args, **kwargs)
 
@@ -298,7 +298,7 @@ class AutologgerMixin(object):
             try:
                 o = field.related_model.objects.get(pk=value)
                 return (fname, str(o))
-            except:
+            except Exception:
                 return (fname, str(value))
 
         if field.many_to_many or field.one_to_many:
@@ -307,7 +307,7 @@ class AutologgerMixin(object):
                 try:
                     o = field.related_model.objects.get(pk=x)
                     res.append(str(o))
-                except:
+                except Exception:
                     res.append(str(x))
             return (fname, ", ".join(res))
 

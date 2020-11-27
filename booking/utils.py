@@ -33,11 +33,11 @@ def log_action(user, obj, action_flag, change_message=''):
         content_type_id = ctype.pk
         try:
             object_id = obj.pk
-        except:
+        except Exception:
             pass
         try:
             object_repr = repr(obj)
-        except:
+        except Exception:
             pass
 
     LogEntry.objects.log_action(
@@ -48,6 +48,7 @@ def log_action(user, obj, action_flag, change_message=''):
         action_flag,
         change_message
     )
+
 
 _releated_content_types_cache = {}
 
@@ -203,13 +204,13 @@ def get_model_field_map(model, visited_models=None):
 
             try:
                 label = field.related_model._meta.verbose_name
-            except:
+            except Exception:
                 pass
             value = get_model_field_map(field.related_model, visited_models)
         else:
             try:
                 label = field.verbose_name
-            except:
+            except Exception:
                 pass
             value = True
         map[(field.name, label)] = value
@@ -289,7 +290,7 @@ def binary_or(*items):
     for item in list(flatten([items])):
         try:
             base = base | item
-        except:
+        except Exception:
             pass
     return base
 
@@ -302,7 +303,7 @@ def binary_and(*items):
     for item in flatten(items):
         try:
             base = base & item
-        except:
+        except Exception:
             pass
     return base
 
@@ -605,9 +606,9 @@ def bool2int(bool):
     return 1 if bool else 0
 
 
-def prune_list(l, prune_empty_string=False):
+def prune_list(lst, prune_empty_string=False):
     return [
-        x for x in l
+        x for x in lst
         if x is not None and not (prune_empty_string and x == '')
     ]
 

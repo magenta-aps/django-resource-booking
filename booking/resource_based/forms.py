@@ -223,7 +223,7 @@ class EditResourcePoolForm(forms.ModelForm):
                 # This lookup might fail, see ticket #20705
                 si = resource.subclass_instance
                 choices.append((si.id, si.get_name()))
-            except:
+            except Exception:
                 pass
         self.fields['resources'].choices = choices
 
