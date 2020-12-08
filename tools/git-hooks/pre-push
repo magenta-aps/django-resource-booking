@@ -9,10 +9,10 @@ cd $GIT_ROOT
 echo $GIT_ROOT
 
 # Enter python virtual environment
-source python-env/bin/activate
+source env/bin/activate
 
 # Run syntax check
-flake8 --exclude="migrations,data" booking/ resource_booking/ profile/
+flake8 --exclude="migrations,data" booking/ resource_booking/ user_profile/
 STATUS=$?
 
 # Exit python virtual environment

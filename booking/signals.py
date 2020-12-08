@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
-from booking.models import Guest, VisitResource, ResourceRequirement
 from booking.models import Booking, ClassBooking, TeacherBooking
+from booking.models import Guest, VisitResource, ResourceRequirement
 from booking.models import Product
 from booking.models import Visit
 
@@ -33,6 +33,7 @@ def run_searchvector_for_object(obj):
 def update_search_vectors(sender, instance, **kwargs):
     run_searchvector_for_object(instance)
 
+
 for model in MODELS_WITH_SEARCHVECTOR:
     post_save.connect(update_search_vectors, sender=model)
 
@@ -42,6 +43,7 @@ def on_booking_save(sender, instance, **kwargs):
     if vo:
         run_searchvector_for_object(vo)
 
+
 for model in BOOKING_MODELS:
     post_save.connect(on_booking_save, sender=model)
 
@@ -50,6 +52,7 @@ def on_booker_save(sender, instance, **kwargs):
     vo = getattr(instance, 'visit', None)
     if vo:
         run_searchvector_for_object(vo)
+
 
 post_save.connect(on_booker_save, sender=Guest)
 
@@ -66,4 +69,3 @@ def on_visitresource_delete(sender, instance, using, **kwargs):
         instance.visit.autoassign_resources()
 
 # Import resource-based signals
-from booking.resource_based.signals import *  # NOQA
