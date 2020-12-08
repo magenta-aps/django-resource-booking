@@ -32,7 +32,9 @@ from django.utils import formats
 from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __, gettext
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ungettext_lazy as __
+from django.utils.translation import gettext
 
 from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
