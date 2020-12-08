@@ -38,7 +38,8 @@ import unittest.mock
 
 class AnonymizeEmailsJobTestCase(TestCase):
     def test_emails_before_limit_are_anonymized(self):
-        less_than_two_years_ago = timezone.now() - timedelta(days=(365 * 2) + 1)
+        less_than_two_years_ago = \
+            timezone.now() - timedelta(days=(365 * 2) + 1)
         with freeze_time(less_than_two_years_ago):
             email = KUEmailMessage.objects.create()
 
@@ -53,7 +54,8 @@ class AnonymizeEmailsJobTestCase(TestCase):
 
 class AnonymizeInquirersJobTestCase(TestCase, TestMixin):
     def test_inquirers_before_limit_are_anonymized(self):
-        less_than_two_years_ago = timezone.now() - timedelta(days=(365 * 2) + 1)
+        less_than_two_years_ago = \
+            timezone.now() - timedelta(days=(365 * 2) + 1)
 
         template_type = EmailTemplateType.objects.create(
             key=EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE
@@ -134,12 +136,20 @@ class EvaluationReminderJobTestCase(TestCase, TestMixin):
             type=template_type
         )
 
-        autosend = self.create_autosend(visit, template_type, enabled=True, days=5)
+        autosend = self.create_autosend(
+            visit,
+            template_type,
+            enabled=True,
+            days=5
+        )
         job = EvaluationReminderJob()
         job.run()
 
         evaluation_guest.refresh_from_db()
-        self.assertEqual(evaluation_guest.status, SurveyXactEvaluationGuest.STATUS_SECOND_SENT)
+        self.assertEqual(
+            evaluation_guest.status,
+            SurveyXactEvaluationGuest.STATUS_SECOND_SENT
+        )
 
 
 class NotifyEventTimeJobTestCase(TestCase, TestMixin):

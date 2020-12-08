@@ -62,22 +62,23 @@ class VisitQuerySet(models.QuerySet):
             **kwargs
         ))
 
-    def with_product_types(self, product_types=None, **kwargs):
-        if product_types is None:
+    def with_product_types(self, p_types=None, **kwargs):
+        if p_types is None:
             return self
+
+        q1 = Q(
+            multiproductvisit__isnull=True,
+            eventtime__product__type__in=p_types,
+        )
+        q2 = Q(
+            multiproductvisit__isnull=False,
+            multiproductvisit__subvisit__eventtime__product__type__in=p_types,
+            multiproductvisit__subvisit__is_multi_sub=True,
+        )
+
         return (
             VisitQuerySet.prefetch(
-                self.filter(
-                    Q(
-                        multiproductvisit__isnull=True,
-                        eventtime__product__type__in=product_types,
-                    )
-                    | Q(
-                        multiproductvisit__isnull=False,
-                        multiproductvisit__subvisit__eventtime__product__type__in=product_types,
-                        multiproductvisit__subvisit__is_multi_sub=True,
-                    )
-                ),
+                self.filter(q1 | q2),
                 **kwargs
             )
         ).distinct()
