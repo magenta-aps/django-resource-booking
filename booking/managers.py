@@ -1,9 +1,9 @@
 from datetime import time, timedelta
-from django.utils import timezone
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Max
-from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 class VisitQuerySet(models.QuerySet):
@@ -211,7 +211,7 @@ class ProductQuerySet(models.QuerySet):
     def get_latest_created(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             qs = qs.filter_public_bookable() \
                 .distinct("pk", "statistics__created_time").only('pk')
 
@@ -220,7 +220,7 @@ class ProductQuerySet(models.QuerySet):
     def get_latest_updated(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             qs = qs.filter_public_bookable() \
                 .distinct("pk", "statistics__updated_time").only('pk')
 
@@ -229,7 +229,7 @@ class ProductQuerySet(models.QuerySet):
     def get_latest_displayed(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             qs = qs.filter_public_bookable() \
                 .distinct("pk", "statistics__updated_time").only('pk')
 
@@ -240,7 +240,7 @@ class ProductQuerySet(models.QuerySet):
             eventtime__visit__bookings__statistics__created_time__isnull=False
         )
 
-        if user and not user.is_authenticated():
+        if user and not user.is_authenticated:
             qs = qs.filter_public_bookable().distinct().only("pk")
 
         return qs.annotate(
