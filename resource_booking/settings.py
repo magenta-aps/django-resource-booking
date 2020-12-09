@@ -162,10 +162,10 @@ WSGI_APPLICATION = 'resource_booking.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'resource_booking',
-        'USER': 'resource_booking',
-        'PASSWORD': 'resource_booking',
-        'HOST': '127.0.0.1',
+        'NAME': os.getenv('POSTGRES_DB', 'resource_booking'),
+        'USER': os.getenv('POSTGRES_USER', 'resource_booking'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'resource_booking'),
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
     }
 }
 
