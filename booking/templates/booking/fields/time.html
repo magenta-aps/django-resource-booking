@@ -1,5 +1,6 @@
 {% load i18n %}
 {% if bookingform.scheduled %}
+    SCHEDULED
 
     {% if bookingform.eventtime %}
         <div class="form-group">
@@ -16,6 +17,7 @@
     {% endif %}
 
 {% elif bookingform.classbooking %}
+    CLASSBOOKING
 
     {% if bookingform.desired_datetime_date %}
         {% if bookingform.desired_datetime_date.field.widget.input_type == 'hidden' %}
@@ -62,6 +64,7 @@
     {% endif %}
 
 {% elif not bookingform.student_for_a_day_booking %}
+    NOT SFED
 
     {% if bookingform.desired_time %}
         {% if bookingform.desired_time.field.widget.input_type == 'hidden' %}

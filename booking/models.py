@@ -32,7 +32,9 @@ from django.utils import formats
 from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ungettext_lazy as __
+from django.utils.translation import gettext
 
 from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
@@ -334,6 +336,19 @@ class Subject(models.Model):
 
     def is_all(self):
         return self.name == Subject.ALL_NAME
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import subjects
+        data = subjects.subjects
+        for item in data:
+            try:
+                Subject.objects.get(
+                    name=item['name'],
+                    subject_type=item['subject_type']
+                )
+            except Subject.DoesNotExist:
+                Subject(**item).save()
 
 
 class Link(models.Model):
@@ -5954,17 +5969,17 @@ class ClassBooking(Booking):
     def verbose_desires(self):
         desires = []
         if self.tour_desired:
-            desires.append(_('rundvisning'))
+            desires.append(gettext('rundvisning'))
         if self.catering_desired:
-            desires.append(_('forplejning'))
+            desires.append(gettext('forplejning'))
         if self.presentation_desired:
-            desires.append(_('oplæg om uddannelse'))
+            desires.append(gettext('oplæg om uddannelse'))
         if self.custom_desired:
             try:
                 desires.append(self.visit.product.custom_name.lower())
             except Exception:
                 pass
-        return prose_list_join(desires, ', ', _(' og '))
+        return prose_list_join(desires, ', ', gettext(' og '))
 
 
 class TeacherBooking(Booking):
@@ -6430,7 +6445,7 @@ class SurveyXactEvaluation(models.Model):
             guest__booking__visit=visit
         )
         for evalguest in qs:
-            evalguest.send(True)
+            evalguest.send(False)
 
     def product_autosend_activated(self):
         return self.product.get_autosends().filter(

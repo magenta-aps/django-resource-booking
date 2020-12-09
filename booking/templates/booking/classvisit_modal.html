@@ -5,6 +5,7 @@
 {% block htmltitle %} - {% trans 'tilmeld klassebesøg' %}{% endblock %}
 
 {% block content %}
+    ERRORS: {{ bookerform.errors }}{{ bookingform.errors }}
 
     <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
         {% include 'booking/snippets/header.html' %}
