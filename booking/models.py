@@ -5447,7 +5447,7 @@ class School(models.Model):
 
     @property
     def full_address(self):
-        return u"%s, %s" % (self.address, unicode(self.postcode))
+        return "%s, %s" % (self.address, str(self.postcode))
 
     def __str__(self):
         if self.postcode is not None:
