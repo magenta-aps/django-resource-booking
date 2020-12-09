@@ -9,8 +9,8 @@
         {% csrf_token %}
         <p class="margin-top-10-mobile">{% trans 'Er du sikker på at du vil slette denne skabelon?' %}</p>
         <dl class="dl-horizontal wide">
-            <dt>{% trans 'Emne:' %}</dt>
-            <dd>{{ object.get_key_display }}</dd>
+            <dt>{% trans 'Type:' %}</dt>
+            <dd>{{ object.type.name }}</dd>
             <dt>{% trans 'Enhed:' %}</dt>
             <dd>{{ object.organizationalunit }}</dd>
             <dt>{% trans 'Beskedens emne:' %}</dt>

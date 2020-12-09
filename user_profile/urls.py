@@ -1,26 +1,25 @@
 import django.contrib.auth.views as auth_views
-
 from django.conf.urls import url
-from profile.views import ProfileView, CreateUserView, UnitListView
-from profile.views import DeleteUserView, UserListView, StatisticsView
-from profile.views import EmailLoginView
-from profile.views import EditMyProductsView
-from profile.views import AvailabilityView
+
+from user_profile.views import AvailabilityView
+from user_profile.views import DeleteUserView, UserListView, StatisticsView
+from user_profile.views import EditMyProductsView
+from user_profile.views import EmailLoginView
+from user_profile.views import ProfileView, CreateUserView, UnitListView
 
 urlpatterns = [
     url(r'^$', ProfileView.as_view(
         template_name='profile/profile.html'),
         name='user_profile'),
-    url(r'^login/', auth_views.login,
-        {'template_name': 'profile/login.html'},
+    url(r'^login/',
+        auth_views.LoginView.as_view(template_name='profile/login.html'),
         name='standard_login'),
     url(r'^email-login/(?P<slug>[a-f0-9-]+)(?P<dest_url>.*)',
         EmailLoginView.as_view(),
         name='email-login'
         ),
     url(r'^logout/',
-        auth_views.logout,
-        {'template_name': 'profile/logout.html'},
+        auth_views.LogoutView.as_view(template_name='profile/logout.html'),
         name='logout'
         ),
     url(r'^user/create$',

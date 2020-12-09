@@ -1,3 +1,7 @@
+import datetime
+import json
+import re
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
@@ -6,16 +10,13 @@ from django.template import defaulttags, Node, TemplateSyntaxError
 from django.template.base import FilterExpression
 from django.template.defaultfilters import register
 from django.templatetags.static import StaticNode
+from django.utils import six
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
 
-from booking.models import Guest, BookerResponseNonce
 from booking.constants import LOGACTION_DISPLAY_MAP
-from profile.models import EmailLoginURL, UserProfile
-import datetime
-import re
-import json
+from booking.models import Guest, BookerResponseNonce
+from user_profile.models import EmailLoginURL, UserProfile
 
 
 @register.filter
@@ -69,7 +70,7 @@ def timedelta_parse(string):
 def timedelta_i18n(value, display="long", sep=", "):
     if value is None:
         return value
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         try:
             # This should probably use django.utils.dateparse.parse_duration
             # which takes HH:MM:SS but i think that would require changes to
@@ -139,16 +140,17 @@ def timedelta_i18n(value, display="long", sep=", "):
     for i in range(len(values)):
         if values[i]:
             if values[i] == 1:
-                result.append(unicode(words_singular[i]))
+                result.append(words_singular[i])
             else:
-                result.append(unicode(words_plural[i] % values[i]))
+                result.append(words_plural[i] % values[i])
 
     # values with less than one second, which are considered zeroes
     if len(result) == 0:
         # display as 0 of the smallest unit
         result.append(words_plural[-1] % 0)
 
-    return sep.join(result)
+    # Force lazy translations to be evaluated with str() before join().
+    return sep.join([str(x) for x in result])
 
 
 @register.filter
@@ -248,7 +250,7 @@ class FullURLNode(defaulttags.Node):
             user = kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, FilterExpression):
                 user = user.resolve(context)
-            elif isinstance(user, basestring):
+            elif isinstance(user, str):
                 user = context.get(user)
             if isinstance(user, dict) and 'user' in user:
                 user = user['user']
@@ -288,7 +290,7 @@ class FullURLNode(defaulttags.Node):
                 return ''
             else:
                 return self.prefix(self.tokenize(result, context))
-        except:
+        except Exception:
             args = [arg.resolve(context) for arg in self.url_node.args]
             string_if_invalid = context.template.engine.string_if_invalid
             if not string_if_invalid:
@@ -372,9 +374,9 @@ def evaluation_boolean(value):
     if value is not None:
         if isinstance(value, bool):
             b = value
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             b = value.lower() in ['true', '1', 'y', 'yes', 'ja']
-        elif isinstance(value, (int, long, float, complex)):
+        elif isinstance(value, (int, float, complex)):
             b = value > 0
     return 1 if b else 2
 

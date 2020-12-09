@@ -13,19 +13,15 @@ ADMINISTRATOR = 3
 FACULTY_EDITOR = 4
 NONE = 5
 
-EDIT_ROLES = set([
-    ADMINISTRATOR,
-    FACULTY_EDITOR,
-    COORDINATOR
-])
+EDIT_ROLES = {ADMINISTRATOR, FACULTY_EDITOR, COORDINATOR}
 
 user_role_choices = (
-    (TEACHER, _(u"Underviser")),
-    (HOST, _(u"Vært")),
-    (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
-    (NONE, _(u"Ingen"))
+    (TEACHER, _("Underviser")),
+    (HOST, _("Vært")),
+    (COORDINATOR, _("Koordinator")),
+    (ADMINISTRATOR, _("Administrator")),
+    (FACULTY_EDITOR, _("Fakultetsredaktør")),
+    (NONE, _("Ingen"))
 )
 
 
@@ -33,6 +29,7 @@ def get_role_name(role):
     for id, label in user_role_choices:
         if id == role:
             return label
+
 
 # Which roles are available for editing?
 # E.g. a faculty editor can create, edit and delete coordinators but not admins
@@ -52,5 +49,5 @@ def role_to_text(role):
     """Return text representation of role code."""
     for r, t in user_role_choices:
         if r == role:
-            return unicode(t)
+            return t
     return ""
