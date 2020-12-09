@@ -25,7 +25,11 @@
         </p>
 
         <input type="submit" role="button" class="btn btn-success" value="{% trans 'Slet kalender' %}" />
-        <a href="{% url 'calendar' view.kwargs.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+        {% if view.kwargs.reverse_prefix %}
+            <a href="{% url 'product-calendar' view.kwargs.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+        {% else %}
+            <a href="{% url 'calendar' view.kwargs.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+        {% endif %}
         <div class="divider"></div>
 
     </form>

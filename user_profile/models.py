@@ -1,32 +1,36 @@
 # encoding: utf-8
+import uuid
 from datetime import timedelta
 
-from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.db import models
 from django.db.models import Aggregate
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models.functions import Coalesce
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 import booking.models
-
+from booking.admin import CLASSES_BY_ROLE
 from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
-
 # User roles
-from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
-    role_to_text
-from profile.constants import FACULTY_EDITOR, NONE
-from profile.constants import EDIT_ROLES, user_role_choices, available_roles
-
-from booking.admin import CLASSES_BY_ROLE
-
-import uuid
+from user_profile.constants import (
+    ADMINISTRATOR,
+    COORDINATOR,
+    EDIT_ROLES,
+    FACULTY_EDITOR,
+    HOST,
+    NONE,
+    TEACHER,
+    available_roles,
+    role_to_text,
+    user_role_choices,
+)
 
 
 def get_none_role():
@@ -97,15 +101,21 @@ class UserRole(models.Model):
                 name=entry["name"]
             )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class UserProfile(models.Model):
     """User profile associated with each user."""
 
-    user = models.OneToOneField(User)
-    user_role = models.ForeignKey(UserRole)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+    user_role = models.ForeignKey(
+        UserRole,
+        on_delete=models.CASCADE
+    )
     # Unit must always be specified for coordinators,
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
@@ -128,7 +138,7 @@ class UserProfile(models.Model):
         default=""
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.username
 
     def get_full_email(self):
@@ -471,17 +481,19 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('teachers')
             ).filter(
+                (Q(eventtime__start__gt=timezone.now()) |
+                 Q(eventtime__start__isnull=True)),
                 eventtime__product__time_mode__in=[
                     Product.TIME_MODE_SPECIFIC,
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
-                eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
                 ),
-                is_multi_sub=False
+                is_multi_sub=False,
+                eventtime__product__potentielle_undervisere=self.user
             ).exclude(
                 teachers=self.user
             )
@@ -489,17 +501,19 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('hosts')
             ).filter(
+                (Q(eventtime__start__gt=timezone.now()) |
+                 Q(eventtime__start__isnull=True)),
                 eventtime__product__time_mode__in=[
                     Product.TIME_MODE_SPECIFIC,
                     Product.TIME_MODE_GUEST_SUGGESTED
                 ],
-                eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit__in=unit_qs,
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'
                 ),
-                is_multi_sub=False
+                is_multi_sub=False,
+                eventtime__product__potentielle_vaerter=self.user
             ).exclude(
                 hosts=self.user
             )
@@ -588,7 +602,10 @@ class UserProfile(models.Model):
 class EmailLoginURL(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
     success_url = models.CharField(max_length=2024)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
@@ -604,8 +621,8 @@ class EmailLoginURL(models.Model):
     def is_expired(self):
         return (self.created + self.expires_in) < timezone.now()
 
-    def __unicode__(self):
-        return unicode(self.as_public_url())
+    def __str__(self):
+        return self.as_public_url()
 
     @classmethod
     def create_from_url(cls, user, url, **kwargs):

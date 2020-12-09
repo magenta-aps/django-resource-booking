@@ -26,7 +26,7 @@
                 {% if object.multiproductvisit %}
                     <div>
                         {% trans 'Ønskede tilbud/underbesøg:' %}
-                        <ul>
+                        <ul id="subvisits">
                             {% for visit in object.multiproductvisit.subvisits %}
                                 <li class="subvisit-status-{{ visit.workflow_status }}">
                                     <a class="product-link" href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
@@ -37,14 +37,14 @@
                     </div>
                 {% else %}
                     {% if object.is_multi_sub %}
-                    <div>
+                    <div id="multi-master">
                         {% url 'visit-view' object.multi_master.id as masterurl %}
                         {% blocktrans with master=object.multi_master %}
                             Dette er et underbesøg under <a href="{{ masterurl }}">{{ master }}</a>
                         {% endblocktrans %}
                     </div>
                     {% else %}
-                    <div>
+                    <div id="attendees">
                         {% url 'product-view' object.product.id as producturl %}
                         {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
                             {{ nr_bookers }} har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a>
@@ -131,7 +131,7 @@
             {% endfor %}
         {% endif %}
         {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-            {% if request.user.userprofile.is_teacher %}
+            {% if request.user.userprofile.is_teacher and request.user in object.potentielle_undervisere.all %}
                 {% if object.needs_teachers %}
                     {% if request.user in object.teachers.all %}
                         {% trans '(allerede underviser for dette besøg)' %}
@@ -145,7 +145,7 @@
                     <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle undervisere fundet' %}</button>
                 {% endif %}
             {% endif %}
-            {% if request.user.userprofile.is_host %}
+            {% if request.user.userprofile.is_host and request.user in object.potentielle_vaerter.all %}
                 {% if object.needs_hosts %}
                     {% if request.user in object.hosts.all %}
                         {% trans '(allerede vært for dette besøg)' %}
@@ -167,12 +167,12 @@
         <div class="col-sm-12 col-md-10 col-md-offset-2">
             {% with left_class="col-sm-3" center_class="col-sm-7" right_class="col-sm-2" %}
             <div class="panel panel-default">
-                <div class="panel-body">
+                <div id="status-overview" class="panel-body">
                     <h2>{% trans 'Statusoverblik' %}</h2>
 
                     {% if object.organizationalunit %}
                     <div class="row row-border">
-                        <strong class="{{ left_class }}">{% trans 'Enhed:' %}</strong>
+                        <strong class="{{ left_class }}">{% trans 'Enhed' %}</strong>
                         <div class="{{ center_class }}">{{ object.organizationalunit.name }}</div>
                     </div>
                     {% endif %}
@@ -454,19 +454,19 @@
                     {% if object.type == object.GROUP_VISIT %}
                         {% if object.student_evaluation %}
                             <a href="{% url 'evaluation-view' object.student_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
                         {% endif %}
                         {% if object.teacher_evaluation %}
                             <a href="{% url 'evaluation-view' object.teacher_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
                         {% endif %}
                     {% else %}
                         {% if object.common_evaluation %}
                             <a href="{% url 'evaluation-view' object.common_evaluation.pk object.id %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
-                        {% else %}
-                            <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                        {% elif not object.is_multiproductvisit %}
+                            <a href="{% url 'evaluation-create' object.product.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -487,7 +487,7 @@
                         {% trans 'Tilmeldte' %}
                         ({{ object.nr_attendees }}{% if object.product.maximum_number_of_visitors %}/{{ object.product.maximum_number_of_visitors }}{% endif %})
                     </h2>
-                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' can_edit=can_edit %}
                 </div>
             </div>
         </div>

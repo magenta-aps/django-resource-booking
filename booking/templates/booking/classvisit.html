@@ -5,6 +5,7 @@
 {% block htmltitle %} - {% trans 'tilmeld klassebesøg' %}{% endblock %}
 
 {% block content %}
+    ERRORS: {{ bookerform.errors }}{{ bookingform.errors }}
 
     {% include 'booking/snippets/header.html' %}
     <div class="modal-body">

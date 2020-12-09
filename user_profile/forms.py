@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from booking.models import OrganizationalUnit
 from django import forms
-from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from django.forms import ModelChoiceField, EmailField
 from django.utils.translation import ugettext_lazy as _
-from profile.models import UserRole, UserProfile
+
+from booking.models import OrganizationalUnit
+from user_profile.models import UserRole, UserProfile
 
 
 class UserCreateForm(UserCreationForm):
@@ -124,12 +125,14 @@ class StatisticsForm(forms.Form):
             attrs={
                 'class': 'form-control input-sm datepicker datepicker-admin'
             }
-        )
+        ),
+        required=False
     )
     to_date = forms.DateField(
         widget=forms.TextInput(
             attrs={
                 'class': 'form-control input-sm datepicker datepicker-admin'
             }
-        )
+        ),
+        required=False
     )

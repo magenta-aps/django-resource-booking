@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
 import datetime
-import booking.utils
-import recurrence.fields
-import booking.models
-import booking.mixins
-import django.db.models.deletion
-import django.utils.timezone
-from django.conf import settings
-import django.core.validators
 import uuid
+
+import django.core.validators
+import django.utils.timezone
+import recurrence.fields
+from django.conf import settings
+from django.db import migrations, models
+
+import booking.mixins
+import booking.utils
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('start', models.DateTimeField(verbose_name='Starttidspunkt')),
                 ('end', models.DateTimeField(verbose_name='Sluttidspunkt', blank=True)),
-                ('calendar', models.ForeignKey(verbose_name='Kalender', to='booking.Calendar')),
+                ('calendar', models.ForeignKey(verbose_name='Kalender', to='booking.Calendar', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -98,7 +98,7 @@ class Migration(migrations.Migration):
                 ('start', models.DateTimeField(verbose_name='Starttidspunkt')),
                 ('end', models.DateTimeField(verbose_name='Sluttidspunkt', blank=True)),
                 ('recurrences', recurrence.fields.RecurrenceField(null=True, verbose_name='Gentagelser', blank=True)),
-                ('calendar', models.ForeignKey(verbose_name='Kalender', to='booking.Calendar')),
+                ('calendar', models.ForeignKey(verbose_name='Kalender', to='booking.Calendar', on_delete=django.db.models.deletion.CASCADE)),
             ],
             bases=(booking.mixins.AvailabilityUpdaterMixin, models.Model),
         ),
@@ -237,9 +237,9 @@ class Migration(migrations.Migration):
                 ('object_id', models.PositiveIntegerField(default=None, null=True)),
                 ('reply_nonce', models.UUIDField(default=None, null=True, blank=True)),
                 ('template_key', models.IntegerField(default=None, null=True, verbose_name='Template key', blank=True)),
-                ('content_type', models.ForeignKey(default=None, to='contenttypes.ContentType', null=True)),
-                ('reply_to_message', models.ForeignKey(verbose_name='Reply to', blank=True, to='booking.KUEmailMessage', null=True)),
-                ('template_type', models.ForeignKey(default=None, blank=True, to='booking.EmailTemplateType', null=True, verbose_name='Template type')),
+                ('content_type', models.ForeignKey(default=None, to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.SET_NULL)),
+                ('reply_to_message', models.ForeignKey(verbose_name='Reply to', blank=True, to='booking.KUEmailMessage', null=True, on_delete=django.db.models.deletion.SET_NULL)),
+                ('template_type', models.ForeignKey(default=None, blank=True, to='booking.EmailTemplateType', null=True, on_delete=django.db.models.deletion.SET_NULL, verbose_name='Template type')),
             ],
         ),
         migrations.CreateModel(
@@ -250,9 +250,9 @@ class Migration(migrations.Migration):
                 ('formatted_address', models.TextField(null=True, blank=True)),
                 ('email', models.TextField(null=True, blank=True)),
                 ('type', models.IntegerField(default=0, choices=[(0, 'Anden'), (1, 'G\xe6st'), (2, 'Underviser'), (3, 'V\xe6rt'), (4, 'Koordinator'), (6, 'Modtager af sp\xf8rgsm\xe5l'), (7, 'Lokaleansvarlig'), (8, 'Tilbudsansvarlig'), (9, 'Enhedsansvarlig')])),
-                ('email_message', models.ForeignKey(to='booking.KUEmailMessage')),
-                ('guest', models.ForeignKey(blank=True, to='booking.Guest', null=True)),
-                ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('email_message', models.ForeignKey(to='booking.KUEmailMessage', on_delete=django.db.models.deletion.CASCADE)),
+                ('guest', models.ForeignKey(blank=True, to='booking.Guest', null=True, on_delete=django.db.models.deletion.SET_NULL)),
+                ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.SET_NULL)),
             ],
         ),
         migrations.CreateModel(
@@ -295,7 +295,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('index', models.IntegerField()),
-                ('multiproductvisittemp', models.ForeignKey(to='booking.MultiProductVisitTemp')),
+                ('multiproductvisittemp', models.ForeignKey(to='booking.MultiProductVisitTemp', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -372,7 +372,7 @@ class Migration(migrations.Migration):
                 ('preparation_time', models.CharField(max_length=200, null=True, verbose_name='Forberedelsestid', blank=True)),
                 ('price', models.DecimalField(decimal_places=2, default=0, max_digits=10, blank=True, null=True, verbose_name='Pris')),
                 ('comment', models.TextField(verbose_name='Kommentar', blank=True)),
-                ('search_index', booking.models.VectorField(default=b'', serialize=False, null=True, editable=False)),
+                ('search_index', django.contrib.postgres.search.SearchVectorField(null=True)),
                 ('extra_search_text', models.TextField(default=b'', verbose_name='Tekst-v\xe6rdier til friteksts\xf8gning', editable=False, blank=True)),
                 ('rooms_needed', models.BooleanField(default=True, verbose_name='Tilbuddet kr\xe6ver brug af et eller flere lokaler')),
                 ('duration', models.CharField(blank=True, max_length=8, null=True, verbose_name='Varighed', choices=[(b'00:00', b'00:00'), (b'00:15', b'00:15'), (b'00:30', b'00:30'), (b'00:45', b'00:45'), (b'01:00', b'01:00'), (b'01:15', b'01:15'), (b'01:30', b'01:30'), (b'01:45', b'01:45'), (b'02:00', b'02:00'), (b'02:15', b'02:15'), (b'02:30', b'02:30'), (b'02:45', b'02:45'), (b'03:00', b'03:00'), (b'03:15', b'03:15'), (b'03:30', b'03:30'), (b'03:45', b'03:45'), (b'04:00', b'04:00'), (b'04:15', b'04:15'), (b'04:30', b'04:30'), (b'04:45', b'04:45'), (b'05:00', b'05:00'), (b'05:15', b'05:15'), (b'05:30', b'05:30'), (b'05:45', b'05:45'), (b'06:00', b'06:00'), (b'06:15', b'06:15'), (b'06:30', b'06:30'), (b'06:45', b'06:45'), (b'07:00', b'07:00'), (b'07:15', b'07:15'), (b'07:30', b'07:30'), (b'07:45', b'07:45'), (b'08:00', b'08:00'), (b'08:15', b'08:15'), (b'08:30', b'08:30'), (b'08:45', b'08:45'), (b'09:00', b'09:00'), (b'09:15', b'09:15'), (b'09:30', b'09:30'), (b'09:45', b'09:45'), (b'10:00', b'10:00'), (b'10:15', b'10:15'), (b'10:30', b'10:30'), (b'10:45', b'10:45'), (b'11:00', b'11:00'), (b'11:15', b'11:15'), (b'11:30', b'11:30'), (b'11:45', b'11:45')])),
@@ -412,7 +412,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('class_level_min', models.IntegerField(default=0, verbose_name='Klassetrin fra', choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'), (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10')])),
                 ('class_level_max', models.IntegerField(default=10, verbose_name='Klassetrin til', choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5'), (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10')])),
-                ('product', models.ForeignKey(to='booking.Product')),
+                ('product', models.ForeignKey(to='booking.Product', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['subject__name'],
@@ -426,7 +426,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('display_value_cached', models.CharField(max_length=100, null=True)),
                 ('level', models.ManyToManyField(to='booking.GymnasieLevel')),
-                ('product', models.ForeignKey(to='booking.Product')),
+                ('product', models.ForeignKey(to='booking.Product', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['subject__name'],
@@ -458,7 +458,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=1024, verbose_name='Navn')),
-                ('organizationalunit', models.ForeignKey(verbose_name='Ressourcens enhed', to='booking.OrganizationalUnit')),
+                ('organizationalunit', models.ForeignKey(verbose_name='Ressourcens enhed', to='booking.OrganizationalUnit', on_delete=django.db.models.deletion.CASCADE)),
             ],
             bases=(booking.mixins.AvailabilityUpdaterMixin, models.Model),
         ),
@@ -468,7 +468,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('required_amount', models.IntegerField(verbose_name='P\xe5kr\xe6vet antal', validators=[django.core.validators.MinValueValidator(1)])),
                 ('being_deleted', models.BooleanField(default=False)),
-                ('product', models.ForeignKey(to='booking.Product')),
+                ('product', models.ForeignKey(to='booking.Product', on_delete=django.db.models.deletion.CASCADE)),
                 ('resource_pool', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='Ressourcegruppe', to='booking.ResourcePool', null=True)),
             ],
             bases=(booking.mixins.AvailabilityUpdaterMixin, models.Model),
@@ -500,7 +500,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=50)),
                 ('email', models.EmailField(max_length=64, null=True, blank=True)),
                 ('phone', models.CharField(max_length=14, null=True, blank=True)),
-                ('organizationalunit', models.ForeignKey(blank=True, to='booking.OrganizationalUnit', null=True)),
+                ('organizationalunit', models.ForeignKey(blank=True, to='booking.OrganizationalUnit', null=True, on_delete=django.db.models.deletion.SET_NULL)),
             ],
             options={
                 'verbose_name': 'Lokaleanvarlig',
@@ -516,8 +516,8 @@ class Migration(migrations.Migration):
                 ('cvr', models.IntegerField(null=True, verbose_name='CVR-nummer')),
                 ('ean', models.BigIntegerField(null=True, verbose_name='EAN-nummer')),
                 ('type', models.IntegerField(default=1, verbose_name='Uddannelsestype', choices=[(2, 'Folkeskole'), (1, 'Gymnasie')])),
-                ('municipality', models.ForeignKey(to='booking.Municipality', null=True)),
-                ('postcode', models.ForeignKey(to='booking.PostCode', null=True)),
+                ('municipality', models.ForeignKey(to='booking.Municipality', null=True, on_delete=django.db.models.deletion.SET_NULL)),
+                ('postcode', models.ForeignKey(to='booking.PostCode', null=True, on_delete=django.db.models.deletion.SET_NULL)),
             ],
             options={
                 'ordering': ['name', 'postcode'],
@@ -532,7 +532,7 @@ class Migration(migrations.Migration):
                 ('type', models.IntegerField(default=0, choices=[(0, 'URL'), (1, 'Vedh\xe6ftet fil')])),
                 ('url', models.URLField(null=True, blank=True)),
                 ('file', models.FileField(storage=booking.utils.CustomStorage(), null=True, upload_to=b'material', blank=True)),
-                ('product', models.ForeignKey(to='booking.Product', null=True)),
+                ('product', models.ForeignKey(to='booking.Product', null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'undervisningsmateriale',
@@ -568,8 +568,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('status', models.SmallIntegerField(default=1, verbose_name='status', choices=[(0, 'Modtager ikke evaluering'), (1, 'Ikke afholdt / ikke afsendt'), (2, 'Sendt f\xf8rste gang'), (3, 'Sendt anden gang'), (4, 'Har klikket p\xe5 link')])),
                 ('shortlink_id', models.CharField(max_length=16)),
-                ('evaluation', models.ForeignKey(blank=True, to='booking.SurveyXactEvaluation', null=True)),
-                ('guest', models.ForeignKey(to='booking.Guest')),
+                ('evaluation', models.ForeignKey(blank=True, to='booking.SurveyXactEvaluation', null=True, on_delete=django.db.models.deletion.SET_NULL)),
+                ('guest', models.ForeignKey(to='booking.Guest', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -608,7 +608,7 @@ class Migration(migrations.Migration):
                 ('last_workflow_update', models.DateTimeField(default=django.utils.timezone.now)),
                 ('needs_attention_since', models.DateTimeField(default=None, null=True, verbose_name='Behov for opm\xe6rksomhed siden', blank=True)),
                 ('comments', models.TextField(default=b'', verbose_name='Interne kommentarer', blank=True)),
-                ('search_index', booking.models.VectorField(default=b'', serialize=False, null=True, editable=False)),
+                ('search_index', django.contrib.postgres.search.SearchVectorField(null=True)),
                 ('extra_search_text', models.TextField(default=b'', verbose_name='Tekst-v\xe6rdier til friteksts\xf8gning', editable=False, blank=True)),
                 ('multi_priority', models.IntegerField(default=0)),
                 ('is_multi_sub', models.BooleanField(default=False)),
@@ -643,7 +643,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ClassBooking',
             fields=[
-                ('booking_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Booking')),
+                ('booking_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Booking', on_delete=django.db.models.deletion.CASCADE)),
                 ('tour_desired', models.BooleanField(default=False, verbose_name='Rundvisning \xf8nsket')),
                 ('catering_desired', models.BooleanField(default=False, verbose_name='Forplejning \xf8nsket')),
                 ('presentation_desired', models.BooleanField(default=False, verbose_name='Opl\xe6g om uddannelse \xf8nsket')),
@@ -658,7 +658,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CustomResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
                 ('name', models.CharField(max_length=1024, verbose_name='Navn')),
             ],
             options={
@@ -669,8 +669,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='HostResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
-                ('user', models.ForeignKey(verbose_name='Underviser', to=settings.AUTH_USER_MODEL)),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(verbose_name='Underviser', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -680,7 +680,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ItemResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
                 ('name', models.CharField(max_length=1024, verbose_name='Navn')),
             ],
             options={
@@ -691,32 +691,32 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MultiProductVisit',
             fields=[
-                ('visit_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Visit')),
+                ('visit_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Visit', on_delete=django.db.models.deletion.CASCADE)),
                 ('date', models.DateField(null=True, verbose_name='Dato')),
                 ('required_visits', models.PositiveIntegerField(default=2, verbose_name='Antal \xf8nskede bes\xf8g')),
-                ('responsible', models.ForeignKey(verbose_name='Bes\xf8gsansvarlig', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('responsible', models.ForeignKey(verbose_name='Bes\xf8gsansvarlig', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.SET_NULL)),
             ],
             bases=('booking.visit',),
         ),
         migrations.CreateModel(
             name='ProductAutosend',
             fields=[
-                ('autosend_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Autosend')),
+                ('autosend_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Autosend', on_delete=django.db.models.deletion.CASCADE)),
             ],
             bases=('booking.autosend',),
         ),
         migrations.CreateModel(
             name='RoomResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
-                ('room', models.ForeignKey(verbose_name='Lokale', to='booking.Room')),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
+                ('room', models.ForeignKey(verbose_name='Lokale', to='booking.Room', on_delete=django.db.models.deletion.CASCADE)),
             ],
             bases=('booking.resource',),
         ),
         migrations.CreateModel(
             name='TeacherBooking',
             fields=[
-                ('booking_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Booking')),
+                ('booking_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Booking', on_delete=django.db.models.deletion.CASCADE)),
                 ('subjects', models.ManyToManyField(to='booking.Subject')),
             ],
             options={
@@ -728,8 +728,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TeacherResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
-                ('user', models.ForeignKey(verbose_name='Underviser', to=settings.AUTH_USER_MODEL)),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(verbose_name='Underviser', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -739,7 +739,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='VehicleResource',
             fields=[
-                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource')),
+                ('resource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Resource', on_delete=django.db.models.deletion.CASCADE)),
                 ('name', models.CharField(max_length=1024, verbose_name='Navn')),
             ],
             options={
@@ -750,7 +750,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='VisitAutosend',
             fields=[
-                ('autosend_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Autosend')),
+                ('autosend_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='booking.Autosend', on_delete=django.db.models.deletion.CASCADE)),
                 ('inherit', models.BooleanField(verbose_name='Genbrug indstilling fra tilbud')),
             ],
             bases=('booking.autosend',),
@@ -758,27 +758,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='visitresource',
             name='resource',
-            field=models.ForeignKey(related_name='visitresource', verbose_name='Ressource', to='booking.Resource'),
+            field=models.ForeignKey(related_name='visitresource', verbose_name='Ressource', to='booking.Resource', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='visitresource',
             name='resource_requirement',
-            field=models.ForeignKey(related_name='visitresource', verbose_name='Ressourcebehov', to='booking.ResourceRequirement'),
+            field=models.ForeignKey(related_name='visitresource', verbose_name='Ressourcebehov', to='booking.ResourceRequirement', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='visitresource',
             name='visit',
-            field=models.ForeignKey(related_name='visitresource', verbose_name='Bes\xf8g', to='booking.Visit'),
+            field=models.ForeignKey(related_name='visitresource', verbose_name='Bes\xf8g', to='booking.Visit', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='visitcomment',
             name='visit',
-            field=models.ForeignKey(verbose_name='Bes\xf8g', to='booking.Visit'),
+            field=models.ForeignKey(verbose_name='Bes\xf8g', to='booking.Visit', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='visit',
             name='cancelled_eventtime',
-            field=models.ForeignKey(related_name='cancelled_visits', default=None, blank=True, to='booking.EventTime', null=True, verbose_name='Tidspunkt for aflyst bes\xf8g'),
+            field=models.ForeignKey(related_name='cancelled_visits', default=None, blank=True, to='booking.EventTime', null=True, on_delete=django.db.models.deletion.SET_NULL, verbose_name='Tidspunkt for aflyst bes\xf8g'),
         ),
         migrations.AddField(
             model_name='visit',
@@ -833,12 +833,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='surveyxactevaluation',
             name='product',
-            field=models.ForeignKey(to='booking.Product', null=True),
+            field=models.ForeignKey(to='booking.Product', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='resourcepool',
             name='resource_type',
-            field=models.ForeignKey(to='booking.ResourceType'),
+            field=models.ForeignKey(to='booking.ResourceType', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='resourcepool',
@@ -853,22 +853,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resource',
             name='organizationalunit',
-            field=models.ForeignKey(verbose_name='Ressourcens enhed', to='booking.OrganizationalUnit'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='Ressourcens enhed', to='booking.OrganizationalUnit'),
         ),
         migrations.AddField(
             model_name='resource',
             name='resource_type',
-            field=models.ForeignKey(verbose_name='Type', to='booking.ResourceType'),
+            field=models.ForeignKey(verbose_name='Type', to='booking.ResourceType', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='productgymnasiefag',
             name='subject',
-            field=models.ForeignKey(to='booking.Subject'),
+            field=models.ForeignKey(to='booking.Subject', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='productgrundskolefag',
             name='subject',
-            field=models.ForeignKey(to='booking.Subject'),
+            field=models.ForeignKey(to='booking.Subject', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='product',
@@ -938,27 +938,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='postcode',
             name='region',
-            field=models.ForeignKey(to='booking.Region'),
+            field=models.ForeignKey(to='booking.Region', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='organizationalunit',
             name='type',
-            field=models.ForeignKey(to='booking.OrganizationalUnitType'),
+            field=models.ForeignKey(to='booking.OrganizationalUnitType', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='municipality',
             name='region',
-            field=models.ForeignKey(verbose_name='Region', to='booking.Region'),
+            field=models.ForeignKey(verbose_name='Region', to='booking.Region', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='multiproductvisittempproduct',
             name='product',
-            field=models.ForeignKey(related_name='prod', to='booking.Product'),
+            field=models.ForeignKey(related_name='prod', to='booking.Product', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='multiproductvisittemp',
             name='baseproduct',
-            field=models.ForeignKey(related_name='foobar', blank=True, to='booking.Product', null=True),
+            field=models.ForeignKey(related_name='foobar', blank=True, to='booking.Product', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='multiproductvisittemp',
@@ -973,12 +973,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='guest',
             name='school',
-            field=models.ForeignKey(verbose_name='Skole', to='booking.School', null=True),
+            field=models.ForeignKey(verbose_name='Skole', to='booking.School', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='eventtime',
             name='product',
-            field=models.ForeignKey(to='booking.Product', null=True),
+            field=models.ForeignKey(to='booking.Product', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='eventtime',
@@ -993,42 +993,42 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='emailtemplate',
             name='type',
-            field=models.ForeignKey(to='booking.EmailTemplateType', null=True),
+            field=models.ForeignKey(to='booking.EmailTemplateType', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='bookinggymnasiesubjectlevel',
             name='booking',
-            field=models.ForeignKey(to='booking.Booking'),
+            field=models.ForeignKey(to='booking.Booking', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bookinggymnasiesubjectlevel',
             name='level',
-            field=models.ForeignKey(to='booking.GymnasieLevel'),
+            field=models.ForeignKey(to='booking.GymnasieLevel', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bookinggymnasiesubjectlevel',
             name='subject',
-            field=models.ForeignKey(to='booking.Subject'),
+            field=models.ForeignKey(to='booking.Subject', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bookinggrundskolesubjectlevel',
             name='booking',
-            field=models.ForeignKey(to='booking.Booking'),
+            field=models.ForeignKey(to='booking.Booking', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bookinggrundskolesubjectlevel',
             name='level',
-            field=models.ForeignKey(to='booking.GrundskoleLevel'),
+            field=models.ForeignKey(to='booking.GrundskoleLevel', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bookinggrundskolesubjectlevel',
             name='subject',
-            field=models.ForeignKey(to='booking.Subject'),
+            field=models.ForeignKey(to='booking.Subject', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='booking',
             name='booker',
-            field=models.OneToOneField(to='booking.Guest'),
+            field=models.OneToOneField(to='booking.Guest', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='booking',
@@ -1038,22 +1038,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='booking',
             name='visit',
-            field=models.ForeignKey(related_name='bookings', verbose_name='Bes\xf8g', blank=True, to='booking.Visit', null=True),
+            field=models.ForeignKey(related_name='bookings', verbose_name='Bes\xf8g', blank=True, to='booking.Visit', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='bookerresponsenonce',
             name='booker',
-            field=models.ForeignKey(to='booking.Guest'),
+            field=models.ForeignKey(to='booking.Guest', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='autosend',
             name='template_type',
-            field=models.ForeignKey(to='booking.EmailTemplateType', null=True),
+            field=models.ForeignKey(to='booking.EmailTemplateType', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='visitautosend',
             name='visit',
-            field=models.ForeignKey(verbose_name='Bes\xf8gForekomst', to='booking.Visit'),
+            field=models.ForeignKey(verbose_name='Bes\xf8gForekomst', to='booking.Visit', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='visit',
@@ -1063,17 +1063,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='vehicleresource',
             name='locality',
-            field=models.ForeignKey(verbose_name='Lokalitet', blank=True, to='booking.Locality', null=True),
+            field=models.ForeignKey(verbose_name='Lokalitet', blank=True, to='booking.Locality', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='productautosend',
             name='product',
-            field=models.ForeignKey(verbose_name='Bes\xf8g', to='booking.Product'),
+            field=models.ForeignKey(verbose_name='Bes\xf8g', to='booking.Product', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='itemresource',
             name='locality',
-            field=models.ForeignKey(verbose_name='Lokalitet', blank=True, to='booking.Locality', null=True),
+            field=models.ForeignKey(verbose_name='Lokalitet', blank=True, to='booking.Locality', null=True, on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AlterIndexTogether(
             name='calendarcalculatedavailable',

@@ -1,6 +1,7 @@
 *~
 /booking/management/commands/local_*
-
+/booking/migrations/0*.py
+/booking/migrations/*_auto_*
 /build
 /config/booking
 /cron.log
@@ -13,6 +14,8 @@ install.log
 /locale/**/*.mo
 /media/
 /migrate_restart
+/profile/migrations/0*.py
+/profile/migrations/*_auto_*
 *.pyc
 python-env
 /resource_booking/local_saml_settings.py

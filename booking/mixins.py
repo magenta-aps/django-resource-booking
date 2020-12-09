@@ -3,15 +3,16 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import model_to_dict
+from django.http import QueryDict
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.base import ContextMixin
 
-from booking.logging import log_action
 from booking.constants import LOGACTION_CREATE, LOGACTION_CHANGE
+from booking.logging import log_action
 from booking.utils import get_related_content_types
-from profile.constants import EDIT_ROLES, ADMINISTRATOR, role_to_text
+from user_profile.constants import EDIT_ROLES, ADMINISTRATOR, role_to_text
 
 
 class AvailabilityUpdaterMixin(object):
@@ -93,7 +94,7 @@ class BreadcrumbMixin(ContextMixin):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
         except Exception as e:
-            print e
+            print(e)
             return []
 
     def get_breadcrumb_args(self):
@@ -138,11 +139,11 @@ class RoleRequiredMixin(object):
                 return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
         else:
             pass
-        txts = map(role_to_text, self.roles)
+        txts = map(str, map(role_to_text, self.roles))
         # TODO: Render this with the error message!
         raise AccessDenied(
-            u"Kun brugere med disse roller kan logge ind: " +
-            u",".join(txts)
+            "Kun brugere med disse roller kan logge ind: " +
+            ",".join(txts)
         )
 
 
@@ -200,12 +201,12 @@ class BackMixin(ContextMixin):
 class AccessDenied(PermissionDenied):
     def __init__(self, text, *args, **kwargs):
         self._text = text
-        print self._text.encode('utf-8')
+        print(self._text.encode('utf-8'))
         return super(AccessDenied, self).__init__(text, *args, **kwargs)
 
-    def __unicode__(self):
-        print self._text.encode('utf-8')
-        return unicode(self._text)
+    def __str__(self):
+        print(self._text.encode('utf-8'))
+        return self._text
 
 
 class ModalMixin(object):
@@ -214,10 +215,10 @@ class ModalMixin(object):
     def dispatch(self, request, *args, **kwargs):
         try:
             self.modalid = request.GET["modalid"]
-        except:
+        except Exception:
             try:
                 self.modalid = request.POST["modalid"]
-            except:
+            except Exception:
                 pass
         return super(ModalMixin, self).dispatch(request, *args, **kwargs)
 
@@ -245,16 +246,16 @@ class UnitAccessRequiredMixin(object):
         if hasattr(current_user, 'userprofile'):
             if current_user.userprofile.can_edit(item):
                 return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
+        raise AccessDenied(_("You cannot edit an object for a unit "
+                             "that you don't belong to"))
 
     def check_unit(self, unit):
         current_user = self.request.user
         if hasattr(current_user, 'userprofile'):
             if current_user.userprofile.unit_access(unit):
                 return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
+        raise AccessDenied(_("You cannot edit an object for a unit "
+                             "that you don't belong to"))
 
 
 class AutologgerMixin(object):
@@ -291,52 +292,52 @@ class AutologgerMixin(object):
         fname = field.verbose_name
 
         if value is None:
-            return (fname, unicode(value))
+            return (fname, str(value))
 
         if field.many_to_one:
             try:
                 o = field.related_model.objects.get(pk=value)
-                return (fname, unicode(o))
-            except:
-                return (fname, unicode(value))
+                return (fname, str(o))
+            except Exception:
+                return (fname, str(value))
 
         if field.many_to_many or field.one_to_many:
             res = []
             for x in value:
                 try:
                     o = field.related_model.objects.get(pk=x)
-                    res.append(unicode(o))
-                except:
-                    res.append(unicode(x))
+                    res.append(str(o))
+                except Exception:
+                    res.append(str(x))
             return (fname, ", ".join(res))
 
         if field.choices:
             d = dict(field.choices)
             if value in d:
-                return (fname, unicode(d[value]))
+                return (fname, str(d[value]))
 
-        return (fname, unicode(value))
+        return (fname, str(value))
 
     def _changes_to_text(self, changes):
         if not changes:
             return ""
 
         result = {}
-        for key, val in changes.iteritems():
+        for key, val in changes.items():
             name, value = self._field_value_to_display(key, val[1])
             result[name] = value
 
         return "\n".join([
-            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
+            "%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
         ])
 
     def _log_changes(self):
         if self._old_state:
             action = LOGACTION_CHANGE
-            msg = _(u"Ændrede felter:\n%s")
+            msg = _("Ændrede felter:\n%s")
         else:
             action = LOGACTION_CREATE
-            msg = _(u"Oprettet med felter:\n%s")
+            msg = _("Oprettet med felter:\n%s")
 
         changeset = self._get_changed_fields(self._old_state)
 
@@ -378,3 +379,29 @@ class LoggedViewMixin(object):
             log_entries=self.get_log_queryset(),
             **kwargs
         )
+
+
+class SearchEngineMixin(ContextMixin):
+
+    canonical_url_params = []
+    no_index = False
+
+    def get_canonical_url(self):
+        path = self.request.path
+        if len(self.canonical_url_params):
+            if self.request.GET.keys() == set(self.canonical_url_params):
+                params = self.request.GET
+            else:
+                params = QueryDict(mutable=True)
+                for key in self.canonical_url_params:
+                    if key in self.request.GET:
+                        params[key] = self.request.GET[key]
+            if len(params):
+                path = path + "?" + params.urlencode()
+        return path
+
+    def get_context_data(self, **kwargs):
+        context = super(SearchEngineMixin, self).get_context_data(**kwargs)
+        context['canonical_url'] = self.get_canonical_url()
+        context['no_index'] = self.no_index
+        return context
