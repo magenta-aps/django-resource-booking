@@ -1,15 +1,15 @@
 from datetime import time, timedelta
-from django.utils import timezone
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Max
-from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 class VisitQuerySet(models.QuerySet):
 
     @staticmethod
-    def prefetch(query, *extra_related):
+    def prefetch(query, **extra_related):
         return query.select_related(
             "multiproductvisit",
             "eventtime__product",
@@ -62,22 +62,26 @@ class VisitQuerySet(models.QuerySet):
             **kwargs
         ))
 
-    def with_product_types(self, product_types=None, **kwargs):
-        if product_types is None:
+    def with_product_types(self, p_types=None, **kwargs):
+        if p_types is None:
             return self
+
+        q1 = Q(
+            multiproductvisit__isnull=True,
+            eventtime__product__type__in=p_types,
+        )
+        q2 = Q(
+            multiproductvisit__isnull=False,
+            multiproductvisit__subvisit__eventtime__product__type__in=p_types,
+            multiproductvisit__subvisit__is_multi_sub=True,
+        )
+
         return (
-            VisitQuerySet.prefetch(self.filter(
-                multiproductvisit__isnull=True,
-                eventtime__product__type__in=product_types,
-            ) | self.filter(
-                multiproductvisit__isnull=False,
-                multiproductvisit__subvisit__in=self.filter(
-                    eventtime__product__type__in=product_types,
-                    is_multi_sub=True
-                ),
+            VisitQuerySet.prefetch(
+                self.filter(q1 | q2),
                 **kwargs
             )
-            ).distinct())
+        ).distinct()
 
     def get_latest_created(self):
         return VisitQuerySet.prefetch(
@@ -208,43 +212,43 @@ class ProductQuerySet(models.QuerySet):
     def get_latest_created(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+        if user and not user.is_authenticated:
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__created_time").only('pk')
 
-        return qs.order_by("-statistics__created_time")
+        return qs.order_by("-statistics__created_time", "pk")
 
     def get_latest_updated(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+        if user and not user.is_authenticated:
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__updated_time").only('pk')
 
-        return qs.order_by("-statistics__updated_time")
+        return qs.order_by("-statistics__updated_time", "pk")
 
     def get_latest_displayed(self, user=None):
         qs = self.filter(statistics__isnull=False)
 
-        if user and not user.is_authenticated():
-            # subselect-instead-of-distinct trick
-            qs = qs.filter_public_bookable().only("pk")
+        if user and not user.is_authenticated:
+            qs = qs.filter_public_bookable() \
+                .distinct("pk", "statistics__updated_time").only('pk')
 
-        return qs.order_by("-statistics__visited_time")
+        return qs.order_by("-statistics__visited_time", "pk")
 
     def get_latest_booked(self, user=None):
         qs = self.filter(
             eventtime__visit__bookings__statistics__created_time__isnull=False
         )
 
-        if user and not user.is_authenticated():
-            qs = qs.filter_public_bookable().only("pk")
+        if user and not user.is_authenticated:
+            qs = qs.filter_public_bookable().distinct().only("pk")
 
         return qs.annotate(
             latest_booking=Max(
                 "eventtime__visit__bookings__statistics__created_time"
             )
-        ).order_by("-latest_booking")
+        ).order_by("-latest_booking", "pk")
 
 
 class SchoolQuerySet(models.QuerySet):

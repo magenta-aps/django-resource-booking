@@ -217,7 +217,7 @@
                                 {% endif %}
                             </dd>
 
-                            {% if object.time_mode != view.model.TIME_MODE_NONE %}
+                            {% if object.time_mode != view.model.TIME_MODE_NONE and object.time_mode != view.model.TIME_MODE_NO_BOOKING %}
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>
                                 {% if object.is_guest_time_suggested %}
@@ -236,10 +236,14 @@
                                     {% endif %}
                                 {% elif object.time_mode == view.model.TIME_MODE_NO_BOOKING %}
                                     {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_times %}
-                                {% elif object.future_bookable_times_with_cutoff %}
-                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_bookable_times_with_cutoff %}
                                 {% else %}
-                                    {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
+                                    {% with object.future_bookable_times_with_cutoff as bookable_times %}
+                                    {% if bookable_times %}
+                                        {% include 'product/details-eventtime-list.html' with eventtime_list=bookable_times %}
+                                    {% else %}
+                                        {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
+                                    {% endif %}
+                                    {% endwith %}
                                 {% endif %}
                                 {% if request.user.userprofile.can_create %}
                                     <hr />

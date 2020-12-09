@@ -7,7 +7,7 @@ from django.db.models.fields.related_descriptors import \
     ForwardManyToOneDescriptor
 
 from booking.resource_based import models as resource_models
-from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from user_profile.constants import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 from . import models as booking_models
 
 EXCLUDE_MODELS = set([
@@ -17,7 +17,7 @@ EXCLUDE_MODELS = set([
 # Important: when changing this, be sure to run the
 # following in a shell on the server:
 #
-# from profile.models import UserProfile
+# from user_profile.models import UserProfile
 # for userprofile in UserProfile.objects.all():
 #     userprofile.update_user_permissions()
 
@@ -67,6 +67,8 @@ MODEL_UNIT_FILTER_MAP = {
 
 class KUBookingModelAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
+        if not request.user.is_authenticated:
+            return False
         return request.user.userprofile.get_role() in EDIT_ROLES
 
     def has_change_permission(self, request, obj=None):
@@ -200,7 +202,7 @@ CUSTOM_ADMIN_CLASSES[booking_models.OrganizationalUnit] = KUBookingUnitAdmin
 
 
 class KUBookingRoomResponsibleAdmin(KUBookingModelAdmin):
-    list_display = ['__unicode__', 'admin_delete_button']
+    list_display = ['__str__', 'admin_delete_button']
 
 
 CUSTOM_ADMIN_CLASSES[booking_models.RoomResponsible] = (
@@ -231,11 +233,12 @@ def register_models(models, namespace=None):
         cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
         admin.site.register(value, cls)
 
+
 register_models(
-    booking_models.__dict__.iteritems(),
+    booking_models.__dict__.items(),
     'booking.models'
 )
 register_models(
-    resource_models.__dict__.iteritems(),
+    resource_models.__dict__.items(),
     'booking.resource_based.models'
 )

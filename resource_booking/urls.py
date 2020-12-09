@@ -18,13 +18,12 @@ from django.conf.urls import include, url
 # from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 
-
 urlpatterns = [
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     # Booking URLs:
     url(r'^', include('booking.urls')),
-    url(r'^profile/', include('profile.urls')),
+    url(r'^profile/', include('user_profile.urls')),
     url(r'^hijack/', include('hijack.urls', namespace='hijack')),
 ]
 # Allow setting language explicitly in url
