@@ -23,6 +23,8 @@ from booking.models import RoomResponsible
 from booking.models import SurveyXactEvaluation
 from booking.models import Visit
 from booking.models import VisitAutosend
+from booking.models import OrganizationalUnit
+from booking.models import OrganizationalUnitType
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
 from user_profile.constants import ADMINISTRATOR
@@ -345,6 +347,14 @@ class TestMixin(object):
         )
         eventtime.save()
         return visit
+
+    def create_organizational_unit(self, name="Test enhed", type=None):
+        if not type:
+            type, _ = OrganizationalUnitType.objects.get_or_create(
+                name="Test enhedstype"
+            )
+        unit = OrganizationalUnit.objects.create(name=name, type=type)
+        return unit
 
     def create_emailtemplate(
             self,

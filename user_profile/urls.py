@@ -20,7 +20,8 @@ urlpatterns = [
         ),
     url(r'^logout/',
         auth_views.LogoutView.as_view(template_name='profile/logout.html'),
-        name='logout'),
+        name='logout'
+        ),
     url(r'^user/create$',
         CreateUserView.as_view(
             template_name='profile/create_user.html',
