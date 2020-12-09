@@ -23,6 +23,7 @@ from resource_booking.tests.mixins import TestMixin
 from booking.models import ResourceType
 from user_profile.models import UserRole
 
+
 class TestBooking(TestMixin, TestCase):
 
     @classmethod
@@ -82,10 +83,6 @@ class TestBooking(TestMixin, TestCase):
             Product.STUDENT_FOR_A_DAY
         )
 
-
-
-
-
     def test_booking_ui_teacher_timed(self):
         self._test_booking_ui(
             Product.TIME_MODE_SPECIFIC,
@@ -108,7 +105,6 @@ class TestBooking(TestMixin, TestCase):
             subjects=[s.id for s in Subject.objects.all()]
         )
 
-
     def test_booking_ui_group_timed(self):
         self._test_booking_ui(
             Product.TIME_MODE_SPECIFIC,
@@ -119,7 +115,8 @@ class TestBooking(TestMixin, TestCase):
         self._test_booking_ui(
             Product.TIME_MODE_GUEST_SUGGESTED,
             Product.GROUP_VISIT,
-            desired_datetime_date=(datetime.utcnow() + timedelta(days=12)).strftime('%d-%m-%Y')
+            desired_datetime_date=(datetime.utcnow() + timedelta(days=12))
+            .strftime('%d-%m-%Y')
         )
 
     def test_booking_ui_group_resource(self):
@@ -139,6 +136,7 @@ class TestBooking(TestMixin, TestCase):
             Product.TIME_MODE_SPECIFIC,
             Product.STUDY_PROJECT
         )
+
     def test_booking_ui_project_resource(self):
         self._test_booking_ui(
             Product.TIME_MODE_RESOURCE_CONTROLLED,
@@ -220,7 +218,10 @@ class TestBooking(TestMixin, TestCase):
         for name in formdata.keys():
             self.assertEqual(
                 1,
-                len(query("input[name=%s],textarea[name=%s],select[name=%s]" % (name, name, name))),
+                len(query(
+                    "input[name=%s],textarea[name=%s],select[name=%s]" %
+                    (name, name, name)
+                )),
                 "%s not found" % name
             )
         count_before = KUEmailMessage.objects.count()
@@ -235,40 +236,50 @@ class TestBooking(TestMixin, TestCase):
         booking = Booking.objects.last()
         for name in guestdata.keys():
             self.assertEquals(guestdata[name], getattr(booking.booker, name))
-        if time_mode in [Product.TIME_MODE_SPECIFIC, Product.TIME_MODE_RESOURCE_CONTROLLED, Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN]:
+        if time_mode in [
+            Product.TIME_MODE_SPECIFIC,
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]:
             self.assertEquals(visit, booking.visit)
         self.assertFalse(booking.cancelled)
         self.assertIsNotNone(booking.statistics)
         self.assertEquals("some text æøå", booking.notes)
 
         # Check that the expected mails are sent
-
         message_count = KUEmailMessage.objects.count() - count_before
-        # self.assertEquals(len(mail_types), KUEmailMessage.objects.count() - count_before)
         mails = {}
 
-        for message in list(KUEmailMessage.objects.order_by('id'))[-message_count:]:
+        for message in \
+                list(KUEmailMessage.objects.order_by('id'))[-message_count:]:
             self.assertEquals("Booking created", message.subject)
-            match = re.search("Type: (\d+)", message.body)
+            match = re.search(r"Type: (\d+)", message.body)
             self.assertIsNotNone(match)
             mails[match.group(1)] = message
 
         self.assertEquals(3, len(mails))
         guest_key = next(
             k
-            for k in [EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED, EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED]
+            for k in [
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
+            ]
             if str(k) in mails
         )
         self.assertEquals(
             "\"%s\" <%s>" % (coordinator.get_full_name(), coordinator.email),
-            mails[str(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)].recipients
+            mails[str(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)]
+            .recipients
         )
         self.assertEquals(
             "\"%s\" <%s>" % (responsible.get_full_name(), responsible.email),
             mails[str(EmailTemplateType.NOTIFY_HOST__REQ_ROOM)].recipients
         )
         self.assertEquals(
-            "\"%s %s\" <%s>" % (guestdata['firstname'], guestdata['lastname'], guestdata['email']),
+            "\"%s %s\" <%s>" % (
+                guestdata['firstname'], guestdata['lastname'],
+                guestdata['email']
+            ),
             mails[str(guest_key)].recipients
         )
 
