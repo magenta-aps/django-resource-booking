@@ -1,11 +1,14 @@
 apache2
 gettext
-libapache2-mod-wsgi
+libapache2-mod-wsgi-py3
 libffi-dev
 npm
 postgresql
-postgresql-server-dev-10
-python-dev
-python-virtualenv
-npm
+postgresql-server-dev-12
+python3-dev
+python3-virtualenv
 xmlsec1
+postfix
+# Below are Pillow dependencies
+libjpeg-dev
+zlib1g-dev

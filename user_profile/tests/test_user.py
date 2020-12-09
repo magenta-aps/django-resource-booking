@@ -7,9 +7,9 @@ from pyquery import PyQuery as pq
 
 from booking.models import OrganizationalUnit, OrganizationalUnitType, Product
 from booking.resource_based.models import ResourceType
-from profile.constants import TEACHER, HOST, FACULTY_EDITOR, COORDINATOR
-from profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin
+from user_profile.constants import TEACHER, HOST, FACULTY_EDITOR, COORDINATOR
+from user_profile.models import UserRole
 
 
 class TestUser(TestMixin, TestCase):
@@ -101,7 +101,7 @@ class TestUser(TestMixin, TestCase):
             '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'
             'Opret ny bruger'
             '</a>',
-            response.content
+            str(response.content).replace("\\n", "\n")
         )
         query = pq(response.content)
         items = query("ul.list-unstyled li")

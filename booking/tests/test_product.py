@@ -10,7 +10,7 @@ from django.http import QueryDict
 from django.test import TestCase
 from django.utils.datastructures import MultiValueDict
 from django.utils.datetime_safe import datetime
-from pyquery import PyQuery as pq
+from pyquery import PyQuery
 
 from booking.forms import AssignmentHelpForm
 from booking.forms import ClassProductForm
@@ -21,21 +21,21 @@ from booking.forms import StudentForADayForm
 from booking.forms import StudyProjectForm
 from booking.forms import TeacherProductForm
 from booking.models import EmailTemplateType
-from booking.models import SurveyXactEvaluationGuest
-from booking.models import KUEmailRecipient
-from booking.models import Visit
-from booking.models import ResourceType
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import Locality
 from booking.models import OrganizationalUnit
 from booking.models import OrganizationalUnitType
 from booking.models import Product
+from booking.models import ResourceType
 from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import Subject
+from booking.models import SurveyXactEvaluationGuest
+from booking.models import Visit
 from booking.utils import flatten
-from profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
+from user_profile.models import UserRole
 
 
 class TestProduct(TestMixin, TestCase):
@@ -214,7 +214,7 @@ class TestProduct(TestMixin, TestCase):
                 {'type': str(product_type + 10)}
             )
             self.assertEquals(200, response.status_code)
-            query = pq(response.content)
+            query = PyQuery(response.content)
             errors = query("[name=\"type\"]") \
                 .closest("div.form-group").find("ul.errorlist li")
             self.assertEquals(1, len(errors))
@@ -300,13 +300,13 @@ class TestProduct(TestMixin, TestCase):
                 for submit_value in self._ensure_list(value['fail']):
                     msg = u"Testing with value %s in field %s, " \
                           "expected to fail, did not fail"\
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     response = self.client.post(
                         url,
                         self._apply_value(form_data, key, submit_value)
                     )
                     self.assertEquals(200, response.status_code, msg)
-                    query = pq(response.content)
+                    query = PyQuery(response.content)
                     errors = query("[name=\"%s\"]" % key) \
                         .closest("div.form-group").find("ul.errorlist li")
                     self.assertEquals(1, len(errors), msg)
@@ -320,7 +320,7 @@ class TestProduct(TestMixin, TestCase):
                         else (v, v)
                     msg = u"Testing with value %s in field %s, " \
                           "expected to succeed, did not succeed" \
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     response = self.client.post(
                         url,
                         self._apply_value(form_data, key, submit_value)
@@ -426,7 +426,7 @@ class TestProduct(TestMixin, TestCase):
 
         response = self.client.get("/product/%d" % product.id)
         self.assertEquals(200, response.status_code)
-        query = pq(response.content)
+        query = PyQuery(response.content)
         self.assertEquals([
                 u'Du er her:',
                 u'Søgning',
@@ -447,7 +447,7 @@ class TestProduct(TestMixin, TestCase):
             'hvad': self._get_choices_label(
                 Product.resource_type_choices, product_type
             ),
-            u'arrangør': unicode(self.unit.name),
+            u'arrangør': self.unit.name,
         }
         if 'maximum_number_of_visitors' in data:
             expected_data['antal'] = \
@@ -465,7 +465,7 @@ class TestProduct(TestMixin, TestCase):
             )
         if 'locality' in data:
             expected_data['hvor'] = '\n'.join([
-                unicode(getattr(data['locality'], x))
+                getattr(data['locality'], x)
                 for x in ['name', 'address_line', 'zip_city']
                 if len(x.strip()) > 0
             ])
@@ -482,7 +482,7 @@ class TestProduct(TestMixin, TestCase):
             expected_data['mulighed for'] = '\n'.join(options)
 
         expected_data = {
-            unicode(key+":"): value
+            (key+":"): value
             for key, value in expected_data.items()
         }
 
@@ -490,7 +490,7 @@ class TestProduct(TestMixin, TestCase):
             key: '\n'.join([v for v in value])
             for key, value in ParsedNode(
                 query(".panel-body dl.dl-horizontal")
-            ).extract_dl(True).iteritems()
+            ).extract_dl(True).items()
         }
         self.assertDictEqual(expected_data, rightbox_data)
 
@@ -574,7 +574,7 @@ class TestProduct(TestMixin, TestCase):
             q['page'] = page
             response = self.client.get("/search?%s" % q.urlencode())
             self.assertEquals(200, response.status_code)
-            query = pq(response.content)
+            query = PyQuery(response.content)
             self.assertEquals(
                 u"%d resultater matcher din søgning på \"%s\""
                 % (len(products), query_params.get('q', '')),
@@ -602,9 +602,9 @@ class TestProduct(TestMixin, TestCase):
                     actual = {
                         'type': self._get_choices_key(
                             Product.type_choices,
-                            unicode(q_list_item.find(
+                            q_list_item.find(
                                 ".media-body > div.small"
-                            ).text())
+                            ).text()
                         ),
                         'title': "\n".join(flatten([
                             ParsedNode._get_text_nodes(node)
@@ -722,12 +722,12 @@ class TestProduct(TestMixin, TestCase):
         self.login(url, user)
         response = self.client.get(url)
         self.assertEquals(200, response.status_code)
-        query = pq(response.content)
+        query = PyQuery(response.content)
         items = query("h3.panel-title")\
             .closest(".panel").find(".panel-body .list-group-item")
         self.assertEquals(1, len(items))
         item = items[0]
-        self.assertEquals(product.title, pq(item).find("h2").text())
+        self.assertEquals(product.title, PyQuery(item).find("h2").text())
 
     def test_evaluation(self):
         EmailTemplateType.set_defaults()
@@ -893,7 +893,7 @@ class TestProduct(TestMixin, TestCase):
                 return (item.name, item.email)
 
         for product in products:
-            for template_type_key, expected_recipients in expected.iteritems():
+            for template_type_key, expected_recipients in expected.items():
                 actual_recipients = product.get_recipients(
                     EmailTemplateType.get(template_type_key)
                 )
@@ -948,7 +948,7 @@ class TestProduct(TestMixin, TestCase):
         rproducts = products[:]
         rproducts.reverse()
         response = self.client.get("/")
-        query = pq(response.content)
+        query = PyQuery(response.content)
         lists = query(".listcontainer > div")
 
         self._check_frontpage_product_list(

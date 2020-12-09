@@ -5,7 +5,7 @@
     <li>
         {{ eventtime.interval_display }}
         <span class="product-time-availability">
-        {% if eventtime.available_seats > 1000000 %}
+        {% if eventtime.available_seats == AVAILABLE_SEATS_NO_LIMIT %}
             {% trans 'ingen begrænsning' %}
         {% else %}
             {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}
@@ -18,7 +18,7 @@
         <li class="hidden default-hidden">
             {{ eventtime.interval_display }}
             <span class="product-time-availability">
-            {% if eventtime.available_seats > 1000000 %}
+            {% if eventtime.available_seats == AVAILABLE_SEATS_NO_LIMIT %}
                 {% trans 'ingen begrænsning' %}
             {% else %}
                 {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}

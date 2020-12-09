@@ -9,8 +9,8 @@ from booking.models import OrganizationalUnitType, OrganizationalUnit, \
 from booking.resource_based.forms import EditItemResourceForm, \
     EditVehicleResourceForm
 from booking.resource_based.models import ResourceType, ResourcePool
-from profile.models import UserRole
 from resource_booking.tests.mixins import TestMixin, ParsedNode
+from user_profile.models import UserRole
 
 
 class TestResources(TestMixin, TestCase):
@@ -243,7 +243,7 @@ class TestResources(TestMixin, TestCase):
                 for submit_value in self._ensure_list(value['fail']):
                     msg = u"Testing with value %s in field %s, " \
                           "expected to fail, did not fail" \
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     response = self.client.post(
                         url,
                         self._apply_value(form_data, key, submit_value)
@@ -263,7 +263,7 @@ class TestResources(TestMixin, TestCase):
                         else (v, v)
                     msg = u"Testing with value %s in field %s, " \
                           "expected to succeed, did not succeed" \
-                          % (unicode(submit_value), unicode(key))
+                          % (submit_value, key)
                     data = self._apply_value(form_data, key, submit_value)
                     self.replace_models_with_pks(data)
                     response = self.client.post(
