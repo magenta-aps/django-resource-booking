@@ -337,6 +337,19 @@ class Subject(models.Model):
     def is_all(self):
         return self.name == Subject.ALL_NAME
 
+    @staticmethod
+    def create_defaults():
+        from booking.data import subjects
+        data = subjects.subjects
+        for item in data:
+            try:
+                Subject.objects.get(
+                    name=item['name'],
+                    subject_type=item['subject_type']
+                )
+            except Subject.DoesNotExist:
+                Subject(**item).save()
+
 
 class Link(models.Model):
     """"An URL and relevant metadata."""

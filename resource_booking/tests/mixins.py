@@ -452,6 +452,8 @@ class TestMixin(object):
                                        phone=12345678,
                                        unit=None
                                        ):
+        if unit is None:
+            unit = self.unit
         (roomresponsible, c) = RoomResponsible.objects.get_or_create(
             name=name, email=email, phone=phone, organizationalunit=unit
         )

@@ -10,7 +10,7 @@ cache:
   paths:
     - .cache/
 
-notice:
+migration:
   stage: migrations
   image: python:3.8
   services:

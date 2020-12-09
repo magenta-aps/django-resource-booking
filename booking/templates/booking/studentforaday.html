@@ -6,6 +6,7 @@
 
 {% block content %}
 
+
     {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
         <p>{% trans "Når du har udfyldt formularen, sender vi en e-mail til dig, der bekræfter din henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen finder I en dag der passer." %}</p>
@@ -14,6 +15,7 @@
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
             {{ bookerform.non_field_errors }}
+            ERRORS: {{ bookerform.errors }}{{ bookingform.errors }}
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/school.html" %}
             {% include "booking/fields/location.html" %}
