@@ -5,6 +5,7 @@ import re
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import QueryDict
 from django.test import TestCase
@@ -769,7 +770,10 @@ class TestProduct(TestMixin, TestCase):
             message.recipients
         )
 
-        m = re.search("Link: http://fokusku.dk/e/(.*)", message.body.strip())
+        m = re.search(
+            "Link: http://%s/e/(.*)" % settings.PUBLIC_URL_HOSTNAME,
+            message.body.strip()
+        )
         self.assertIsNotNone(m)
         shortlink_id = m.group(1)
         evalguest = SurveyXactEvaluationGuest.objects.get(
