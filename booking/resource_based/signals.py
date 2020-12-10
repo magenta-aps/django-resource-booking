@@ -158,7 +158,7 @@
 #     sender, instance, action, reverse, model, pk_set, **kwargs
 # ):
 #     args = (sender, instance, action, reverse, model, pk_set, kwargs)
-#     print args
+#     print(args)
 #
 #     if action == "pre_clear":
 #         setattr(
@@ -167,7 +167,7 @@
 #             set([x for x in instance.resources.all()])
 #         )
 #     elif action == "post_add":
-#         print getattr(instance, "m2m_changed_pks", None)
+#         print(getattr(instance, "m2m_changed_pks", None))
 #
 #
 # m2m_changed.connect(

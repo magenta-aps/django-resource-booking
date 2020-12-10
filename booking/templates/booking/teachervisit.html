@@ -6,6 +6,7 @@
 
 {% block content %}
 
+    ERRORS: {{ bookerform.errors }}{{ bookingform.errors }}
     {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
         <p>{% trans "Udfyld venligst nedenstående formular for at tilmelde dig et tilbud. Felter markeret med * er obligatoriske." %}</p>

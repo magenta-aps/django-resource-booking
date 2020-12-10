@@ -30,7 +30,7 @@
                         <div class="panel-body">
                             <h3 class="panel-title">{% trans 'Hvor er du fra?' %}</h3>
                             <hr/>
-                            <div class="input-group">
+                            <div class="input-group education">
                                 {% for c in institution_choices %}
                                     <div class="checkbox">
                                         <label class="control-label" for="institution-choice-{{c.value}}">
@@ -44,7 +44,7 @@
                             </div>
                             <h3 class="panel-title">{% trans 'Hvad søger du?' %}</h3>
                             <hr/>
-                            <div class="input-group">
+                            <div class="input-group type">
                                 {% for c in type_choices %}
                                 <div class="checkbox">
                                     <label class="control-label" for="type-choice-{{c.value}}">

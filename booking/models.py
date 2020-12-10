@@ -3,7 +3,6 @@
 import math
 import random
 import re
-import sys
 import uuid
 from datetime import timedelta, datetime, date, time
 
@@ -17,7 +16,6 @@ from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Case, When
 from django.db.models import Q
@@ -29,13 +27,16 @@ from django.template.base import Template, VariableNode
 from django.template.context import make_context
 from django.template.loader import get_template
 from django.template.loader_tags import IncludeNode
+from django.urls import reverse
 from django.utils import formats
 from django.utils import six
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ungettext_lazy as __
+from django.utils.translation import gettext
 
-from booking.constants import LOGACTION_MAIL_SENT
+from booking.constants import LOGACTION_MAIL_SENT, AVAILABLE_SEATS_NO_LIMIT
 from booking.logging import log_action
 from booking.managers import (
     VisitQuerySet,
@@ -61,8 +62,8 @@ from booking.utils import (
     merge_dicts,
     prose_list_join
 )
-from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
-from profile.constants import TEACHER, HOST, NONE, get_role_name
+from user_profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+from user_profile.constants import TEACHER, HOST, NONE, get_role_name
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -70,8 +71,8 @@ BLANK_OPTION = (None, BLANK_LABEL,)
 
 class RoomResponsible(models.Model):
     class Meta:
-        verbose_name = _(u'Lokaleanvarlig')
-        verbose_name_plural = _(u'Lokaleanvarlige')
+        verbose_name = _('Lokaleanvarlig')
+        verbose_name_plural = _('Lokaleanvarlige')
 
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=64, null=True, blank=True)
@@ -80,7 +81,8 @@ class RoomResponsible(models.Model):
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     allow_null_unit_editing = True
@@ -94,9 +96,9 @@ class RoomResponsible(models.Model):
             _(u"Delete"),
         )
     admin_delete_button.allow_tags = True
-    admin_delete_button.short_description = _(u"Delete")
+    admin_delete_button.short_description = _("Delete")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def get_name(self):
@@ -117,12 +119,12 @@ class OrganizationalUnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
 
     class Meta:
-        verbose_name = _(u"enhedstype")
-        verbose_name_plural = _(u"Enhedstyper")
+        verbose_name = _("enhedstype")
+        verbose_name_plural = _("Enhedstyper")
 
     name = models.CharField(max_length=25)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -130,12 +132,15 @@ class OrganizationalUnit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
 
     class Meta:
-        verbose_name = _(u"enhed")
-        verbose_name_plural = _(u"enheder")
+        verbose_name = _("enhed")
+        verbose_name_plural = _("enheder")
         ordering = ['name']
 
     name = models.CharField(max_length=100)
-    type = models.ForeignKey(OrganizationalUnitType)
+    type = models.ForeignKey(
+        OrganizationalUnitType,
+        on_delete=models.CASCADE
+    )
     parent = models.ForeignKey(
         'self',
         null=True,
@@ -144,17 +149,17 @@ class OrganizationalUnit(models.Model):
     )
     contact = models.ForeignKey(
         User, null=True, blank=True,
-        verbose_name=_(u'Kontaktperson'),
+        verbose_name=_('Kontaktperson'),
         related_name="contactperson_for_units",
         on_delete=models.SET_NULL,
     )
     url = models.URLField(
-        verbose_name=u'Hjemmeside',
+        verbose_name='Hjemmeside',
         null=True,
         blank=True
     )
     autoassign_resources_enabled = models.BooleanField(
-        verbose_name=_(u'Automatisk ressourcetildeling mulig'),
+        verbose_name=_('Automatisk ressourcetildeling mulig'),
         default=False
     )
 
@@ -186,7 +191,7 @@ class OrganizationalUnit(models.Model):
         else:
             return OrganizationalUnit.objects.none()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s)" % (self.name, self.type.name)
 
     def get_users(self, role=None):
@@ -257,7 +262,7 @@ class OrganizationalUnit(models.Model):
     @classmethod
     def root_unit_id(cls):
         unit = cls.objects.filter(
-            type__name=u"Københavns Universitet"
+            type__name="Københavns Universitet"
         ).first()
         if unit:
             return unit.pk
@@ -270,8 +275,8 @@ class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
 
     class Meta:
-        verbose_name = _(u"fag")
-        verbose_name_plural = _(u"fag")
+        verbose_name = _("fag")
+        verbose_name_plural = _("fag")
         ordering = ["name"]
 
     SUBJECT_TYPE_GYMNASIE = 2**0
@@ -281,21 +286,21 @@ class Subject(models.Model):
     SUBJECT_TYPE_BOTH = SUBJECT_TYPE_GYMNASIE | SUBJECT_TYPE_GRUNDSKOLE
 
     type_choices = (
-        (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
-        (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
-        (SUBJECT_TYPE_BOTH, _(u'Både gymnasie og grundskole')),
+        (SUBJECT_TYPE_GYMNASIE, _('Gymnasie')),
+        (SUBJECT_TYPE_GRUNDSKOLE, _('Grundskole')),
+        (SUBJECT_TYPE_BOTH, _('Både gymnasie og grundskole')),
     )
 
     name = models.CharField(max_length=256)
     subject_type = models.IntegerField(
         choices=type_choices,
-        verbose_name=u'Skoleniveau',
+        verbose_name='Skoleniveau',
         default=SUBJECT_TYPE_GYMNASIE,
         blank=False,
     )
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (%s)' % (self.name, self.get_subject_type_display())
 
     @classmethod
@@ -314,7 +319,7 @@ class Subject(models.Model):
             ]
         )
 
-    ALL_NAME = u'Alle'
+    ALL_NAME = 'Alle'
 
     @classmethod
     def get_all(cls):
@@ -324,13 +329,26 @@ class Subject(models.Model):
             subject = Subject(
                 name=Subject.ALL_NAME,
                 subject_type=cls.SUBJECT_TYPE_BOTH,
-                description=u'Placeholder for "alle fag"'
+                description='Placeholder for "alle fag"'
             )
             subject.save()
             return subject
 
     def is_all(self):
         return self.name == Subject.ALL_NAME
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import subjects
+        data = subjects.subjects
+        for item in data:
+            try:
+                Subject.objects.get(
+                    name=item['name'],
+                    subject_type=item['subject_type']
+                )
+            except Subject.DoesNotExist:
+                Subject(**item).save()
 
 
 class Link(models.Model):
@@ -341,7 +359,7 @@ class Link(models.Model):
     # pages.
     description = models.CharField(max_length=256, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -350,7 +368,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -358,13 +376,13 @@ class Topic(models.Model):
     """Tag class, just name and description fields."""
 
     class Meta:
-        verbose_name = _(u"emne")
-        verbose_name_plural = _(u"emner")
+        verbose_name = _("emne")
+        verbose_name_plural = _("emner")
 
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -372,14 +390,14 @@ class StudyMaterial(models.Model):
     """Material for the students to study before visiting."""
 
     class Meta:
-        verbose_name = _(u'undervisningsmateriale')
-        verbose_name_plural = _(u'undervisningsmaterialer')
+        verbose_name = _('undervisningsmateriale')
+        verbose_name_plural = _('undervisningsmaterialer')
 
     URL = 0
     ATTACHMENT = 1
     study_material_choices = (
-        (URL, _(u"URL")),
-        (ATTACHMENT, _(u"Vedhæftet fil"))
+        (URL, _("URL")),
+        (ATTACHMENT, _("Vedhæftet fil"))
     )
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
@@ -388,9 +406,9 @@ class StudyMaterial(models.Model):
     product = models.ForeignKey('Product', null=True,
                                 on_delete=models.CASCADE,)
 
-    def __unicode__(self):
-        s = u"{0}: {1}".format(
-            u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
+    def __str__(self):
+        s = "{0}: {1}".format(
+            'URL' if self.type == self.URL else _("Vedhæftet fil"),
             self.url if self.type == self.URL else self.file
         )
         return s
@@ -400,19 +418,19 @@ class Locality(models.Model):
     """A locality where a visit may take place."""
 
     class Meta:
-        verbose_name = _(u'lokalitet')
-        verbose_name_plural = _(u'lokaliteter')
+        verbose_name = _('lokalitet')
+        verbose_name_plural = _('lokaliteter')
         ordering = ["name"]
 
-    name = models.CharField(max_length=256, verbose_name=_(u'Navn'))
-    description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
-    address_line = models.CharField(max_length=256, verbose_name=_(u'Adresse'))
+    name = models.CharField(max_length=256, verbose_name=_('Navn'))
+    description = models.TextField(blank=True, verbose_name=_('Beskrivelse'))
+    address_line = models.CharField(max_length=256, verbose_name=_('Adresse'))
     zip_city = models.CharField(
-        max_length=256, verbose_name=_(u'Postnummer og by')
+        max_length=256, verbose_name=_('Postnummer og by')
     )
     organizationalunit = models.ForeignKey(
         OrganizationalUnit,
-        verbose_name=_(u'Enhed'),
+        verbose_name=_('Enhed'),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
@@ -421,7 +439,7 @@ class Locality(models.Model):
     # the booker's own location
     no_address = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -429,9 +447,9 @@ class Locality(models.Model):
         if self.no_address:
             return self.name
         return "%s (%s)" % (
-            unicode(self.name),
+            self.name,
             ", ".join([
-                unicode(x) for x in [self.address_line, self.zip_city]
+                x for x in [self.address_line, self.zip_city]
                 if len(x.strip()) > 0
             ])
         )
@@ -439,8 +457,7 @@ class Locality(models.Model):
     @property
     def full_address(self):
         return " ".join([
-            unicode(x)
-            for x in (self.name, self.address_line, self.zip_city)
+            x for x in [self.name, self.address_line, self.zip_city]
             if len(x.strip()) > 0
         ])
 
@@ -477,7 +494,7 @@ class EmailTemplateTypeMeta(ModelBase):
                 if type(value) == int:
                     try:
                         return self.objects.get(key=value)
-                    except:
+                    except Exception:
                         pass
 
 
@@ -526,18 +543,18 @@ class EmailTemplateType(
         return EmailTemplateType.get(template_key).name
 
     key = models.IntegerField(
-        verbose_name=u'Type',
+        verbose_name='Type',
         default=1
     )
 
     name_da = models.CharField(
-        verbose_name=u'Navn',
+        verbose_name='Navn',
         max_length=1024,
         null=True
     )
 
     ordering = models.IntegerField(
-        verbose_name=u'Sortering',
+        verbose_name='Sortering',
         default=0
     )
 
@@ -545,7 +562,7 @@ class EmailTemplateType(
     def name(self):
         return self.name_da
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     # Template available for manual sending from visits
@@ -669,7 +686,7 @@ class EmailTemplateType(
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
-            name_da=u'Besked til gæst ved tilmelding (med fast tid)',
+            name_da='Besked til gæst ved tilmelding (med fast tid)',
             manual_sending_visit_enabled=False,
             manual_sending_mpv_enabled=False,
             manual_sending_booking_enabled=True,
@@ -685,7 +702,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            name_da=u'Besked til gæst ved tilmelding (besøg uden fast tid)',
+            name_da='Besked til gæst ved tilmelding (besøg uden fast tid)',
             manual_sending_visit_enabled=False,
             manual_sending_mpv_enabled=False,
             manual_sending_booking_enabled=True,
@@ -701,7 +718,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-            name_da=u'Besked til gæster der har tilmeldt sig venteliste',
+            name_da='Besked til gæster der har tilmeldt sig venteliste',
             manual_sending_visit_enabled=False,
             manual_sending_mpv_enabled=False,
             manual_sending_booking_enabled=True,
@@ -716,7 +733,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG,
-            name_da=u'Generel besked til gæst(er)',
+            name_da='Generel besked til gæst(er)',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             manual_sending_booking_enabled=True,
@@ -729,8 +746,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
-            name_da=u'Mail til gæst fra venteliste, '
-                    u'der får tilbudt plads på besøget',
+            name_da='Mail til gæst fra venteliste, '
+                    'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
             enable_booking=True,
             enable_autosend=True,
@@ -740,7 +757,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
-            name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
+            name_da='Besked til gæst ved accept af plads (fra venteliste)',
             manual_sending_visit_enabled=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=True,
@@ -753,7 +770,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
-            name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
+            name_da='Besked til gæst ved afvisning af plads (fra venteliste)',
             manual_sending_visit_enabled=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=True,
@@ -765,7 +782,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST_REMINDER,
-            name_da=u'Reminder til gæst',
+            name_da='Reminder til gæst',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -779,7 +796,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
-            name_da=u'Besked til koordinator, når gæst har tilmeldt sig besøg',
+            name_da='Besked til koordinator, når gæst har tilmeldt sig besøg',
             manual_sending_visit_enabled=False,
             send_to_contactperson=True,
             enable_booking=True,
@@ -791,8 +808,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
-            name_da=u'Besked til koordinatorer ved afvisning '
-                    u'af plads (fra venteliste)',
+            name_da='Besked til koordinatorer ved afvisning '
+                    'af plads (fra venteliste)',
             manual_sending_visit_enabled=False,
             send_to_contactperson=True,
             enable_booking=True,
@@ -804,7 +821,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-            name_da=u'Besked til vært, når en gæst har lavet en tilmelding',
+            name_da='Besked til vært, når en gæst har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_hosts=True,
@@ -817,8 +834,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-            name_da=u'Besked til underviser, når en gæst '
-                    u'har lavet en tilmelding',
+            name_da='Besked til underviser, når en gæst '
+                    'har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_teachers=True,
@@ -831,7 +848,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
-            name_da=u'Bekræftelsesmail til vært',
+            name_da='Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             send_to_visit_added_host=True,
@@ -842,7 +859,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
-            name_da=u'Bekræftelsesmail til underviser',
+            name_da='Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True,
             enable_autosend=True,
@@ -852,8 +869,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
-            name_da=u'Notifikation til koordinatorer om '
-                    u'ledig værtsrolle på besøg',
+            name_da='Notifikation til koordinatorer om '
+                    'ledig værtsrolle på besøg',
             manual_sending_visit_enabled=False,
             manual_sending_mpv_sub_enabled=False,
             send_to_editors=True,
@@ -865,7 +882,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
-            name_da=u'Besked til lokaleansvarlig',
+            name_da='Besked til lokaleansvarlig',
             send_to_room_responsible=True,
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
@@ -876,7 +893,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED,
-            name_da=u'Besked til alle ved aflysning',
+            name_da='Besked til alle ved aflysning',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -894,7 +911,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE,
-            name_da=u'Besked om færdigplanlagt besøg til alle involverede',
+            name_da='Besked om færdigplanlagt besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -912,7 +929,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
-            name_da=u'Reminder om besøg til alle involverede',
+            name_da='Reminder om besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -930,7 +947,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
-            name_da=u'Besked til tilbudsansvarlig',
+            name_da='Besked til tilbudsansvarlig',
             manual_sending_visit_enabled=True,
             enable_autosend=False,
             form_show=False,
@@ -940,7 +957,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
             # name_da=u'Svar på e-mail fra systemet',
-            name_da=u'Skabelon med informationer om tilmelding fra gæst',
+            name_da='Skabelon med informationer om tilmelding fra gæst',
             enable_autosend=False,
             form_show=False,
             ordering=22
@@ -948,7 +965,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
-            name_da=u'Besked til bruger ved brugeroprettelse',
+            name_da='Besked til bruger ved brugeroprettelse',
             manual_sending_visit_enabled=True,
             form_show=False,
             ordering=23
@@ -962,7 +979,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
-            name_da=u'Besked til bruger angående evaluering (første besked)',
+            name_da='Besked til bruger angående evaluering (første besked)',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             form_show=True,
@@ -977,8 +994,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
-            name_da=u'Besked til bruger angående evaluering (første besked), '
-                    u'for videresendelse til elever',
+            name_da='Besked til bruger angående evaluering (første besked), '
+                    'for videresendelse til elever',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             form_show=True,
@@ -993,7 +1010,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
-            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            name_da='Besked til bruger angående evaluering (anden besked)',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             form_show=True,
@@ -1009,8 +1026,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS,
-            name_da=u'Besked til bruger angående evaluering (anden besked), '
-                    u'for videresendelse til elever',
+            name_da='Besked til bruger angående evaluering (anden besked), '
+                    'for videresendelse til elever',
             manual_sending_visit_enabled=True,
             form_show=True,
             send_to_booker=True,
@@ -1083,8 +1100,10 @@ class EmailTemplateType(
                 )
                 if qs.count() == 0 and product.type not in \
                         template_type.disabled_product_types:
-                    print "    creating autosend type %d for product %d" % \
-                          (template_type.key, product.id)
+                    print(
+                        "    creating autosend type %d for product %d" %
+                        (template_type.key, product.id)
+                    )
                     autosend = ProductAutosend(
                         template_key=template_type.key,
                         template_type=template_type,
@@ -1093,8 +1112,10 @@ class EmailTemplateType(
                     )
                     autosend.save()
                 elif qs.count() > 1:
-                    print "    removing extraneous autosend %d " \
-                          "for product %d" % (template_type.key, product.id)
+                    print(
+                        "    removing extraneous autosend %d for product %d" %
+                        (template_type.key, product.id)
+                    )
                     for extra in qs[1:]:
                         extra.delete()
 
@@ -1108,8 +1129,10 @@ class EmailTemplateType(
                     )
                     if qs.count() == 0 and visit.product.type not in \
                             template_type.disabled_product_types:
-                        print "    creating autosend type %d for visit %d" % \
-                              (template_type.key, visit.id)
+                        print(
+                                "    creating autosend type %d "
+                                "for visit %d" % (template_type.key, visit.id)
+                        )
                         visitautosend = VisitAutosend(
                             visit=visit,
                             inherit=True,
@@ -1120,8 +1143,10 @@ class EmailTemplateType(
                         )
                         visitautosend.save()
                     elif qs.count() > 1:
-                        print "    removing extraneous autosend %d " \
-                              "for visit %d" % (template_type.key, visit.id)
+                        print(
+                                "    removing extraneous autosend %d for "
+                                "visit %d" % (template_type.key, visit.id)
+                        )
                     for extra in qs[1:]:
                         extra.delete()
 
@@ -1136,28 +1161,29 @@ class EmailTemplateType(
 class EmailTemplate(models.Model):
 
     key = models.IntegerField(
-        verbose_name=u'Type',
+        verbose_name='Type',
         default=1
     )
 
     type = models.ForeignKey(
         EmailTemplateType,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     subject = models.CharField(
         max_length=65584,
-        verbose_name=u'Emne'
+        verbose_name='Emne'
     )
 
     body = models.CharField(
         max_length=65584,
-        verbose_name=u'Tekst'
+        verbose_name='Tekst'
     )
 
     organizationalunit = models.ForeignKey(
         OrganizationalUnit,
-        verbose_name=u'Enhed',
+        verbose_name='Enhed',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -1190,7 +1216,7 @@ class EmailTemplate(models.Model):
         lines = [] + EmailTemplate.default_includes + ["{% language 'da' %}"]
         if not escape:
             lines.append("{% autoescape off %}")
-        lines.append(unicode(template_text))
+        lines.append(template_text)
         if not escape:
             lines.append("{% endautoescape %}")
         lines.append("{% endlanguage %}")
@@ -1231,7 +1257,7 @@ class EmailTemplate(models.Model):
                 ).first()
                 if template is not None:
                     templates.append(template)
-            except:
+            except Exception:
                 pass
             unit = unit.parent if unit.parent != unit else None
         if include_overridden or len(templates) == 0:
@@ -1242,7 +1268,7 @@ class EmailTemplate(models.Model):
                 ).first()
                 if template is not None:
                     templates.append(template)
-            except:
+            except Exception:
                 pass
         if include_overridden:
             return templates
@@ -1279,9 +1305,9 @@ class EmailTemplate(models.Model):
                     subtemplate = get_template(x.template.var)
                     self._add_template_vars(subtemplate.template, variables)
                 except Exception as e:
-                    print "Error while processcing included template: %s" % e
+                    print("Error while processcing included template: %s" % e)
             for x in node.get_nodes_by_type(VariableNode):
-                variables.append(unicode(x.filter_expression))
+                variables.append(str(x.filter_expression))
 
     @staticmethod
     def migrate():
@@ -1306,15 +1332,15 @@ class KUEmailRecipient(models.Model):
     TYPE_UNIT_RESPONSIBLE = 9
 
     type_choices = [
-        (TYPE_UNKNOWN, u'Anden'),
-        (TYPE_GUEST, u'Gæst'),
-        (TYPE_TEACHER, u'Underviser'),
-        (TYPE_HOST, u'Vært'),
-        (TYPE_COORDINATOR, u'Koordinator'),
-        (TYPE_INQUIREE, u'Modtager af spørgsmål'),
-        (TYPE_ROOM_RESPONSIBLE, u'Lokaleansvarlig'),
-        (TYPE_PRODUCT_RESPONSIBLE, u'Tilbudsansvarlig'),
-        (TYPE_UNIT_RESPONSIBLE, u'Enhedsansvarlig')
+        (TYPE_UNKNOWN, 'Anden'),
+        (TYPE_GUEST, 'Gæst'),
+        (TYPE_TEACHER, 'Underviser'),
+        (TYPE_HOST, 'Vært'),
+        (TYPE_COORDINATOR, 'Koordinator'),
+        (TYPE_INQUIREE, 'Modtager af spørgsmål'),
+        (TYPE_ROOM_RESPONSIBLE, 'Lokaleansvarlig'),
+        (TYPE_PRODUCT_RESPONSIBLE, 'Tilbudsansvarlig'),
+        (TYPE_UNIT_RESPONSIBLE, 'Enhedsansvarlig')
     ]
 
     type_map = {
@@ -1328,12 +1354,25 @@ class KUEmailRecipient(models.Model):
 
     all_types = set([k for k, v in type_choices])
 
-    email_message = models.ForeignKey('KUEmailMessage')
+    email_message = models.ForeignKey(
+        'KUEmailMessage',
+        on_delete=models.CASCADE
+    )
     name = models.TextField(blank=True, null=True)
     formatted_address = models.TextField(blank=True, null=True)
     email = models.TextField(blank=True, null=True)
-    user = models.ForeignKey(User, blank=True, null=True)
-    guest = models.ForeignKey('Guest', blank=True, null=True)
+    user = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    guest = models.ForeignKey(
+        'Guest',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     type = models.IntegerField(choices=type_choices, default=TYPE_UNKNOWN)
 
     def __str__(self):
@@ -1343,7 +1382,7 @@ class KUEmailRecipient(models.Model):
     def create(cls, base=None, recipient_type=None):
         ku_email_recipient = cls()
         address = None
-        if isinstance(base, basestring):
+        if isinstance(base, str):
             address = base
         elif isinstance(base, User):
             ku_email_recipient.user = base
@@ -1360,11 +1399,11 @@ class KUEmailRecipient(models.Model):
         else:
             try:
                 ku_email_recipient.name = base.get_name()
-            except:
+            except Exception:
                 pass
             try:
                 address = base.get_email()
-            except:
+            except Exception:
                 pass
 
         if recipient_type is not None:
@@ -1390,7 +1429,7 @@ class KUEmailRecipient(models.Model):
         for recipient_type, name in KUEmailRecipient.type_choices:
             if self.type == recipient_type:
                 return name
-        return u"Ukendt (%d)" % self.type
+        return "Ukendt (%d)" % self.type
 
     @staticmethod
     def multiple(bases, recipient_type=None):
@@ -1481,21 +1520,29 @@ class ObjectStatistics(models.Model):
 
 class ProductGymnasieFag(models.Model):
     class Meta:
-        verbose_name = _(u"gymnasiefagtilknytning")
-        verbose_name_plural = _(u"gymnasiefagtilknytninger")
+        verbose_name = _("gymnasiefagtilknytning")
+        verbose_name_plural = _("gymnasiefagtilknytninger")
         ordering = ["subject__name"]
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
-    product = models.ForeignKey("Product", blank=False, null=False)
+    product = models.ForeignKey(
+        "Product",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
                 Subject.SUBJECT_TYPE_BOTH
             ]
-        }
+        },
+        on_delete=models.CASCADE
     )
 
     display_value_cached = models.CharField(
@@ -1523,32 +1570,32 @@ class ProductGymnasieFag(models.Model):
 
         return f
 
-    def __unicode__(self):
-        return u"%s (for '%s')" % (self.display_value(), self.product.title)
+    def __str__(self):
+        return "%s (for '%s')" % (self.display_value(), self.product.title)
 
     def ordered_levels(self):
         return self.level.all().order_by('level')
 
     @classmethod
     def display(cls, subject, levels):
-        levels = [unicode(x) for x in levels.all()]
+        levels = [str(x) for x in levels.all()]
         levels_desc = None
 
         nr_levels = len(levels)
         if nr_levels == 1:
             levels_desc = levels[0]
         elif nr_levels == 2:
-            levels_desc = u'%s eller %s' % (levels[0], levels[1])
+            levels_desc = '%s eller %s' % (levels[0], levels[1])
         elif nr_levels > 2:
             last = levels.pop()
-            levels_desc = u'%s eller %s' % (", ".join(levels), last)
+            levels_desc = '%s eller %s' % (", ".join(levels), last)
 
         if levels_desc:
-            return u'%s på %s niveau' % (
-                unicode(subject.name), levels_desc
+            return '%s på %s niveau' % (
+                subject.name, levels_desc
             )
         else:
-            return unicode(subject.name)
+            return subject.name
 
     def display_value(self):
         if self.display_value_cached is None:
@@ -1559,8 +1606,8 @@ class ProductGymnasieFag(models.Model):
         return self.display_value_cached
 
     def as_submitvalue(self):
-        res = unicode(self.subject.pk)
-        levels = ",".join([unicode(x.pk) for x in self.ordered_levels().all()])
+        res = str(self.subject.pk)
+        levels = ",".join([str(x.pk) for x in self.ordered_levels().all()])
 
         if levels:
             res = ",".join([res, levels])
@@ -1570,13 +1617,18 @@ class ProductGymnasieFag(models.Model):
 
 class ProductGrundskoleFag(models.Model):
     class Meta:
-        verbose_name = _(u"grundskolefagtilknytning")
-        verbose_name_plural = _(u"grundskolefagtilknytninger")
+        verbose_name = _("grundskolefagtilknytning")
+        verbose_name_plural = _("grundskolefagtilknytninger")
         ordering = ["subject__name"]
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
-    product = models.ForeignKey("Product", blank=False, null=False)
+    product = models.ForeignKey(
+        "Product",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
         Subject, blank=False, null=False,
         limit_choices_to={
@@ -1584,16 +1636,17 @@ class ProductGrundskoleFag(models.Model):
                 Subject.SUBJECT_TYPE_GRUNDSKOLE,
                 Subject.SUBJECT_TYPE_BOTH
             ]
-        }
+        },
+        on_delete=models.CASCADE
     )
 
     # TODO: We should validate that min <= max here.
     class_level_min = models.IntegerField(choices=class_level_choices,
                                           default=0,
-                                          verbose_name=_(u'Klassetrin fra'))
+                                          verbose_name=_('Klassetrin fra'))
     class_level_max = models.IntegerField(choices=class_level_choices,
                                           default=10,
-                                          verbose_name=_(u'Klassetrin til'))
+                                          verbose_name=_('Klassetrin til'))
 
     @classmethod
     def create_from_submitvalue(cls, product, value):
@@ -1611,8 +1664,8 @@ class ProductGrundskoleFag(models.Model):
 
         return f
 
-    def __unicode__(self):
-        return u"%s (for '%s')" % (self.display_value(), self.product.title)
+    def __str__(self):
+        return "%s (for '%s')" % (self.display_value(), self.product.title)
 
     @classmethod
     def display(cls, subject, clevel_min, clevel_max):
@@ -1626,12 +1679,12 @@ class ProductGrundskoleFag(models.Model):
                 class_range.append(clevel_max)
 
         if len(class_range) > 0:
-            return u'%s på klassetrin %s' % (
+            return '%s på klassetrin %s' % (
                 subject.name,
-                "-".join([unicode(x) for x in class_range])
+                "-".join([str(x) for x in class_range])
             )
         else:
-            return unicode(subject.name)
+            return subject.name
 
     def display_value(self):
         return ProductGrundskoleFag.display(
@@ -1640,17 +1693,17 @@ class ProductGrundskoleFag(models.Model):
 
     def as_submitvalue(self):
         return ",".join([
-            unicode(self.subject.pk),
-            unicode(self.class_level_min or 0),
-            unicode(self.class_level_max or 0)
+            str(self.subject.pk),
+            str(self.class_level_min or 0),
+            str(self.class_level_max or 0)
         ])
 
 
 class GymnasieLevel(models.Model):
 
     class Meta:
-        verbose_name = _(u'Gymnasieniveau')
-        verbose_name_plural = _(u'Gymnasieniveauer')
+        verbose_name = _('Gymnasieniveau')
+        verbose_name_plural = _('Gymnasieniveauer')
         ordering = ['level']
 
     # Level choices - A, B or C
@@ -1659,11 +1712,11 @@ class GymnasieLevel(models.Model):
     C = 2
 
     level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
+        (A, 'A'), (B, 'B'), (C, 'C')
     )
 
     level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Gymnasieniveau"),
+                                verbose_name=_("Gymnasieniveau"),
                                 blank=True,
                                 null=True)
 
@@ -1676,15 +1729,15 @@ class GymnasieLevel(models.Model):
                 o = GymnasieLevel(level=val)
                 o.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_level_display()
 
 
 class GrundskoleLevel(models.Model):
 
     class Meta:
-        verbose_name = _(u'Grundskoleniveau')
-        verbose_name_plural = _(u'Grundskoleniveauer')
+        verbose_name = _('Grundskoleniveau')
+        verbose_name_plural = _('Grundskoleniveauer')
         ordering = ['level']
 
     f0 = 0
@@ -1700,21 +1753,21 @@ class GrundskoleLevel(models.Model):
     f10 = 10
 
     level_choices = (
-        (f0, _(u'0. klasse')),
-        (f1, _(u'1. klasse')),
-        (f2, _(u'2. klasse')),
-        (f3, _(u'3. klasse')),
-        (f4, _(u'4. klasse')),
-        (f5, _(u'5. klasse')),
-        (f6, _(u'6. klasse')),
-        (f7, _(u'7. klasse')),
-        (f8, _(u'8. klasse')),
-        (f9, _(u'9. klasse')),
-        (f10, _(u'10. klasse')),
+        (f0, _('0. klasse')),
+        (f1, _('1. klasse')),
+        (f2, _('2. klasse')),
+        (f3, _('3. klasse')),
+        (f4, _('4. klasse')),
+        (f5, _('5. klasse')),
+        (f6, _('6. klasse')),
+        (f7, _('7. klasse')),
+        (f8, _('8. klasse')),
+        (f9, _('9. klasse')),
+        (f10, _('10. klasse')),
     )
 
     level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Grundskoleniveau"),
+                                verbose_name=_("Grundskoleniveau"),
                                 blank=True,
                                 null=True)
 
@@ -1727,7 +1780,7 @@ class GrundskoleLevel(models.Model):
                 o = GrundskoleLevel(level=val)
                 o.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_level_display()
 
 
@@ -1756,15 +1809,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     STUDIEPRAKTIK = 9
 
     resource_type_choices = (
-        (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (STUDIEPRAKTIK, _(u"Studiepraktik")),
-        (OPEN_HOUSE, _(u"Åbent hus")),
-        (TEACHER_EVENT, _(u"Tilbud til undervisere")),
-        (GROUP_VISIT, _(u"Besøg med klassen")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
-        (OTHER_OFFERS,  _(u"Andre tilbud")),
-        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
+        (STUDENT_FOR_A_DAY, _("Studerende for en dag")),
+        (STUDIEPRAKTIK, _("Studiepraktik")),
+        (OPEN_HOUSE, _("Åbent hus")),
+        (TEACHER_EVENT, _("Tilbud til undervisere")),
+        (GROUP_VISIT, _("Besøg med klassen")),
+        (STUDY_PROJECT, _("Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _("Lektiehjælp")),
+        (OTHER_OFFERS, _("Andre tilbud")),
+        (STUDY_MATERIAL, _("Undervisningsmateriale"))
     )
 
     evaluation_autosends_enabled = [
@@ -1784,7 +1837,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     C = 2
 
     level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
+        (A, 'A'), (B, 'B'), (C, 'C')
     )
 
     # Product state - created, active and discontinued.
@@ -1794,33 +1847,33 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     state_choices = (
         BLANK_OPTION,
-        (CREATED, _(u"Under udarbejdelse")),
-        (ACTIVE, _(u"Offentlig")),
-        (DISCONTINUED, _(u"Skjult"))
+        (CREATED, _("Under udarbejdelse")),
+        (ACTIVE, _("Offentlig")),
+        (DISCONTINUED, _("Skjult"))
     )
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+    class_level_choices = [(i, str(i)) for i in range(0, 11)]
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices,
-                                verbose_name=_(u"Status"), blank=False)
+                                verbose_name=_("Status"), blank=False)
     title = models.CharField(
         max_length=80,
         blank=False,
-        verbose_name=_(u'Titel')
+        verbose_name=_('Titel')
     )
     teaser = models.TextField(
         max_length=300,
         blank=False,
-        verbose_name=_(u'Teaser')
+        verbose_name=_('Teaser')
     )
     description = models.TextField(
         blank=False,
-        verbose_name=_(u'Beskrivelse')
+        verbose_name=_('Beskrivelse')
     )
     mouseover_description = models.CharField(
-        max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
+        max_length=512, blank=True, verbose_name=_('Mouseover-tekst')
     )
     organizationalunit = models.ForeignKey(
         OrganizationalUnit,
@@ -1832,13 +1885,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
 
     institution_level = models.IntegerField(choices=institution_choices,
-                                            verbose_name=_(u'Institution'),
+                                            verbose_name=_('Institution'),
                                             default=SECONDARY,
                                             blank=False)
 
     locality = models.ForeignKey(
         Locality,
-        verbose_name=_(u'Lokalitet'),
+        verbose_name=_('Lokalitet'),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
@@ -1846,7 +1899,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     rooms = models.ManyToManyField(
         'Room',
-        verbose_name=_(u'Lokaler'),
+        verbose_name=_('Lokaler'),
         blank=True
     )
 
@@ -1912,18 +1965,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     time_mode_choices = (
         (TIME_MODE_NONE,
-         _(u"Tilbuddet har ingen tidspunkter og ingen tilmelding")),
+         _("Tilbuddet har ingen tidspunkter og ingen tilmelding")),
         (TIME_MODE_RESOURCE_CONTROLLED,
-         _(u"Tilbuddets tidspunkter styres af ressourcer")),
+         _("Tilbuddets tidspunkter styres af ressourcer")),
         (TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
-         _(u"Tilbuddets tidspunkter styres af ressourcer,"
-           u" med automatisk tildeling")),
+         _("Tilbuddets tidspunkter styres af ressourcer,"
+           " med automatisk tildeling")),
         (TIME_MODE_SPECIFIC,
-         _(u"Tilbuddet har faste tidspunkter")),
+         _("Tilbuddet har faste tidspunkter")),
         (TIME_MODE_NO_BOOKING,
-         _(u"Tilbuddet har faste tidspunkter, men er uden tilmelding")),
+         _("Tilbuddet har faste tidspunkter, men er uden tilmelding")),
         (TIME_MODE_GUEST_SUGGESTED,
-         _(u"Gæster foreslår mulige tidspunkter")),
+         _("Gæster foreslår mulige tidspunkter")),
     )
 
     # Note: Default here is a type that can not be selected in the dropdown.
@@ -1931,14 +1984,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     # for time_mode. Products that does a have a form field will have to
     # choose a specific time mode.
     time_mode = models.IntegerField(
-        verbose_name=_(u"Håndtering af tidspunkter"),
+        verbose_name=_("Håndtering af tidspunkter"),
         choices=time_mode_choices,
         default=TIME_MODE_NONE,
     )
 
     tilbudsansvarlig = models.ForeignKey(
         User,
-        verbose_name=_(u'Koordinator'),
+        verbose_name=_('Koordinator'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
         null=True,
@@ -1947,14 +2000,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     roomresponsible = models.ManyToManyField(
         RoomResponsible,
-        verbose_name=_(u'Lokaleansvarlige'),
+        verbose_name=_('Lokaleansvarlige'),
         related_name='ansvarlig_for_besoeg_set',
         blank=True,
     )
 
     potentielle_undervisere = models.ManyToManyField(
         User,
-        verbose_name=_(u'Potentielle undervisere'),
+        verbose_name=_('Potentielle undervisere'),
         related_name='potentiel_underviser_for_set',
         blank=True,
         limit_choices_to={
@@ -1964,7 +2017,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     potentielle_vaerter = models.ManyToManyField(
         User,
-        verbose_name=_(u'Potentielle værter'),
+        verbose_name=_('Potentielle værter'),
         related_name='potentiel_vaert_for_set',
         blank=True,
         limit_choices_to={
@@ -1976,7 +2029,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_(u'Forberedelsestid')
+        verbose_name=_('Forberedelsestid')
     )
 
     price = models.DecimalField(
@@ -1985,36 +2038,37 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         max_digits=10,
         decimal_places=2,
-        verbose_name=_(u'Pris')
+        verbose_name=_('Pris'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
-        verbose_name=_(u'Gymnasiefag'),
+        verbose_name=_('Gymnasiefag'),
         through='ProductGymnasieFag',
         related_name='gymnasie_resources'
     )
 
     grundskolefag = models.ManyToManyField(
         Subject, blank=True,
-        verbose_name=_(u'Grundskolefag'),
+        verbose_name=_('Grundskolefag'),
         through='ProductGrundskoleFag',
         related_name='grundskole_resources'
     )
 
-    tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
+    tags = models.ManyToManyField(Tag, blank=True, verbose_name=_('Tags'))
     topics = models.ManyToManyField(
-        Topic, blank=True, verbose_name=_(u'Emner')
+        Topic, blank=True, verbose_name=_('Emner')
     )
 
     # Comment field for internal use in backend.
-    comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
+    comment = models.TextField(blank=True, verbose_name=_('Kommentar'))
 
     created_by = models.ForeignKey(
         User,
         blank=True,
         null=True,
-        verbose_name=_(u"Oprettet af"),
+        verbose_name=_("Oprettet af"),
         related_name='created_visits_set',
         on_delete=models.SET_NULL
     )
@@ -2026,7 +2080,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     extra_search_text = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        verbose_name=_('Tekst-værdier til fritekstsøgning'),
         editable=False
     )
 
@@ -2068,27 +2122,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 Product.resource_type_choices
                 if x[0] in Product.applicable_types)
 
-    @classmethod
-    def type_name(cls, type):
-        for value, label in cls.resource_type_choices:
-            if value == type:
-                return label
-
-    def type_display(self):
-        return Product.type_name(self.type)
-
-    @classmethod
-    def state_name(cls, type):
-        for value, label in cls.state_choices:
-            if value == type:
-                return label
-
-    def state_display(self):
-        return Product.state_name(self.state)
-
     rooms_needed = models.BooleanField(
         default=True,
-        verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
+        verbose_name=_("Tilbuddet kræver brug af et eller flere lokaler")
     )
 
     duration_choices = []
@@ -2099,86 +2135,95 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     duration = models.CharField(
         max_length=8,
-        verbose_name=_(u'Varighed'),
+        verbose_name=_('Varighed'),
         blank=True,
         null=True,
         choices=duration_choices
     )
 
     do_send_evaluation = models.BooleanField(
-        verbose_name=_(u"Udsend evaluering"),
+        verbose_name=_("Udsend evaluering"),
         default=False
     )
     is_group_visit = models.BooleanField(
         default=True,
-        verbose_name=_(u'Gruppebesøg')
+        verbose_name=_('Gruppebesøg')
     )
     # Min/max number of visitors - only relevant for group visits.
     minimum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Mindste antal deltagere')
+        verbose_name=_('Mindste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
     maximum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Højeste antal deltagere')
+        verbose_name=_('Højeste antal deltagere'),
+        validators=[validators.MinValueValidator(0)]
     )
 
     # Waiting lists
     do_create_waiting_list = models.BooleanField(
         default=False,
-        verbose_name=_(u'Ventelister')
+        verbose_name=_('Ventelister')
     )
     waiting_list_length = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Antal pladser')
+        verbose_name=_('Antal pladser'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_days = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Lukning af venteliste (dage inden besøg)')
+        verbose_name=_('Lukning af venteliste (dage inden besøg)'),
+        validators=[validators.MinValueValidator(0)]
     )
     waiting_list_deadline_hours = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Lukning af venteliste (timer inden besøg)')
+        verbose_name=_('Lukning af venteliste (timer inden besøg)'),
+
+        validators=[
+            validators.MinValueValidator(0),
+            validators.MaxValueValidator(23)
+        ]
     )
 
     do_show_countdown = models.BooleanField(
         default=False,
-        verbose_name=_(u'Vis nedtælling')
+        verbose_name=_('Vis nedtælling')
     )
 
     tour_available = models.BooleanField(
         default=False,
         blank=True,
-        verbose_name=_(u'Mulighed for rundvisning')
+        verbose_name=_('Mulighed for rundvisning')
     )
 
     catering_available = models.BooleanField(
         default=False,
         blank=True,
-        verbose_name=_(u'Mulighed for forplejning')
+        verbose_name=_('Mulighed for forplejning')
     )
 
     presentation_available = models.BooleanField(
         default=False,
         blank=True,
-        verbose_name=_(u'Mulighed for oplæg om uddannelse')
+        verbose_name=_('Mulighed for oplæg om uddannelse')
     )
 
     custom_available = models.BooleanField(
         default=False,
         blank=True,
-        verbose_name=_(u'Andet')
+        verbose_name=_('Andet')
     )
 
     custom_name = models.CharField(
         blank=True,
         null=True,
-        verbose_name=_(u'Navn for tilpasset mulighed'),
+        verbose_name=_('Navn for tilpasset mulighed'),
         max_length=50
     )
 
@@ -2187,44 +2232,45 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     needed_number_choices = [
         BLANK_OPTION,
-        (NEEDED_NUMBER_NONE, _(u'Ingen'))
+        (NEEDED_NUMBER_NONE, _('Ingen'))
     ] + [
-        (x, unicode(x)) for x in range(1, 11)
+        (x, str(x)) for x in range(1, 11)
     ] + [
-        (NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10'))
+        (NEEDED_NUMBER_MORE_THAN_TEN, _('Mere end 10'))
     ]
 
     needed_hosts = models.IntegerField(
         default=0,
-        verbose_name=_(u'Nødvendigt antal værter'),
+        verbose_name=_('Nødvendigt antal værter'),
         choices=needed_number_choices,
         blank=False
     )
 
     needed_teachers = models.IntegerField(
         default=0,
-        verbose_name=_(u'Nødvendigt antal undervisere'),
+        verbose_name=_('Nødvendigt antal undervisere'),
         choices=needed_number_choices,
         blank=False
     )
 
     only_one_guest_per_visit = models.BooleanField(
         default=False,
-        verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
+        verbose_name=_('Der tillades kun 1 tilmelding pr. besøg')
     )
 
     booking_close_days_before = models.IntegerField(
         default=6,
-        verbose_name=_(u'Antal dage før afholdelse, '
-                       u'hvor der lukkes for tilmeldinger'),
+        verbose_name=_('Antal dage før afholdelse, '
+                       'hvor der lukkes for tilmeldinger'),
         blank=False,
-        null=True
+        null=True,
+        validators=[validators.MinValueValidator(0)]
     )
 
-    booking_max_days_in_future = models.IntegerField(
+    booking_max_days_in_future = models.PositiveIntegerField(
         default=90,
         verbose_name=_(
-            u'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
+            'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
         ),
         blank=False,
         null=True
@@ -2232,13 +2278,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     inquire_enabled = models.BooleanField(
         default=True,
-        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+        verbose_name=_('"Spørg om tilbud" aktiveret')
     )
 
     education_name = models.CharField(
         blank=True,
         null=True,
-        verbose_name=_(u'Navn på uddannelsen'),
+        verbose_name=_('Navn på uddannelsen'),
         max_length=50
     )
 
@@ -2425,10 +2471,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 self.maximum_number_of_visitors
             )
         elif self.maximum_number_of_visitors:
-            return _(u"Max. %(visitors)d") % \
+            return _("Max. %(visitors)d") % \
                 {'visitors': self.maximum_number_of_visitors}
         elif self.minimum_number_of_visitors:
-            return _(u"Min. %(visitors)d") % \
+            return _("Min. %(visitors)d") % \
                 {'visitors': self.minimum_number_of_visitors}
         else:
             return None
@@ -2449,7 +2495,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             item = self.productautosend_set.filter(
                 template_type=template_type, enabled=True)[0]
             return item
-        except:
+        except Exception:
             return None
 
     def autosend_enabled(self, template_type):
@@ -2493,13 +2539,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 texts.append(self.organizationalunit.parent.name)
 
         # Url, name and description of all links
-        for l in self.links.all():
-            if l.url:
-                texts.append(l.url)
-            if l.name:
-                texts.append(l.name)
-            if l.description:
-                texts.append(l.description)
+        for link in self.links.all():
+            if link.url:
+                texts.append(link.url)
+            if link.name:
+                texts.append(link.name)
+            if link.description:
+                texts.append(link.description)
 
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
@@ -2519,7 +2565,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return "\n".join(texts)
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([str(x) for x in [
             self.pk,
             self.title,
             self.teaser,
@@ -2700,7 +2746,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 return True
             if eventtime.visit.is_bookable:
                 return True
-
         return False
 
     @property
@@ -2730,17 +2775,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     nonbookable_reason_text = {
         NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
-            _(u'Tilbudstypen kan ikke tilmeldes.'),
+            _('Tilbudstypen kan ikke tilmeldes.'),
         NONBOOKABLE_REASON__NOT_ACTIVE:
-            _(u'Tilbuddet er ikke aktivt.'),
+            _('Tilbuddet er ikke aktivt.'),
         NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
-            _(u'Der er ingen ledige besøg.'),
+            _('Der er ingen ledige besøg.'),
         NONBOOKABLE_REASON__BOOKING_CUTOFF:
-            _(u'Der er lukket for tilmelding %d dage før afholdelse.'),
+            _('Der er lukket for tilmelding %d dage før afholdelse.'),
         NONBOOKABLE_REASON__NO_CALENDAR_TIME:
-            _(u'Der er ikke er flere ledige tider.'),
+            _('Der er ikke er flere ledige tider.'),
         NONBOOKABLE_REASON__BOOKING_FUTURE:
-            _(u'Der er lukket for tilmelding %d dage efter dags dato.')
+            _('Der er lukket for tilmelding %d dage efter dags dato.')
     }
 
     def nonbookable_text(self, bookability):
@@ -2882,14 +2927,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             parts = self.duration.split(":")
             try:
                 result = int(parts[0]) * 60 + int(parts[1])
-            except:
+            except Exception:
                 pass
         return result
 
     @property
     def latest_starttime(self):
         mins = 60 * 24 - self.duration_in_minutes
-        return u'%.2d:%.2d' % (math.floor(mins / 60), mins % 60)
+        return '%.2d:%.2d' % (math.floor(mins / 60), mins % 60)
 
     def get_duration_display(self):
         mins = self.duration_in_minutes
@@ -2897,9 +2942,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             hours = math.floor(mins / 60)
             mins = mins % 60
             if(hours == 1):
-                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
+                return _("1 time og %(minutes)d minutter") % {'minutes': mins}
             else:
-                return _(u"%(hours)d timer og %(minutes)d minutter") % {
+                return _("%(hours)d timer og %(minutes)d minutter") % {
                     'hours': hours, 'minutes': mins
                 }
         else:
@@ -2944,7 +2989,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             visit__bookings__isnull=False
         ).distinct()
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u"Tilbud #%(pk)s - %(title)s") % \
             {'pk': self.pk, 'title': self.title}
 
@@ -2956,8 +3001,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         self.qs_cache = {}
 
     class Meta:
-        verbose_name = _(u"besøg")
-        verbose_name_plural = _(u"besøg")
+        verbose_name = _("besøg")
+        verbose_name_plural = _("besøg")
         ordering = ['id']
         indexes = [
             GinIndex(fields=['search_vector'])
@@ -2969,19 +3014,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         null=True,
         blank=True,
         max_length=2000,
-        verbose_name=u'Ønsket tidspunkt'
+        verbose_name='Ønsket tidspunkt'
     )
 
     override_duration = models.CharField(
         max_length=8,
-        verbose_name=_(u'Varighed'),
+        verbose_name=_('Varighed'),
         blank=True,
         null=True,
     )
 
     override_locality = models.ForeignKey(
         Locality,
-        verbose_name=_(u'Lokalitet'),
+        verbose_name=_('Lokalitet'),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
@@ -2989,16 +3034,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     rooms = models.ManyToManyField(
         'Room',
-        verbose_name=_(u'Lokaler'),
+        verbose_name=_('Lokaler'),
         blank=True
     )
 
     persons_needed_choices = (
-        (None, _(u"Brug værdi fra tilbud")),
+        (None, _("Brug værdi fra tilbud")),
     ) + tuple((x, x) for x in range(1, 10))
 
     override_needed_hosts = models.IntegerField(
-        verbose_name=_(u"Antal nødvendige værter"),
+        verbose_name=_("Antal nødvendige værter"),
         choices=persons_needed_choices,
         blank=True,
         null=True
@@ -3011,7 +3056,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'userprofile__user_role__role': HOST
         },
         related_name="hosted_visits",
-        verbose_name=_(u'Tilknyttede værter')
+        verbose_name=_('Tilknyttede værter')
     )
 
     hosts_rejected = models.ManyToManyField(
@@ -3021,11 +3066,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'userprofile__user_role__role': HOST
         },
         related_name='rejected_hosted_visits',
-        verbose_name=_(u'Værter, som har afslået')
+        verbose_name=_('Værter, som har afslået')
     )
 
     override_needed_teachers = models.IntegerField(
-        verbose_name=_(u"Antal nødvendige undervisere"),
+        verbose_name=_("Antal nødvendige undervisere"),
         choices=persons_needed_choices,
         blank=True,
         null=True
@@ -3038,7 +3083,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'userprofile__user_role__role': TEACHER
         },
         related_name="taught_visits",
-        verbose_name=_(u'Tilknyttede undervisere')
+        verbose_name=_('Tilknyttede undervisere')
     )
 
     teachers_rejected = models.ManyToManyField(
@@ -3048,7 +3093,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'userprofile__user_role__role': TEACHER
         },
         related_name='rejected_taught_visits',
-        verbose_name=_(u'Undervisere, som har afslået')
+        verbose_name=_('Undervisere, som har afslået')
     )
 
     STATUS_NOT_NEEDED = 0
@@ -3056,26 +3101,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     STATUS_NOT_ASSIGNED = 2
 
     room_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling/bekræftelse')),
-        (STATUS_ASSIGNED, _(u'Tildelt/bekræftet'))
+        (STATUS_NOT_NEEDED, _('Tildeling af lokaler ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _('Afventer tildeling/bekræftelse')),
+        (STATUS_ASSIGNED, _('Tildelt/bekræftet'))
     )
 
     room_status = models.IntegerField(
         choices=room_status_choices,
         default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af lokaler')
+        verbose_name=_('Status for tildeling af lokaler')
     )
-
-    @classmethod
-    def room_status_name(cls, room_status):
-        for value, label in cls.room_status_choices:
-            if value == room_status:
-                return label
-
-    @property
-    def room_status_display(self):
-        return Visit.room_status_name(self.room_status)
 
     statistics = models.ForeignKey(
         ObjectStatistics,
@@ -3087,16 +3122,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         "Resource",
         through="VisitResource",
         blank=True,
-        verbose_name=_(u'Besøgets ressourcer')
+        verbose_name=_('Besøgets ressourcer')
     )
 
     cancelled_eventtime = models.ForeignKey(
         'EventTime',
-        verbose_name=_(u"Tidspunkt for aflyst besøg"),
+        verbose_name=_("Tidspunkt for aflyst besøg"),
         related_name='cancelled_visits',
         blank=True,
         null=True,
-        default=None
+        default=None,
+        on_delete=models.SET_NULL
     )
 
     WORKFLOW_STATUS_BEING_PLANNED = 0
@@ -3111,9 +3147,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
     WORKFLOW_STATUS_AUTOASSIGN_FAILED = 10
 
-    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
-    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
-    PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
+    BEING_PLANNED_STATUS_TEXT = 'Under planlægning'
+    PLANNED_STATUS_TEXT = 'Planlagt (ressourcer tildelt)'
+    PLANNED_NOBOOKING_TEXT = 'Planlagt og lukket for booking'
 
     status_to_class_map = {
         WORKFLOW_STATUS_BEING_PLANNED: 'warning',
@@ -3137,16 +3173,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller vært')),
+        (WORKFLOW_STATUS_REJECTED, _('Afvist af undervisere eller vært')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af gæst')),
-        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
-        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
-        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
-        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
-        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
-        (WORKFLOW_STATUS_AUTOASSIGN_FAILED, _(u'Automatisk tildeling fejlet')),
+        (WORKFLOW_STATUS_CONFIRMED, _('Bekræftet af gæst')),
+        (WORKFLOW_STATUS_REMINDED, _('Påmindelse afsendt')),
+        (WORKFLOW_STATUS_EXECUTED, _('Afviklet')),
+        (WORKFLOW_STATUS_EVALUATED, _('Evalueret')),
+        (WORKFLOW_STATUS_CANCELLED, _('Aflyst')),
+        (WORKFLOW_STATUS_NOSHOW, _('Udeblevet')),
+        (WORKFLOW_STATUS_AUTOASSIGN_FAILED, _('Automatisk tildeling fejlet')),
     )
 
     workflow_status = models.IntegerField(
@@ -3159,13 +3195,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         null=True,
         default=None,
-        verbose_name=_(u'Behov for opmærksomhed siden')
+        verbose_name=_('Behov for opmærksomhed siden')
     )
 
     comments = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Interne kommentarer')
+        verbose_name=_('Interne kommentarer')
     )
 
     # ts_vector field for fulltext search
@@ -3175,7 +3211,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     extra_search_text = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        verbose_name=_('Tekst-værdier til fritekstsøgning'),
         editable=False
     )
 
@@ -3482,19 +3518,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if self.product.type == Product.STUDENT_FOR_A_DAY:
                 return self.bookings.first().booker.get_full_name()
             return self.bookings.first().booker.school.name
-        except:
+        except Exception:
             return self.product.title if self.product \
-                else _(u"Besøg #%d") % self.id
+                else _("Besøg #%d") % self.id
 
     @property
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
-            return _(u'ikke-fastlagt tidspunkt')
+            return _('ikke-fastlagt tidspunkt')
         return self.eventtime.interval_display
 
     @property
     def id_display(self):
-        return _(u'Besøg #%d') % self.id
+        return _('Besøg #%d') % self.id
 
     # Format date for basic display
     @property
@@ -3505,7 +3541,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 "DATETIME_FORMAT"
             )
         else:
-            return _(u'ikke-fastlagt tidspunkt')
+            return _('ikke-fastlagt tidspunkt')
 
     # Format date for display with context (e.g. "on [date] at [time]")
     @property
@@ -3520,7 +3556,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 )
             }
         else:
-            return _(u'på ikke-fastlagt tidspunkt')
+            return _('på ikke-fastlagt tidspunkt')
 
     @property
     def interval_display(self):
@@ -3849,39 +3885,39 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         limit = self.product.maximum_number_of_visitors \
             if self.product is not None else None
         if limit is None:
-            return sys.maxint
+            return AVAILABLE_SEATS_NO_LIMIT
         return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
-    def __unicode__(self):
+    def __str__(self):
         if self.is_multiproductvisit:
-            return self.multiproductvisit.__unicode__()
+            return str(self.multiproductvisit)
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
+            return _('Besøg %(id)s - %(title)s - %(time)s') % {
                 'id': self.pk,
-                'title': unicode(self.real.display_title),
-                'time': unicode(self.eventtime.interval_display)
+                'title': self.real.display_title,
+                'time': self.eventtime.interval_display
             }
         elif self.cancelled_eventtime:
-            return _(u'Besøg %(id)s - %(title)s - %(time)s (aflyst)') % {
+            return _('Besøg %(id)s - %(title)s - %(time)s (aflyst)') % {
                 'id': self.pk,
-                'title': unicode(self.real.display_title),
-                'time': unicode(self.cancelled_eventtime.interval_display)
+                'title': self.real.display_title,
+                'time': self.cancelled_eventtime.interval_display
             }
         else:
-            return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
+            return _('Besøg %s - uden tidspunkt') % self.pk
 
     @property
     def product(self):
         try:
             return self.eventtime.product
-        except:
+        except Exception:
             pass
         try:
             return self.cancelled_eventtime.product
-        except:
+        except Exception:
             pass
         return None
 
@@ -3891,7 +3927,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.multiproductvisit.unit
         try:
             return self.product.organizationalunit
-        except:
+        except Exception:
             pass
 
     def get_override_attr(self, attrname):
@@ -4005,7 +4041,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         s = self.visitautosend_set.filter(
             template_type=template_type
         )
-
         # If no rule specified, always inherit
         if s.count() == 0:
             return True
@@ -4031,7 +4066,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 if not include_disabled:
                     query = query.filter(enabled=True)
                 return query[0]
-            except:
+            except Exception:
                 return None
 
     def get_autosends(self, follow_inherit=True,
@@ -4302,19 +4337,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def calender_event_title(self):
-        output = [_(u'Besøg #%s') % self.pk]
+        output = [_('Besøg #%s') % self.pk]
         if self.product:
             output.append(" - %s" % self.product.title)
         teachers = ', '.join([
             teacher.get_full_name()
             for teacher in self.teachers.all()
         ]) if self.teachers.exists() else _("<ingen>")
-        output.append(_(u"\nUndervisere: %s") % teachers)
+        output.append(_("\nUndervisere: %s") % teachers)
         hosts = ', '.join([
             host.get_full_name()
             for host in self.hosts.all()
         ]) if self.hosts.exists() else _("<ingen>")
-        output.append(_(u"\nVærter: %s") % hosts)
+        output.append(_("\nVærter: %s") % hosts)
         return ''.join(output)
 
     def context_for_user(self, user, request_usertype=None):
@@ -4478,7 +4513,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for student in self.student_evaluation_guests.all():
                 student_status[student.status] += 1
             output.append((
-                _(u'Elever'),
+                _('Elever'),
                 self.product.student_evaluation,
                 [student_status[key] for key in statuslist]
             ))
@@ -4488,7 +4523,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for teacher in self.teacher_evaluation_guests.all():
                 teacher_status[teacher.status] += 1
             output.append((
-                _(u'Lærere'),
+                _('Lærere'),
                 self.product.teacher_evaluation,
                 [teacher_status[key] for key in statuslist]
             ))
@@ -4510,17 +4545,18 @@ class MultiProductVisit(Visit):
     date = models.DateField(
         null=True,
         blank=False,
-        verbose_name=_(u'Dato')
+        verbose_name=_('Dato')
     )
     required_visits = models.PositiveIntegerField(
         default=2,
-        verbose_name=_(u'Antal ønskede besøg')
+        verbose_name=_('Antal ønskede besøg')
     )
     responsible = models.ForeignKey(
         User,
         blank=True,
         null=True,
-        verbose_name=_(u'Besøgsansvarlig')
+        verbose_name=_('Besøgsansvarlig'),
+        on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -4605,7 +4641,7 @@ class MultiProductVisit(Visit):
     def unit(self):
         try:
             return self.products[0].organizationalunit
-        except:
+        except Exception:
             pass
 
     def resources_assigned(self, requirement):
@@ -4730,7 +4766,7 @@ class MultiProductVisit(Visit):
         # return _(u'prioriteret liste af %d tilbud') % len(self.products)
         try:
             return self.bookings.first().booker.school.name
-        except:
+        except Exception:
             count = len(self.subvisits_unordered)
             return __(
                 "%(title)s, %(count)d prioritet",
@@ -4744,12 +4780,12 @@ class MultiProductVisit(Visit):
     @property
     def date_display(self):
         return formats.date_format(self.date_ref, "DATE_FORMAT") \
-            if self.date_ref is not None else _(u'Intet tidspunkt')
+            if self.date_ref is not None else _('Intet tidspunkt')
 
     @property
     def date_display_context(self):
         return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT") \
-            if self.date_ref is not None else _(u'Intet tidspunkt')
+            if self.date_ref is not None else _('Intet tidspunkt')
 
     @property
     def start_datetime(self):
@@ -4903,21 +4939,28 @@ class MultiProductVisit(Visit):
         for visit in self.subvisits_unordered:
             visit.autoassign_resources()
 
-    def __unicode__(self):
+    def __str__(self):
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %(id)s - Prioriteret liste af '
-                     u'%(count)d underbesøg - %(time)s') % {
+            return _('Besøg %(id)s - Prioriteret liste af '
+                     '%(count)d underbesøg - %(time)s') % {
                 'id': self.pk,
                 'count': self.subvisits_unordered.count(),
-                'time': unicode(self.eventtime.interval_display)
+                'time': self.eventtime.interval_display
             }
         else:
-            return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
+            return _('Besøg %s - uden tidspunkt') % self.pk
 
 
 class MultiProductVisitTempProduct(models.Model):
-    product = models.ForeignKey(Product, related_name='prod')
-    multiproductvisittemp = models.ForeignKey('MultiProductVisitTemp')
+    product = models.ForeignKey(
+        Product,
+        related_name='prod',
+        on_delete=models.CASCADE
+    )
+    multiproductvisittemp = models.ForeignKey(
+        'MultiProductVisitTemp',
+        on_delete=models.CASCADE
+    )
     index = models.IntegerField()
 
 
@@ -4925,7 +4968,7 @@ class MultiProductVisitTemp(models.Model):
     date = models.DateField(
         null=False,
         blank=False,
-        verbose_name=_(u'Dato')
+        verbose_name=_('Dato')
     )
 
     @property
@@ -4949,17 +4992,18 @@ class MultiProductVisitTemp(models.Model):
     )
     notes = models.TextField(
         blank=True,
-        verbose_name=u'Bemærkninger'
+        verbose_name='Bemærkninger'
     )
     baseproduct = models.ForeignKey(
         Product,
         null=True,
         blank=True,
-        related_name='foobar'
+        related_name='foobar',
+        on_delete=models.CASCADE
     )
     required_visits = models.PositiveIntegerField(
         default=2,
-        verbose_name=_(u'Antal ønskede besøg')
+        verbose_name=_('Antal ønskede besøg')
     )
 
     def create_mpv(self):
@@ -5006,9 +5050,10 @@ class VisitComment(models.Model):
 
     visit = models.ForeignKey(
         Visit,
-        verbose_name=_(u'Besøg'),
+        verbose_name=_('Besøg'),
         null=False,
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         User,
@@ -5020,10 +5065,10 @@ class VisitComment(models.Model):
     )
     text = models.CharField(
         max_length=500,
-        verbose_name=_(u'Kommentartekst')
+        verbose_name=_('Kommentartekst')
     )
     time = models.DateTimeField(
-        verbose_name=_(u'Tidsstempel'),
+        verbose_name=_('Tidsstempel'),
         auto_now=True
     )
 
@@ -5040,23 +5085,24 @@ class VisitComment(models.Model):
 
 class Autosend(models.Model):
     template_key = models.IntegerField(
-        verbose_name=_(u'Skabelon'),
+        verbose_name=_('Skabelon'),
         blank=False,
         null=False
     )
     days = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Dage'),
+        verbose_name=_('Dage'),
     )
     enabled = models.BooleanField(
-        verbose_name=_(u'Aktiv'),
+        verbose_name=_('Aktiv'),
         default=True
     )
 
     template_type = models.ForeignKey(
         EmailTemplateType,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     def save(self, *args, **kwargs):
@@ -5064,9 +5110,9 @@ class Autosend(models.Model):
         super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
-        return unicode(self.template_type.name)
+        return self.template_type.name
 
-    def __unicode__(self):
+    def __str__(self):
         return "[%d] %s (%s)" % (
             self.id,
             self.get_name(),
@@ -5096,73 +5142,75 @@ class Autosend(models.Model):
 class ProductAutosend(Autosend):
     product = models.ForeignKey(
         Product,
-        verbose_name=_(u'Besøg'),
-        blank=False
+        verbose_name=_('Besøg'),
+        blank=False,
+        on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s on %s" % (
-            super(ProductAutosend, self).__unicode__(),
-            self.product.__unicode__()
+            super(ProductAutosend, self).__str__(),
+            self.product.__str__()
         )
 
 
 class VisitAutosend(Autosend):
     visit = models.ForeignKey(
         Visit,
-        verbose_name=_(u'BesøgForekomst'),
-        blank=False
+        verbose_name=_('BesøgForekomst'),
+        blank=False,
+        on_delete=models.CASCADE
     )
     inherit = models.BooleanField(
-        verbose_name=_(u'Genbrug indstilling fra tilbud')
+        verbose_name=_('Genbrug indstilling fra tilbud')
     )
 
     def get_inherited(self):
         if self.inherit:
             return self.visit.get_autosend(self.template_type)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s on %s" % (
-            super(VisitAutosend, self).__unicode__(),
-            self.visit.__unicode__()
+            super(VisitAutosend, self).__str__(),
+            self.visit.__str__()
         )
 
 
 class Room(models.Model):
 
     class Meta:
-        verbose_name = _(u"lokale")
-        verbose_name_plural = _(u"lokaler")
+        verbose_name = _("lokale")
+        verbose_name_plural = _("lokaler")
 
     locality = models.ForeignKey(
         Locality,
-        verbose_name=_(u'Lokalitet'),
+        verbose_name=_('Lokalitet'),
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
     )
 
     name = models.CharField(
-        max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
+        max_length=64, verbose_name=_('Navn på lokale'), blank=False
     )
 
-    def __unicode__(self):
+    def __str__(self):
         if self.locality:
-            return '%s - %s' % (unicode(self.name), unicode(self.locality))
+            return '%s - %s' % (self.name, str(self.locality))
         else:
-            return '%s - %s' % (unicode(self.name), _(u'Ingen lokalitet'))
+            return '%s - %s' % (self.name, _('Ingen lokalitet'))
 
     @property
     def name_with_locality(self):
         if self.locality:
             return '%s, %s' % (
-                unicode(self.name),
+                self.name,
                 self.locality.name_and_address
             )
         else:
             return '%s, %s' % (
-                unicode(self.name),
-                _(u'<uden lokalitet>')
+                self.name,
+                _('<uden lokalitet>')
             )
 
     @classmethod
@@ -5186,26 +5234,30 @@ class Room(models.Model):
 
         return return_value
 
+    @property
+    def resource(self):
+        return self.roomresource_set.first()
+
 
 class Region(models.Model):
 
     class Meta:
-        verbose_name = _(u'region')
-        verbose_name_plural = _(u'regioner')
+        verbose_name = _('region')
+        verbose_name_plural = _('regioner')
 
     name = models.CharField(
         max_length=16,
-        verbose_name=_(u'Navn')
+        verbose_name=_('Navn')
     )
 
     # Not pretty, but it gets the job done for now
     name_en = models.CharField(
         max_length=16,
         null=True,
-        verbose_name=_(u'Engelsk navn')
+        verbose_name=_('Engelsk navn')
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -5221,21 +5273,22 @@ class Region(models.Model):
 class Municipality(models.Model):
 
     class Meta:
-        verbose_name = _(u'kommune')
-        verbose_name_plural = _(u'kommuner')
+        verbose_name = _('kommune')
+        verbose_name_plural = _('kommuner')
 
     name = models.CharField(
         max_length=30,
-        verbose_name=_(u'Navn'),
+        verbose_name=_('Navn'),
         unique=True
     )
 
     region = models.ForeignKey(
         Region,
-        verbose_name=_(u'Region')
+        verbose_name=_('Region'),
+        on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -5256,8 +5309,8 @@ class Municipality(models.Model):
 class PostCode(models.Model):
 
     class Meta:
-        verbose_name = _(u'postnummer')
-        verbose_name_plural = _(u'postnumre')
+        verbose_name = _('postnummer')
+        verbose_name_plural = _('postnumre')
 
     number = models.IntegerField(
         primary_key=True
@@ -5266,10 +5319,11 @@ class PostCode(models.Model):
         max_length=48
     )
     region = models.ForeignKey(
-        Region
+        Region,
+        on_delete=models.CASCADE
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%d %s" % (self.number, self.city)
 
     @staticmethod
@@ -5294,8 +5348,10 @@ class PostCode(models.Model):
                     region = Region.objects.get(name=region_name)
                     regions[region_name] = region
                 except Region.DoesNotExist:
-                    print "Unknown region '%s'. May be a typo, please fix in" \
-                          " booking/data/postcodes.py" % region_name
+                    print(
+                            "Unknown region '%s'. May be a typo, please fix "
+                            "in booking/data/postcodes.py" % region_name
+                    )
                     return
             try:
                 postcode = PostCode.objects.get(number=postcode_number)
@@ -5315,8 +5371,8 @@ class PostCode(models.Model):
 class School(models.Model):
 
     class Meta:
-        verbose_name = _(u'uddannelsesinstitution')
-        verbose_name_plural = _(u'uddannelsesinstitutioner')
+        verbose_name = _('uddannelsesinstitution')
+        verbose_name_plural = _('uddannelsesinstitutioner')
         ordering = ["name", "postcode"]
 
     objects = SchoolQuerySet.as_manager()
@@ -5326,44 +5382,42 @@ class School(models.Model):
     )
     postcode = models.ForeignKey(
         PostCode,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
     municipality = models.ForeignKey(
         Municipality,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
     address = models.CharField(
         max_length=128,
-        verbose_name=_(u'Adresse'),
+        verbose_name=_('Adresse'),
         null=True
     )
     cvr = models.IntegerField(
-        verbose_name=_(u'CVR-nummer'),
+        verbose_name=_('CVR-nummer'),
         null=True
     )
     ean = models.BigIntegerField(
-        verbose_name=_(u'EAN-nummer'),
+        verbose_name=_('EAN-nummer'),
         null=True
     )
 
     ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
     GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
     type_choices = (
-        (ELEMENTARY_SCHOOL, u'Folkeskole'),
-        (GYMNASIE, u'Gymnasie')
+        (ELEMENTARY_SCHOOL, 'Folkeskole'),
+        (GYMNASIE, 'Gymnasie')
     )
 
     type = models.IntegerField(
         choices=type_choices,
         default=1,
-        verbose_name=_(u'Uddannelsestype')
+        verbose_name=_('Uddannelsestype')
     )
 
-    @property
-    def full_address(self):
-        return u"%s, %s" % (self.address, unicode(self.postcode))
-
-    def __unicode__(self):
+    def __str__(self):
         if self.postcode is not None:
             return "%s (%d %s)" % \
                    (self.name, self.postcode.number, self.postcode.city)
@@ -5394,8 +5448,10 @@ class School(models.Model):
                         type=type
                     ).save()
                 except PostCode.DoesNotExist:
-                    print "Warning: Postcode %d not found in database. " \
-                          "Not adding school %s" % (postcode, name)
+                    print(
+                            "Warning: Postcode %d not found in database. "
+                            "Not adding school %s" % (postcode, name)
+                    )
 
         data = schools.elementary_schools
         type = School.ELEMENTARY_SCHOOL
@@ -5410,8 +5466,10 @@ class School(models.Model):
                     name=item.get('municipality')
                 ) if 'municipality' in item else None
             except Municipality.DoesNotExist:
-                print "Municipality '%s' does not exist" % \
-                      item.get('municipality')
+                print(
+                        "Municipality '%s' does not exist" %
+                        item.get('municipality')
+                )
                 return
 
             try:
@@ -5434,8 +5492,10 @@ class School(models.Model):
                         municipality=municipality
                     ).save()
                 except PostCode.DoesNotExist:
-                    print "Warning: Postcode %d not found in database. " \
-                          "Not adding school %s" % (postcode, name)
+                    print(
+                            "Warning: Postcode %d not found in database. "
+                            "Not adding school %s" % (postcode, name)
+                    )
 
     @staticmethod
     def dedup():
@@ -5448,12 +5508,14 @@ class School(models.Model):
                 ).exclude(id=school.id).order_by('id')
                 for other in others:
                     for booker in other.guest_set.all():
-                        print "wire booker to %d instead of %d" % \
-                              (school.id, other.id)
+                        print(
+                                "wire booker to %d instead of %d" %
+                                (school.id, other.id)
+                        )
                         booker.school = school
                         booker.save()
                     remove[other.id] = True
-                    print "remove school %d (%s)" % (other.id, other.name)
+                    print("remove school %d (%s)" % (other.id, other.name))
         r = School.objects.filter(id__in=remove.keys())
         r.delete()
 
@@ -5461,29 +5523,29 @@ class School(models.Model):
 class Guest(models.Model):
 
     class Meta:
-        verbose_name = _(u'besøgende')
-        verbose_name_plural = _(u'besøgende')
+        verbose_name = _('besøgende')
+        verbose_name_plural = _('besøgende')
 
     # A person booking a visit
     firstname = models.CharField(
         max_length=64,
         blank=False,
-        verbose_name=u'Fornavn'
+        verbose_name='Fornavn'
     )
     lastname = models.CharField(
         max_length=64,
         blank=False,
-        verbose_name=u'Efternavn'
+        verbose_name='Efternavn'
     )
     email = models.EmailField(
         max_length=64,
         blank=False,
-        verbose_name=u'Email'
+        verbose_name='Email'
     )
     phone = models.CharField(
         max_length=14,
         blank=False,
-        verbose_name=u'Telefon'
+        verbose_name='Telefon'
     )
 
     stx = 0
@@ -5493,17 +5555,17 @@ class Guest(models.Model):
     valgfag = 4
     hhx = 5
     line_choices = (
-        (stx, _(u'stx')),
-        (hf, _(u'hf')),
-        (htx, _(u'htx')),
-        (eux, _(u'eux')),
-        (hhx, _(u'hhx')),
+        (stx, _('stx')),
+        (hf, _('hf')),
+        (htx, _('htx')),
+        (eux, _('eux')),
+        (hhx, _('hhx')),
     )
     line = models.IntegerField(
         choices=line_choices,
         blank=True,
         null=True,
-        verbose_name=u'Linje',
+        verbose_name='Linje',
     )
     sx_line_conversion = {
         stx: 21,
@@ -5539,27 +5601,27 @@ class Guest(models.Model):
     }
 
     level_choices = (
-        (f0, _(u'0. klasse')),
-        (f1, _(u'1. klasse')),
-        (f2, _(u'2. klasse')),
-        (f3, _(u'3. klasse')),
-        (f4, _(u'4. klasse')),
-        (f5, _(u'5. klasse')),
-        (f6, _(u'6. klasse')),
-        (f7, _(u'7. klasse')),
-        (f8, _(u'8. klasse')),
-        (f9, _(u'9. klasse')),
-        (f10, _(u'10. klasse')),
-        (g1, _(u'1.g')),
-        (g2, _(u'2.g')),
-        (g3, _(u'3.g')),
-        (student, _(u'Afsluttet gymnasieuddannelse')),
-        (other, _(u'Andet')),
+        (f0, _('0. klasse')),
+        (f1, _('1. klasse')),
+        (f2, _('2. klasse')),
+        (f3, _('3. klasse')),
+        (f4, _('4. klasse')),
+        (f5, _('5. klasse')),
+        (f6, _('6. klasse')),
+        (f7, _('7. klasse')),
+        (f8, _('8. klasse')),
+        (f9, _('9. klasse')),
+        (f10, _('10. klasse')),
+        (g1, _('1.g')),
+        (g2, _('2.g')),
+        (g3, _('3.g')),
+        (student, _('Afsluttet gymnasieuddannelse')),
+        (other, _('Andet')),
     )
     level = models.IntegerField(
         choices=level_choices,
         blank=False,
-        verbose_name=u'Niveau'
+        verbose_name='Niveau'
     )
 
     grundskole_level_conversion = {
@@ -5583,19 +5645,20 @@ class Guest(models.Model):
         return {
             thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
             for thisref, grundskoleref
-            in Guest.grundskole_level_conversion.iteritems()
+            in Guest.grundskole_level_conversion.items()
         }
 
     school = models.ForeignKey(
         School,
         null=True,
-        verbose_name=u'Skole'
+        verbose_name='Skole',
+        on_delete=models.SET_NULL
     )
 
     attendee_count = models.IntegerField(
         blank=True,
         null=True,
-        verbose_name=u'Antal deltagere',
+        verbose_name='Antal deltagere',
         validators=[validators.MinValueValidator(int(1))]
     )
 
@@ -5603,11 +5666,11 @@ class Guest(models.Model):
         blank=True,
         null=True,
         default=None,
-        verbose_name=u'Heraf lærere'
+        verbose_name='Heraf lærere'
     )
 
     consent = models.BooleanField(
-        verbose_name=_(u'Samtykke'),
+        verbose_name=_('Samtykke'),
         default=False,
     )
 
@@ -5615,7 +5678,7 @@ class Guest(models.Model):
     def student_count(self):
         try:
             return self.attendee_count - (self.teacher_count or 0)
-        except:
+        except Exception:
             return 0
 
     def evaluationguest_student(self):
@@ -5623,7 +5686,7 @@ class Guest(models.Model):
             return self.surveyxactevaluationguest_set.filter(
                 evaluation__for_students=True, evaluation__for_teachers=False
             ).first()
-        except:
+        except Exception:
             return None
 
     def evaluationguest_teacher(self):
@@ -5631,11 +5694,11 @@ class Guest(models.Model):
             return self.surveyxactevaluationguest_set.filter(
                 evaluation__for_students=False, evaluation__for_teachers=True
             ).first()
-        except:
+        except Exception:
             return None
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([str(x) for x in [
             self.firstname,
             self.lastname,
             self.email,
@@ -5644,7 +5707,7 @@ class Guest(models.Model):
             self.school
         ] if x])
 
-    def __unicode__(self):
+    def __str__(self):
         if self.email is not None and self.email != "":
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
@@ -5681,29 +5744,33 @@ class Guest(models.Model):
 class Booking(models.Model):
 
     class Meta:
-        verbose_name = _(u'booking')
-        verbose_name_plural = _(u'bookinger')
+        verbose_name = _('booking')
+        verbose_name_plural = _('bookinger')
 
     objects = BookingQuerySet.as_manager()
 
-    booker = models.OneToOneField(Guest)
+    booker = models.OneToOneField(
+        Guest,
+        on_delete=models.CASCADE
+    )
 
     visit = models.ForeignKey(
         Visit,
         null=True,
         blank=True,
         related_name='bookings',
-        verbose_name=_(u'Besøg')
+        verbose_name=_('Besøg'),
+        on_delete=models.SET_NULL
     )
 
     waitinglist_spot = models.IntegerField(
         default=0,
-        verbose_name=_(u'Ventelisteposition')
+        verbose_name=_('Ventelisteposition')
     )
 
     notes = models.TextField(
         blank=True,
-        verbose_name=u'Bemærkninger'
+        verbose_name='Bemærkninger'
     )
 
     statistics = models.ForeignKey(
@@ -5714,7 +5781,7 @@ class Booking(models.Model):
 
     cancelled = models.BooleanField(
         default=False,
-        verbose_name=u'Aflyst'
+        verbose_name='Aflyst'
     )
 
     def get_visit_attr(self, attrname):
@@ -5724,8 +5791,8 @@ class Booking(models.Model):
 
     def raise_readonly_attr_error(self, attrname):
         raise Exception(
-            _(u"Attribute %s on Booking is readonly.") % attrname +
-            _(u"Set it on the Visit instead.")
+            _("Attribute %s on Booking is readonly.") % attrname +
+            _("Set it on the Visit instead.")
         )
 
     @classmethod
@@ -5792,8 +5859,8 @@ class Booking(models.Model):
         ]:
             for product in visit.products:
                 if product.autosend_enabled(template_type):
-                    # print "Making exception for evaluation " \
-                    #       "mail with product %d" % product.id
+                    # print("Making exception for evaluation " \
+                    #       "mail with product %d" % product.id)
                     enabled = True
                     break
 
@@ -5826,7 +5893,7 @@ class Booking(models.Model):
         return False
 
     def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
+        return " ".join([x for x in [
             self.booker.as_searchtext(),
             self.notes
         ] if x])
@@ -5838,7 +5905,7 @@ class Booking(models.Model):
             self.statistics = statistics
             self.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return _("Tilmelding #%d") % self.id
 
     @property
@@ -5865,14 +5932,6 @@ class Booking(models.Model):
     def organizationalunit(self):
         return self.visit.real.organizationalunit
 
-    @property
-    def subjectlevel_displayvalues(self):
-        return [
-            s.display_value() for s in
-            list(self.bookinggrundskolesubjectlevel_set.all()) +
-            list(self.bookinggymnasiesubjectlevel_set.all())
-        ]
-
 
 Booking.add_visit_attr('product')
 Booking.add_visit_attr('hosts')
@@ -5887,47 +5946,47 @@ Booking.add_visit_attr('comments')
 class ClassBooking(Booking):
 
     class Meta:
-        verbose_name = _(u'booking for klassebesøg')
-        verbose_name_plural = _(u'bookinger for klassebesøg')
+        verbose_name = _('booking for klassebesøg')
+        verbose_name_plural = _('bookinger for klassebesøg')
 
     tour_desired = models.BooleanField(
-        verbose_name=_(u'Rundvisning ønsket'),
+        verbose_name=_('Rundvisning ønsket'),
         default=False
     )
     catering_desired = models.BooleanField(
-        verbose_name=_(u'Forplejning ønsket'),
+        verbose_name=_('Forplejning ønsket'),
         default=False
     )
     presentation_desired = models.BooleanField(
-        verbose_name=_(u'Oplæg om uddannelse ønsket'),
+        verbose_name=_('Oplæg om uddannelse ønsket'),
         default=False
     )
     custom_desired = models.BooleanField(
-        verbose_name=_(u'Specialtilbud ønsket'),
+        verbose_name=_('Specialtilbud ønsket'),
         default=False
     )
 
     def verbose_desires(self):
         desires = []
         if self.tour_desired:
-            desires.append(_(u'rundvisning'))
+            desires.append(gettext('rundvisning'))
         if self.catering_desired:
-            desires.append(_(u'forplejning'))
+            desires.append(gettext('forplejning'))
         if self.presentation_desired:
-            desires.append(_(u'oplæg om uddannelse'))
+            desires.append(gettext('oplæg om uddannelse'))
         if self.custom_desired:
             try:
                 desires.append(self.visit.product.custom_name.lower())
-            except:
+            except Exception:
                 pass
-        return prose_list_join(desires, ', ', _(' og '))
+        return prose_list_join(desires, ', ', gettext(' og '))
 
 
 class TeacherBooking(Booking):
 
     class Meta:
-        verbose_name = _(u'booking for tilbud til undervisere')
-        verbose_name_plural = _(u'bookinger for tilbud til undervisere')
+        verbose_name = _('booking for tilbud til undervisere')
+        verbose_name_plural = _('bookinger for tilbud til undervisere')
 
     subjects = models.ManyToManyField(
         Subject,
@@ -5949,22 +6008,35 @@ class BookingGymnasieSubjectLevel(models.Model):
         verbose_name = _('fagniveau for booking (gymnasium)')
         verbose_name_plural = _('fagniveauer for bookinger (gymnasium)')
 
-    booking = models.ForeignKey(Booking, blank=False, null=False)
+    booking = models.ForeignKey(
+        Booking,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
             ]
         }
     )
-    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+    level = models.ForeignKey(
+        GymnasieLevel,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
 
-    def __unicode__(self):
-        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+    def __str__(self):
+        return "%s (for booking %s)" % (self.display_value(), self.booking.pk)
 
     def display_value(self):
-        return u'%s på %s niveau' % (self.subject.name, self.level)
+        return '%s på %s niveau' % (self.subject.name, self.level)
 
 
 class BookingGrundskoleSubjectLevel(models.Model):
@@ -5973,22 +6045,35 @@ class BookingGrundskoleSubjectLevel(models.Model):
         verbose_name = _('klasseniveau for booking (grundskole)')
         verbose_name_plural = _('klasseniveauer for bookinger(grundskole)')
 
-    booking = models.ForeignKey(Booking, blank=False, null=False)
+    booking = models.ForeignKey(
+        Booking,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
     subject = models.ForeignKey(
-        Subject, blank=False, null=False,
+        Subject,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GRUNDSKOLE,
             ]
         }
     )
-    level = models.ForeignKey(GrundskoleLevel, blank=False, null=False)
+    level = models.ForeignKey(
+        GrundskoleLevel,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE
+    )
 
-    def __unicode__(self):
-        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+    def __str__(self):
+        return "%s (for booking %s)" % (self.display_value(), self.booking.pk)
 
     def display_value(self):
-        return u'%s på %s niveau' % (self.subject.name, self.level)
+        return '%s på %s niveau' % (self.subject.name, self.level)
 
 
 class KUEmailMessage(models.Model):
@@ -6010,7 +6095,12 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
-    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    content_type = models.ForeignKey(
+        ContentType,
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL
+    )
     object_id = models.PositiveIntegerField(null=True, default=None)
     content_object = GenericForeignKey('content_type', 'object_id')
     reply_nonce = models.UUIDField(
@@ -6019,23 +6109,25 @@ class KUEmailMessage(models.Model):
         default=None
     )
     template_key = models.IntegerField(
-        verbose_name=u'Template key',
+        verbose_name='Template key',
         default=None,
         null=True,
         blank=True
     )
     template_type = models.ForeignKey(
         EmailTemplateType,
-        verbose_name=u'Template type',
+        verbose_name='Template type',
         default=None,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
     reply_to_message = models.ForeignKey(
         'KUEmailMessage',
-        verbose_name=u'Reply to',
+        verbose_name='Reply to',
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
 
     @staticmethod
@@ -6048,7 +6140,7 @@ class KUEmailMessage(models.Model):
             address = None
             user = None
             guest = None
-            if isinstance(recipient, basestring):
+            if isinstance(recipient, str):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
@@ -6061,11 +6153,11 @@ class KUEmailMessage(models.Model):
             else:
                 try:
                     name = recipient.get_name()
-                except:
+                except Exception:
                     pass
                 try:
                     address = recipient.get_email()
-                except:
+                except Exception:
                     pass
             if address is not None and address != '':
 
@@ -6077,20 +6169,20 @@ class KUEmailMessage(models.Model):
 
                 if name is not None:
                     email['name'] = name
-                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                    email['full'] = "\"%s\" <%s>" % (name, address)
                 else:
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
 
                 if guest is not None:
-                    email['type'] = u'Gæst'
+                    email['type'] = 'Gæst'
                 elif user is not None:
                     role = user.userprofile.get_role()
                     if role != NONE:
                         email['type'] = get_role_name(role)
                 if 'type' not in email:
-                    email['type'] = u'Anden'
+                    email['type'] = 'Anden'
 
                 emails.append(email)
         return emails
@@ -6149,11 +6241,11 @@ class KUEmailMessage(models.Model):
             )
             if template is None:
                 raise Exception(
-                    u"Template with key %s does not exist!" % key
+                    "Template with key %s does not exist!" % key
                 )
         if not isinstance(template, EmailTemplate):
             raise Exception(
-                u"Invalid template object '%s'" % str(template)
+                "Invalid template object '%s'" % str(template)
             )
 
         # Alias any visit to "besoeg" for easier use by danes
@@ -6221,22 +6313,22 @@ class KUEmailMessage(models.Model):
         # Log the sending
         if recipients and instance:
             logmessage = [
-                _(u"Template: %s") % template.type.name
+                _("Template: %s") % template.type.name
                 if template.type else "None",
-                _(u"Modtagere: %s") % ", ".join([
+                _("Modtagere: %s") % ", ".join([
                     "%s (%s)" % (x.formatted_address, x.role_name)
                     for x in recipients
                 ])
             ]
             ctxmsg = context.get('log_message', None)
             if ctxmsg:
-                logmessage.append(unicode(ctxmsg))
+                logmessage.append(str(ctxmsg))
 
             log_action(
                 context.get("web_user", None),
                 instance,
                 LOGACTION_MAIL_SENT,
-                u"\n".join(logmessage)
+                "\n".join(logmessage)
             )
 
     def get_reply_url(self, full=False):
@@ -6271,7 +6363,10 @@ class KUEmailMessage(models.Model):
 
 class BookerResponseNonce(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
-    booker = models.ForeignKey(Guest)
+    booker = models.ForeignKey(
+        Guest,
+        on_delete=models.CASCADE
+    )
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
@@ -6350,7 +6445,7 @@ class SurveyXactEvaluation(models.Model):
             guest__booking__visit=visit
         )
         for evalguest in qs:
-            evalguest.send(True)
+            evalguest.send(False)
 
     def product_autosend_activated(self):
         return self.product.get_autosends().filter(
@@ -6397,8 +6492,8 @@ class SurveyXactEvaluation(models.Model):
                     )
                     evaluationguest.save()
 
-    def __unicode__(self):
-        return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
+    def __str__(self):
+        return "SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
 
 class SurveyXactEvaluationGuest(models.Model):
@@ -6407,18 +6502,21 @@ class SurveyXactEvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL
     )
 
     guest = models.ForeignKey(
         Guest,
         null=False,
-        blank=False
+        blank=False,
+        on_delete=models.CASCADE
     )
     # deprecate
     visit = models.ForeignKey(
         Visit,
-        null=False
+        null=False,
+        on_delete=models.CASCADE
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1
@@ -6426,15 +6524,15 @@ class SurveyXactEvaluationGuest(models.Model):
     STATUS_SECOND_SENT = 3
     STATUS_LINK_CLICKED = 4
     status_choices = [
-        (STATUS_NO_PARTICIPATION, _(u'Modtager ikke evaluering')),
-        (STATUS_NOT_SENT, _(u'Ikke afholdt / ikke afsendt')),
-        (STATUS_FIRST_SENT, _(u'Sendt første gang')),
-        (STATUS_SECOND_SENT, _(u'Sendt anden gang')),
-        (STATUS_LINK_CLICKED, _(u'Har klikket på link'))
+        (STATUS_NO_PARTICIPATION, _('Modtager ikke evaluering')),
+        (STATUS_NOT_SENT, _('Ikke afholdt / ikke afsendt')),
+        (STATUS_FIRST_SENT, _('Sendt første gang')),
+        (STATUS_SECOND_SENT, _('Sendt anden gang')),
+        (STATUS_LINK_CLICKED, _('Har klikket på link'))
     ]
     status = models.SmallIntegerField(
         choices=status_choices,
-        verbose_name=u'status',
+        verbose_name='status',
         default=STATUS_NOT_SENT
     )
     shortlink_id = models.CharField(
@@ -6482,7 +6580,7 @@ class SurveyXactEvaluationGuest(models.Model):
             evalguest = SurveyXactEvaluationGuest.objects.get(
                 shortlink_id=shortlink_id,
             )
-        except:
+        except Exception:
             return None
         url = surveyxact_upload(
             evalguest.evaluation.surveyId, evalguest.get_surveyxact_data()
@@ -6498,29 +6596,29 @@ class SurveyXactEvaluationGuest(models.Model):
         visit = self.visit
         guest = self.guest
         data = {
-            u'email': guest.email,
-            u'ID': product.id,
-            u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
+            'email': guest.email,
+            'ID': product.id,
+            'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
-            u'niveau': Guest.grundskole_level_conversion.get(
+            'niveau': Guest.grundskole_level_conversion.get(
                 self.guest.level, None
             )
             if guest.line is None
             else Guest.sx_line_conversion.get(guest.line, None),
-            u'antal': guest.attendee_count,
-            u'elever': guest.student_count,
-            u'lærere': guest.teacher_count or 0,
-            u'oplæg': bool2int(
+            'antal': guest.attendee_count,
+            'elever': guest.student_count,
+            'lærere': guest.teacher_count or 0,
+            'oplæg': bool2int(
                 getattr(visit, 'presentation_desired', False)
             ),
-            u'rundvis': bool2int(
+            'rundvis': bool2int(
                 getattr(visit, 'tour_desired', False)
             ),
-            u'region': getattr_long(guest, 'school.municipality.region.id'),
-            u'skole': getattr_long(guest, 'school.name'),
-            u'skole_id': getattr_long(guest, 'school.id'),
-            u'postnr': getattr_long(guest, 'school.postcode.number'),
-            u'gæst': ' '.join(
+            'region': getattr_long(guest, 'school.municipality.region.id'),
+            'skole': getattr_long(guest, 'school.name'),
+            'skole_id': getattr_long(guest, 'school.id'),
+            'postnr': getattr_long(guest, 'school.postcode.number'),
+            'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
             )
         }
@@ -6535,18 +6633,18 @@ class SurveyXactEvaluationGuest(models.Model):
                 teachers = list(visit.assigned_teachers)
                 product = visit.product
                 data.update({
-                    u"akt%d" % index: product.title,
-                    u"type%d" % index: product.type,
-                    u"enhed%d" % index: getattr_long(
+                    "akt%d" % index: product.title,
+                    "type%d" % index: product.type,
+                    "enhed%d" % index: getattr_long(
                         product, 'organizationalunit.id'
                     ),
-                    u"oenhed%d" % index: getattr_long(
+                    "oenhed%d" % index: getattr_long(
                         product, 'organizationalunit.parent.id'
                     ),
-                    u"undvn%d" % index: ', '.join([
+                    "undvn%d" % index: ', '.join([
                         teacher.get_full_name() for teacher in teachers
                     ]),
-                    u"undvm%d" % index: ', '.join([
+                    "undvm%d" % index: ', '.join([
                         teacher.email for teacher in teachers
                     ])
                 })
@@ -6560,22 +6658,32 @@ class SurveyXactEvaluationGuest(models.Model):
         self.save()
 
     def send(self, first=True):
+        template_types = []
         if first:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_first_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_first
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_first
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
         else:
             if self.evaluation.for_students:
-                template = EmailTemplateType.\
-                    notify_guest__evaluation_second_students
-            else:
-                template = EmailTemplateType.notify_guest__evaluation_second
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second_students
+                )
+            if self.evaluation.for_teachers:
+                template_types.append(
+                    EmailTemplateType.notify_guest__evaluation_second
+                )
             new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
 
-        sent = self.booking.autosend(template)
+        sent = False
+        for template_type in template_types:
+            if self.booking.autosend(template_type):
+                sent = True
         if sent:
             self.status = new_status
             self.save()

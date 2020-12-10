@@ -38,9 +38,9 @@ python manage.py shell
 ## In the django shell run the following for your newly created user
 ```python
 from booking.models import *
-from profile.models import *
+from user_profile.models import *
 from django.contrib.auth.models import User
-from profile.constants import ADMINISTRATOR
+from user_profile.constants import ADMINISTRATOR
 
 user = User.objects.first()
 user_role = UserRole.objects.create(role=ADMINISTRATOR)
@@ -50,7 +50,7 @@ UserProfile.objects.create(user=user, user_role=user_role)
 ## Run the following which generates the preliminary data for our models
 ```python
 from booking.models import *
-from profile.models import *
+from user_profile.models import *
 
 Region.create_defaults()
 PostCode.create_defaults()
