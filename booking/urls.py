@@ -501,9 +501,10 @@ for x in urlpatterns:
             x.default_args['can_be_embedded'] = True
 
             # Add a corresponding embed URL
+
             embedpatterns.append(
                 url(
-                    '^(?P<embed>embed/)' + str(x)[1:],
+                    '^(?P<embed>embed/)' + str(x.pattern)[1:],
                     xframe_options_exempt(x.callback),
                     name=x.name + '-embed'
                 )
