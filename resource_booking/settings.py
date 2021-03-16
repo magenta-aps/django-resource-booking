@@ -313,6 +313,10 @@ CRON_CLASSES = [
 
 HIJACK_USE_BOOTSTRAP = True
 
+# Raise the limit from 1000 -> 10000 to allow fetching more objects
+# when POSTing to for example /ajax/list/Visit using a form with a list (id[]).
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)
     MIDDLEWARE = (
