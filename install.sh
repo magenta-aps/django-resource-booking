@@ -3,7 +3,7 @@
 set -e
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-VE_DIR='python-env-3'
+VE_DIR='env'
 VE="${DIR}/${VE_DIR}"
 
 # Install system dependencies

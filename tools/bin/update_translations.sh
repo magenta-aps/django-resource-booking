@@ -1,2 +1,2 @@
 #!/bin/bash
-django-admin makemessages -i 'python-env/*' -a
+django-admin makemessages -i 'env/*' -a
